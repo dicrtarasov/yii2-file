@@ -309,11 +309,6 @@ class FileAttributeBehavior extends Behavior {
 					$this->owner->addError($attribute, 'не задано имя загруаемого файла: '.$file->path);
 				}
 				
-				if (empty($file->size)) {
-					$this->owner->addError($attribute, 'пустой размер файла: '.$file->name);
-					continue;
-				}
-				
 				if (!@is_file($file->path)) {
 					$this->owner->addError($attribute, 'загружаемый файл не существует: '.$file->path);
 					continue;
