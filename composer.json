@@ -1,0 +1,33 @@
+{
+	"name" : "dicr/yii2-filestore",
+	"description" : "Компонент для работы с файлами",
+	"type" : "library",
+	"homepage" : "https://gitlab.com/yii2-libs/yii2-filestore",
+	"authors" : [{
+			"name" : "Igor Tarasov",
+			"email" : "develop@dicr.org",
+			"homepage" : "http://dicr.org",
+			"role" : "developer"
+		}
+	],
+	"require" : {
+		"yiisoft/yii2" : "~2.0",
+		"yiisoft/yii2-jui" : "~2.0"
+	},
+	"repositories" : [{
+			"type" : "composer",
+			"url" : "https://asset-packagist.org"
+		}
+	],
+	"keywords" : [
+		"yii2 dicr filestore"
+	],
+	"autoload" : {
+		"psr-4" : {
+			"dicr\\filestore\\" : "src"
+		}
+	},
+	"support" : {
+		"source" : "https://gitlab.com/yii2-libs/yii2-filestore.git"
+	}
+}
