@@ -2,7 +2,7 @@
 	"name" : "dicr/yii2-filestore",
 	"description" : "Компонент для работы с файлами",
 	"type" : "library",
-	"homepage" : "https://gitlab.com/yii2-libs/yii2-filestore",
+	"homepage" : "https://gitlab.com/dicrtarasov/yii2-filestore",
 	"authors" : [{
 			"name" : "Igor Tarasov",
 			"email" : "develop@dicr.org",
@@ -28,6 +28,6 @@
 		}
 	},
 	"support" : {
-		"source" : "https://gitlab.com/yii2-libs/yii2-filestore.git"
+		"source" : "https://gitlab.com/dicrtarasov/yii2-filestore.git"
 	}
 }
