@@ -374,10 +374,10 @@ class FileAttributeBehavior extends Behavior {
 		}
 		
 		// готовим путь модели
-		$modelPath = $this->store->getModelPath($this->owner, $attribute);
+		$attributePath = $this->store->getModelPath($this->owner, $attribute);
 		
 		/** @var \dicr\filestore\File[] $oldFiles старые файлы */
-		$oldFiles = $modelPath->getList([
+		$oldFiles = $attributePath->getList([
 			'dirs' => false
 		]);
 		
@@ -418,7 +418,7 @@ class FileAttributeBehavior extends Behavior {
 				if (!empty($file->error) || empty($file->name) || empty($file->path)) unset($files[$pos]);
 				else {
 					// создаем и импортируем файл под временным именем
-					$newFile = $modelPath->child(sprintf('.%d~%s', rand(100000, 999999), $file->name));
+					$newFile = $attributePath->child(sprintf('.%d~%s', rand(100000, 999999), $file->name));
 					$newFile->import($file->path, $options);
 					$files[$pos] = $newFile;
 				}
@@ -434,14 +434,21 @@ class FileAttributeBehavior extends Behavior {
 			}
 		}
 		
-		// переименовываем файлы в правильные имена
+		// переиндексируем в числовые ключи
 		$files = array_values($files);
-		foreach (array_values($files) as $pos => &$file) {
-			$matches = null;
-			if (!preg_match('~^\.\d+\~(.+)$~uism', $file->name, $matches)) {
-				throw new ServerErrorHttpException('внутренняя ошибка');
+		
+		// если файлов нет, то удаляем директорию аттрибута
+		if (empty($files)) {
+			$attributePath->delete(true);
+		} else {
+			// переименовываем файлы в правильные имена
+			foreach (array_values($files) as $pos => &$file) {
+				$matches = null;
+				if (!preg_match('~^\.\d+\~(.+)$~uism', $file->name, $matches)) {
+					throw new ServerErrorHttpException('внутренняя ошибка');
+				}
+				$file->name = sprintf('%d~%s', $pos, $matches[1]);
 			}
-			$file->name = sprintf('%d~%s', $pos, $matches[1]);
 		}
 		
 		// обновляем аттрибут модели
