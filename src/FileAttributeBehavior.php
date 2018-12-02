@@ -31,11 +31,14 @@ use yii\web\ServerErrorHttpException;
  * }
  * 
  * attributes - массив обрабатываемых аттрибутов. Ключ - название аттрибута, значение:
- * 	- limit максимальное кол-во файлов,
- *  (опции импорта из File::import)
+ * - если значение массив, то ключи являются названиями параметров:
+ * 		- limit максимальное кол-во файлов,
+ * - если значение число, то оно считается в качестве значения lmit.
  * 
- * Данный behavior реализует get/set заданных аттрибутов, поэтому эти свойства этих аттрибутов можно не объявляь в модели.
- * Если задан limit = 1, то get/set возвращает элемент, иначе - массив.
+ * Если задан limit = 1, то get/set возвращает файловый элемент, иначе - массив элементов.
+ * 
+ * Данный behavior реализует get/set заданных аттрибутов, 
+ * поэтому эти своства не нужно объявлять в модели.
  * 
  * Значением аттрибутов может быть элемент/массив элементов File и UploadFile.
  * 
@@ -51,6 +54,10 @@ use yii\web\ServerErrorHttpException;
  *		}
  *	 }
  * }
+ * 
+ * При этом File считается текущим элементом значения (существующим файлом), а UploadFile
+ * считается новым файлом и будет импортирован в директорию аттрбуа модели при сохранении
+ * автоматически.
  * 
  * Для загрузки значений аттрибутов модели при обработе POST формы нужно после $model->load() 
  * дополнительно вызвать $model->loadFileAttributes().
@@ -69,6 +76,8 @@ use yii\web\ServerErrorHttpException;
  *     <?=Html::img($pic->url)?>
  *  <?php } ?>
  *  
+ *  Файлы удаляются по событию AFTER_DELETE модели, поэтому нужно вызывать метод delete для каждой модели
+ *  отдельно, вместо deleteAll в напрямую в базе.
  *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2018
@@ -81,6 +90,9 @@ class FileAttributeBehavior extends Behavior {
 	
 	/** @var string|\dicr\filestore\FileStore хранилище файлов */
 	public $store = 'fileStore';
+	
+	/** @var bool удалять директорию модели или только директории аттрибутов при удалении модели */
+	public $deleteModelDirectory = true;
 	
 	/** 
 	 * @var array конфигурация аттрибутов [ attibuteName => limit ] 
@@ -142,6 +154,13 @@ class FileAttributeBehavior extends Behavior {
 			},
 			ActiveRecord::EVENT_AFTER_UPDATE => function() {
 				$this->saveFileAttributes();
+			},
+			ActiveRecord::EVENT_AFTER_DELETE => function() {
+				if ($this->deleteModelDirectory) {
+					$this->deleteModelDirectory();
+				} else {
+					$this->deleteFileAttributes();
+				}
 			}
 		];
 	}
@@ -356,7 +375,6 @@ class FileAttributeBehavior extends Behavior {
 		
 		// готовим путь модели
 		$modelPath = $this->store->getModelPath($this->owner, $attribute);
-		$modelPath->checkDir();
 		
 		/** @var \dicr\filestore\File[] $oldFiles старые файлы */
 		$oldFiles = $modelPath->getList([
@@ -447,6 +465,39 @@ class FileAttributeBehavior extends Behavior {
 		}
 		
 		return $ret;
+	}
+
+	/**
+	 * Удаляет директорию файлов аттрибута
+	 * 
+	 * @param string $attribute
+	 * @throws \InvalidArgumentException
+	 */
+	public function deleteFileAttribute(string $attribute) {
+		if (empty($attribute)) throw new \InvalidArgumentException('attribute');
+		$attributePath = $this->store->getModelPath($this->owner, $attribute);
+		if ($attributePath->exists) {
+			$attributePath->delete(true);
+		}
+	}
+	
+	/**
+	 * Удаляет файлы аттрибутов.
+	 */
+	public function deleteFileAttributes() {
+		foreach (array_keys($this->attributes) as $attribute) {
+			$this->deleteFileAttribute($attribute);
+		}
+	}
+	
+	/**
+	 * Удаляет директори файлов модели
+	 */
+	public function deleteModelDirectory() {
+		$modelPath = $this->store->getModelPath($this->owner);
+		if ($modelPath->exists) {
+			$modelPath->delete(true);
+		}
 	}
 	
 	/**
