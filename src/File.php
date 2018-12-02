@@ -377,10 +377,8 @@ class File extends BaseObject {
 		$move = (bool)ArrayHelper::getValue($options, 'move', false);
 		
 		// пропускаем старые файлы
-		if ($ifModified && $this->exists 
-			&& @filesize($src) === $this->size 
-			&& @filemtime($src) <= $this->time) {
-				return $this;
+		if ($ifModified && @filesize($src) === $this->size && @filemtime($src) <= $this->time) {
+			return $this;
 		}
 		
 		// проверяем существование директории
