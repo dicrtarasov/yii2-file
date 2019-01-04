@@ -1,7 +1,7 @@
 {
 	"name" : "dicr/yii2-file",
 	"description" : "Компонент для работы с файлами",
-	"type" : "library",
+	"type" : "yii2-extension",
 	"homepage" : "https://gitlab.com/dicr/yii2-file",
 	"authors" : [{
 			"name" : "Igor Tarasov",
