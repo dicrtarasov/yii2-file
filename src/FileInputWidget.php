@@ -23,17 +23,16 @@ class FileInputWidget extends InputWidget
     /** @var string|false mime-типы в input type=file, например image/* */
     public $accept;
 
-    /** @var string|\dicr\file\FileStore */
+    /** @var \dicr\file\FileStore */
     public $store = 'fileStore';
 
     /** @var string название поля формы аттрибута */
     protected $inputName;
 
-    /** @var string[] файлы */
+    /** @var \dicr\file\File[] файлы */
     protected $files;
 
     /**
-     *
      * {@inheritdoc}
      * @see \yii\widgets\InputWidget::init()
      */
@@ -67,15 +66,17 @@ class FileInputWidget extends InputWidget
                 $this->files
             ];
         } elseif ($this->limit > 0) {
-            $this->files = array_slice($this->files, 0, $this->limit);
+            ksort($this->files);
+            $this->files = array_slice($this->files, 0, $this->limit, true);
         }
 
         // добавляем опции клиенту
-        $this->clientOptions = ArrayHelper::merge([
-            'accept' => $this->accept,
-            'limit' => $this->limit,
-            'inputName' => $this->inputName
-        ], $this->clientOptions);
+        $this->clientOptions = ArrayHelper::merge(
+            [
+                'accept' => $this->accept,
+                'limit' => $this->limit,
+                'inputName' => $this->inputName
+            ], $this->clientOptions);
 
         // добавляем нужные классы
         Html::addCssClass($this->options, 'file-input-widget');
@@ -106,21 +107,24 @@ class FileInputWidget extends InputWidget
         $isImage = preg_match('~^image\/.+~uism', mime_content_type($file->fullPath));
         $fileId = $this->id . '-fileinput-' . rand(1, 999999);
 
-        return Html::tag('label', Html::hiddenInput($this->inputName . '[' . $pos . ']', $file->name) . Html::fileInput($this->inputName . '[' . $pos . ']', null, [
-            'id' => $fileId,
-            'accept' => $this->accept
-        ]) . Html::img($isImage ? $file->url : null) . Html::tag('div', $file->getName([
-            'removePrefix' => 1,
-            'removeExt' => 1
-        ]), [
-            'class' => 'name'
-        ]) . Html::button('&times;', [
-            'class' => 'del btn btn-link text-danger',
-            'title' => 'удалить'
-        ]), [
-            'class' => 'file btn',
-            'for' => $fileId
-        ]);
+        return Html::tag('label',
+            Html::hiddenInput($this->inputName . '[' . $pos . ']', $file->name) .
+            Html::fileInput($this->inputName . '[' . $pos . ']', null, [
+                'id' => $fileId,
+                'accept' => $this->accept
+            ]) . Html::img($isImage ? $file->url : null) .
+            Html::tag('div', $file->getName([
+                'removePrefix' => 1,
+                'removeExt' => 1
+            ]), [
+                'class' => 'name'
+            ]) . Html::button('&times;', [
+                'class' => 'del btn btn-link text-danger',
+                'title' => 'удалить'
+            ]), [
+                'class' => 'file btn',
+                'for' => $fileId
+            ]);
     }
 
     /**
@@ -145,22 +149,23 @@ class FileInputWidget extends InputWidget
     protected function renderAddButton()
     {
         $fileInputId = $this->id . '-addinput-' . rand(1, 999999);
-        return Html::label(Html::fileInput(null, null, [
-            'accept' => $this->accept ?: null,
-            'id' => $fileInputId
-        ]) . Html::tag('i', '', [
-            'class' => 'fa fas fa-plus-circle text-success'
-        ]), $fileInputId, [
-            'class' => 'add btn',
-            'title' => 'Выбрать файл',
-            'style' => [
-                'display' => $this->limit > 0 && count($this->files) >= $this->limit ? 'none' : 'flex'
-            ]
-        ]);
+        return Html::label(
+            Html::fileInput(null, null, [
+                'accept' => $this->accept ?: null,
+                'id' => $fileInputId
+            ]) . Html::tag('i', '', [
+                'class' => 'fa fas fa-plus-circle text-success'
+            ]), $fileInputId,
+            [
+                'class' => 'add btn',
+                'title' => 'Выбрать файл',
+                'style' => [
+                    'display' => $this->limit > 0 && count($this->files) >= $this->limit ? 'none' : 'flex'
+                ]
+            ]);
     }
 
     /**
-     *
      * {@inheritdoc}
      * @see \yii\base\Widget::render()
      */

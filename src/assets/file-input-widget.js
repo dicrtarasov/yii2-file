@@ -1,8 +1,8 @@
 "use strict";
 
-(function($) {
+(function ($) {
     $.fn.fileInputWidget =
-        function(options) {
+        function (options) {
             options = $.extend({}, {
                 accept : null,
                 limit : null,
@@ -13,19 +13,19 @@
                 throw 'требуется имя поля inputName';
             }
 
-            return this.each(function() {
+            return this.each(function () {
                 const $block = $(this);
                 const $btnAdd = $('.add', $block);
 
                 function reindex() {
                     const $files = $('.file', $block);
-                    $files.each(function(pos, $item) {
+                    $files.each(function (pos, $item) {
                         $('input', $item).attr('name', options.inputName + '[' + pos + ']');
                     });
                     $btnAdd.toggle(!options.limit || options.limit < 1 || $files.length < options.limit);
                 }
 
-                $block.on('change', '.file [type="file"]', function() {
+                $block.on('change', '.file [type="file"]', function () {
                     const input = this;
                     if (input.files.length < 1) {
                         return;
@@ -43,7 +43,7 @@
                     }
 
                     $('.name', $file).text(input.files[0].name);
-                }).on('click', '.file .del', function() {
+                }).on('click', '.file .del', function () {
                     const $file = $(this).closest('.file');
                     const url = $file.data('url');
 
@@ -53,13 +53,13 @@
 
                     $file.remove();
                     reindex();
-                }).on('sortupdate', function() {
+                }).on('sortupdate', function () {
                     reindex();
                 }).sortable({
                     items : '.file'
                 });
 
-                $btnAdd.on('change', '[type="file"]', function() {
+                $btnAdd.on('change', '[type="file"]', function () {
                     const input = this;
                     if (input.files.length < 1) {
                         return;

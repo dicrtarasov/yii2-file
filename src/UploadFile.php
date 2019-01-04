@@ -1,7 +1,6 @@
 <?php
 namespace dicr\file;
 
-use yii\base\BaseObject;
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
@@ -9,14 +8,13 @@ use yii\helpers\ArrayHelper;
 /**
  * Загруженный файл.
  * Файл необхоимо импортировать в директорию модели при ее сохранении.
- *
  * В зависимости от присутствия названия формы и множественности аттрибута,
  * php формирует разную структуру $_FILES.
  *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2018
  */
-class UploadFile extends BaseObject
+class UploadFile extends File
 {
 
     /** @var string наименование файла */
@@ -31,14 +29,10 @@ class UploadFile extends BaseObject
     /** @var int ошибка загрузки */
     public $error;
 
-    /** @var string путь временного файла */
-    public $path;
-
     /** @var array [$formName => [$attribute => \dicr\file\UploadFile[] ]] кэш распарсенных объектов */
     private static $instances;
 
     /**
-     *
      * {@inheritdoc}
      * @see \yii\base\BaseObject::init()
      */
@@ -67,18 +61,31 @@ class UploadFile extends BaseObject
     }
 
     /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::getName()
+     */
+    public function getName(array $options = [])
+    {
+        return $this->name;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::getSize()
+     */
+    public function getSize()
+    {
+        return $this->size;
+    }
+
+    /**
      * Создает объекты для файлов одного аттрибута
      *
-     * @param array $names
-     *            имена
-     * @param array $types
-     *            типы
-     * @param array $sizes
-     *            размеры
-     * @param array $errors
-     *            ошибки
-     * @param array $paths
-     *            пути
+     * @param array $names имена
+     * @param array $types типы
+     * @param array $sizes размеры
+     * @param array $errors ошибки
+     * @param array $paths пути
      * @return \dicr\file\UploadFile[]
      */
     protected static function attributeInstances(array $names, array $types, array $sizes, array $errors, array $paths)
@@ -91,13 +98,14 @@ class UploadFile extends BaseObject
                 continue;
             }
 
-            $instances[$pos] = new static([
-                'name' => $name,
-                'type' => $types[$pos] ?? null,
-                'size' => $sizes[$pos] ?? null,
-                'error' => $errors[$pos] ?? null,
-                'path' => $paths[$pos] ?? null
-            ]);
+            $instances[$pos] = new static(
+                [
+                    'name' => $name,
+                    'type' => $types[$pos] ?? null,
+                    'size' => $sizes[$pos] ?? null,
+                    'error' => $errors[$pos] ?? null,
+                    'path' => $paths[$pos] ?? null
+                ]);
         }
 
         return $instances;
@@ -105,9 +113,7 @@ class UploadFile extends BaseObject
 
     /**
      * Парсит файлы аттрибута, отправленные без имени формы
-     *
      * <input type="file" name="attribute"/>
-     *
      * $_FILES = [
      * '$attribute' => [
      * 'name' => 'test.php',
@@ -117,10 +123,7 @@ class UploadFile extends BaseObject
      * 'size' => 41
      * ]
      * ];
-     *
-     *
      * <input type="file" name="attibute[]"/>
-     *
      * $_FILES = [
      * '$attribute' => [
      * 'name' => [
@@ -146,20 +149,18 @@ class UploadFile extends BaseObject
      * ],
      * ];
      *
-     * @param array $data
-     *            данные аттрибута
+     * @param array $data данные аттрибута
      * @return \dicr\file\UploadFile[] файлы аттрибута
      */
     protected static function parseAttribData(array $data)
     {
-        return static::attributeInstances((array) ($data['name'] ?? []), (array) ($data['type'] ?? []), (array) ($data['size'] ?? []), (array) ($data['error'] ?? []), (array) ($data['tmp_name'] ?? []));
+        return static::attributeInstances((array) ($data['name'] ?? []), (array) ($data['type'] ?? []),
+            (array) ($data['size'] ?? []), (array) ($data['error'] ?? []), (array) ($data['tmp_name'] ?? []));
     }
 
     /**
      * Парсит файлы формы, отправленные с именем формы:
-     *
      * <input type="file" name="formName[attibute]"/>
-     *
      * $_FILES = [
      * '$formName' => [
      * 'name' => [
@@ -179,10 +180,7 @@ class UploadFile extends BaseObject
      * ]
      * ]
      * ];
-     *
-     *
      * <input type="file" name="formName[attibute][]"/>
-     *
      * $_FILES = [
      * '$formName' => [
      * 'name' => [
@@ -218,8 +216,7 @@ class UploadFile extends BaseObject
      * ]
      * ];
      *
-     * @param array $data
-     *            array данные аттрибутов формы
+     * @param array $data array данные аттрибутов формы
      * @return array [$attribute => \dicr\file\UploadFile[]] аттрибуты формы с файлами
      */
     protected static function parseFormData(array $data)
@@ -227,7 +224,9 @@ class UploadFile extends BaseObject
         $instances = [];
 
         foreach (array_keys($data['name']) as $attribute) {
-            $instances[$attribute] = static::attributeInstances((array) $data['name'][$attribute], (array) ($data['type'][$attribute] ?? []), (array) ($data['size'][$attribute] ?? []), (array) ($data['error'][$attribute] ?? []), (array) ($data['tmp_name'][$attribute] ?? []));
+            $instances[$attribute] = static::attributeInstances((array) $data['name'][$attribute],
+                (array) ($data['type'][$attribute] ?? []), (array) ($data['size'][$attribute] ?? []),
+                (array) ($data['error'][$attribute] ?? []), (array) ($data['tmp_name'][$attribute] ?? []));
         }
 
         return $instances;
@@ -235,24 +234,18 @@ class UploadFile extends BaseObject
 
     /**
      * Определяет тип структуры данных $_FILES
-     *
      * Структура без формы в name содержит либо строку имени файла, либо массив имен с порядковыми значениями.
-     *
      * 'name' => '2018-04-23-195938.jpg'
-     *
      * или
-     *
      * 'name' => [
      * 0 => '2018-04-23-195938.jpg',
      * 1 => 'test.php',
      * ];
-     *
-     * Структура с именем формы в аттрибуте в name содержит массив имен аттрбутов, значениями которых являются массивы имен файлов
-     *
+     * Структура с именем формы в аттрибуте в name содержит массив имен аттрбутов, значениями которых являются массивы
+     * имен файлов
      * 'name' => [
      * '$attribute' => 'test.php'
      * ],
-     *
      * 'name' => [
      * '$attribute' => [
      * 0 => '2018-04-23-195938.jpg',
@@ -291,19 +284,16 @@ class UploadFile extends BaseObject
      * Парсит структуру $_FILES и создает объекты
      *
      * @return array [$formName => [$attribute => \dicr\file\UploadFile[]]]
-     *
      *         [
      *         // файлы аттрибутов без формы
      *         '' => [
      *         $attribute => \dicr\file\UploadFile[]
      *         ],
-     *
      *         // файлы аттрибутов формы
      *         $formName => [ // файлы аттрибутов с названием формы
      *         $attribute => \dicr\file\UploadFile[]
      *         ]
      *         ]
-     *
      */
     protected static function parseInstances()
     {
@@ -327,10 +317,8 @@ class UploadFile extends BaseObject
     /**
      * Возвращает файлы аттрибутов формы загруженные в $_FILES или null.
      *
-     * @param string|null $formName
-     *            имя формы для которой возвращает аттрибуты
-     * @param string|null $attribute
-     *            если задан, то возвращает файлы только для аттрибута
+     * @param string|null $formName имя формы для которой возвращает аттрибуты
+     * @param string|null $attribute если задан, то возвращает файлы только для аттрибута
      * @return mixed
      */
     public static function instances(string $formName = '', $attribute = null)
@@ -362,7 +350,9 @@ class UploadFile extends BaseObject
     {
         return new static([
             'path' => $file->path,
-            'name' => $file->name
+            'name' => $file->getName([
+                'removePrefix' => true
+            ])
         ]);
     }
 }

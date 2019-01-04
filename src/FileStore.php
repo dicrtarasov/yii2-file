@@ -11,7 +11,6 @@ use yii\db\ActiveRecord;
  *
  * @property string $basePath базовый путь
  * @property string|null $baseUrl базовый url
- *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 180624
  */
@@ -24,8 +23,13 @@ class FileStore extends Component
     /** @var string|null URL директории файлов */
     private $url;
 
+    /** @var int права на файлы */
+    public $filemode = 0644;
+
+    /** @var int права на директории */
+    public $dirmode = 0755;
+
     /**
-     *
      * {@inheritdoc}
      * @see \yii\base\BaseObject::init()
      */
@@ -40,8 +44,7 @@ class FileStore extends Component
     /**
      * Возвращает путь
      *
-     * @param string|null $relative
-     *            относительный путь от базового
+     * @param string|null $relative относительный путь от базового
      * @return string абсолютный путь
      */
     public function getPath(string $relative = '')
@@ -91,8 +94,7 @@ class FileStore extends Component
     /**
      * Возвращает url
      *
-     * @param string|null $relative
-     *            относительный путь
+     * @param string|null $relative относительный путь
      * @return string
      */
     public function getUrl(string $relative = '')
@@ -129,8 +131,7 @@ class FileStore extends Component
     /**
      * Возвращает элемент файла
      *
-     * @param string $relpath
-     *            относительный путь файла
+     * @param string $relpath относительный путь файла
      * @return \dicr\file\File
      */
     public function file(string $relpath)
@@ -144,19 +145,15 @@ class FileStore extends Component
     /**
      * Читает содержимое директории
      *
-     * @param string $relpath
-     *            относительное имя директории
-     * @param array $optons
-     *            - string $regex регулярная маска имени
-     *            - bool $dirs true - только директории, false - только файлы
+     * @param string $relpath относительное имя директории
+     * @param array $optons - string $regex регулярная маска имени
+     *        - bool $dirs true - только директории, false - только файлы
+     *        - bool $skipHidden - пропускать файлы/директори, начинающиеся с точки (скрытые)
      * @throws \dicr\file\StoreException
      * @return \dicr\file\File[]
      */
     public function list(string $relpath = '', array $options = [])
     {
-        $regex = $options['regex'] ?? null;
-        $dirs = $options['dirs'] ?? null;
-
         $relpath = trim($relpath, '/');
         $path = $this->getPath($relpath);
         if (! @file_exists($path)) {
@@ -176,15 +173,18 @@ class FileStore extends Component
             }
 
             // пропускаем скрытые файлы
-            if (mb_substr($file, 0, 1) == '.') {
+            if (! empty($options['skipHidden']) && substr($file, 0, 1) == '.') {
                 continue;
             }
 
-            if (! empty($regex) && ! preg_match($regex, $file)) {
+            // пропускаем по регулярному выражению
+            if (! empty($options['regex']) && ! preg_match($options['regex'], $file)) {
                 continue;
             }
 
-            if (isset($dirs) && ($dirs && ! @is_dir($path . '/' . $file) || ! $dirs && is_dir($path . '/' . $file))) {
+            if (isset($options['dirs']) &&
+                (! empty($options['dirs']) && ! @is_dir($path . '/' . $file) ||
+                empty($options['dirs']) && is_dir($path . '/' . $file))) {
                 continue;
             }
 
@@ -199,22 +199,15 @@ class FileStore extends Component
     /**
      * Возвращает путь модели/аттрибута
      *
-     * @param \yii\base\Model $model
-     *            модель
-     * @param string|null $attribute
-     *            имя аттрибута модели
-     * @param string|null $file
-     *            название файла
+     * @param \yii\base\Model $model модель
+     * @param string|null $attribute имя аттрибута модели
+     * @param string|null $file название файла
      * @return \dicr\file\File
      */
-    public function getModelPath(Model $model, string $attribute, string $file = null)
+    public function getModelPath(Model $model, string $attribute = '', string $file = '')
     {
         if (empty($model)) {
             throw new \InvalidArgumentException('model');
-        }
-
-        if ($attribute == '') {
-            throw new \InvalidArgumentException('attribute');
         }
 
         $relpath = [
@@ -228,7 +221,7 @@ class FileStore extends Component
             }
         }
 
-        $attribute = basename($attribute);
+        $attribute = basename(trim($attribute, '/'));
         if ($attribute !== '') {
             $relpath[] = $attribute;
         }
