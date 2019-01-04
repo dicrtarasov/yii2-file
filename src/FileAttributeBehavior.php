@@ -74,7 +74,7 @@ class FileAttributeBehavior extends Behavior
      */
     public $attributes;
 
-    /** @var array текущие значения аттрибутов [attibuteName => \app\lib\store\File[]]  */
+    /** @var array текущие значения аттрибутов [attibuteName => \dicr\file\File[]]  */
     private $values = [];
 
     /**
