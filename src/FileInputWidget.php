@@ -1,11 +1,12 @@
 <?php 
-namespace dicr\filestore;
+namespace dicr\file;
 
 use yii\base\InvalidConfigException;
 use yii\base\Model;
+use yii\bootstrap\InputWidget;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
-use yii\widgets\InputWidget;
+use yii\di\Instance;
 
 /**
  * Виджет редактора картинок
@@ -21,7 +22,7 @@ class FileInputWidget extends InputWidget {
 	/** @var string|false mime-типы в input type=file, например image/* */
 	public $accept;
 	
-	/** @var string|dicr\filestore/mponents\FileStore */
+	/** @var string|\dicr\file\FileStore */
 	public $store = 'fileStore';
 	
 	/** @var string название поля формы аттрибута */ 
@@ -36,17 +37,20 @@ class FileInputWidget extends InputWidget {
 	 */
 	public function init() {
 		
-		if (!($this->model instanceof Model)) throw new InvalidConfigException('model');
-		if (!isset($this->attribute)) throw new InvalidConfigException('attribute');
+		if (!($this->model instanceof Model)) {
+			throw new InvalidConfigException('model');
+		}
+		
+		if (!isset($this->attribute)) {
+			throw new InvalidConfigException('attribute');
+		}
 		
 		// получаем store
 		if (is_string($this->store)) {
 			$this->store = \Yii::$app->get($this->store, true);
-		} else if (is_array($this->store)) {
-			$this->store = \Yii::createObject($this->store);
-		} else if (!$this->store instanceof FileStore) {
-			throw new InvalidConfigException('store');
 		}
+		
+		Instance::ensure($this->store, FileStore::class);
 		
 		// получаем inputName
 		$this->attribute = preg_replace('~\[\]$~uism', '', $this->attribute);
@@ -81,10 +85,8 @@ class FileInputWidget extends InputWidget {
 		// инициируем
 		parent::init();
 
-		// регистрируем ассеты
-		FileInputWidgetAsset::register($this->view);
-		
-		// регистрируем плагин
+		// регистрируем ассеты и плагин
+		$this->view->registerAssetBundle(FileInputWidgetAsset::class);
 		$this->registerPlugin('fileInputWidget');
 	}
 	
@@ -92,11 +94,11 @@ class FileInputWidget extends InputWidget {
 	 * Рендерит файл
 	 * 
 	 * @param int $pos
-	 * @param \dicrilestore\File $file
+	 * @param \dicr\file\File $file
 	 * @return string
 	 */
 	protected function renderFileBlock(int $pos, File $file) {
-		$isImage = preg_match('~^image\/.+~uism', mime_content_type($file->path));
+		$isImage = preg_match('~^image\/.+~uism', mime_content_type($file->fullPath));
 		$fileId = $this->id.'-fileinput-'.rand(1, 999999);
 
 		return Html::tag('label',

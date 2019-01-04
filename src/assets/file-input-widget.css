@@ -83,6 +83,6 @@
 	align-items: center;
 }
 
-.file-input-widget input {
+.file-input-widget input[type="file"] {
 	display: none;
 }

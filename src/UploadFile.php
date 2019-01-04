@@ -1,5 +1,5 @@
 <?php 
-namespace dicr\filestore;
+namespace dicr\file;
 
 use yii\base\BaseObject;
 use yii\base\Exception;
@@ -32,7 +32,7 @@ class UploadFile extends BaseObject {
 	/** @var string путь временного файла */
 	public $path;
 	
-	/** @var array [$formName => [$attribute => \dicr\filestore\UploadFile[] ]] кэш распарсенных объектов */
+	/** @var array [$formName => [$attribute => \dicr\file\UploadFile[] ]] кэш распарсенных объектов */
 	private static $_instances;
 
 	/**
@@ -64,7 +64,7 @@ class UploadFile extends BaseObject {
 	 * @param array $sizes размеры
 	 * @param array $errors ошибки
 	 * @param array $paths пути
-	 * @return \dicr\filestore\UploadFile[]
+	 * @return \dicr\file\UploadFile[]
 	 */
 	protected static function attributeInstances(array $names, array $types, array $sizes, array $errors, array $paths) {
 		$instances = [];
@@ -130,7 +130,7 @@ class UploadFile extends BaseObject {
 	 * ];
 	 * 
 	 * @param array $data данные аттрибута
-	 * @return \dicr\filestore\UploadFile[] файлы аттрибута
+	 * @return \dicr\file\UploadFile[] файлы аттрибута
 	 */
 	protected static function parseAttribData(array $data) {
 		return static::attributeInstances(
@@ -206,7 +206,7 @@ class UploadFile extends BaseObject {
 	 * ];
 	 * 
 	 * @param array $data array данные аттрибутов формы
-	 * @return array [$attribute => \dicrilestore\UploadFile[]] аттрибуты формы с файлами
+	 * @return array [$attribute => \dicr\file\UploadFile[]] аттрибуты формы с файлами
 	 */
 	protected static function parseFormData(array $data) {
 		$instances = [];
@@ -276,17 +276,17 @@ class UploadFile extends BaseObject {
 	/**
 	 * Парсит структуру $_FILES и создает объекты
 	 * 
-	 * @return array [$formName => [$attribute => \dicrilestore\UploadFile[]]] 
+	 * @return array [$formName => [$attribute => \dicr\file\UploadFile[]]] 
 	 * 
 	 * [
 	 *   // файлы аттрибутов без формы
 	 *   '' => [	
-	 *   	$attribute => \dicrilestore\UploadFile[]
+	 *   	$attribute => \dicr\file\UploadFile[]
 	 *   ],
 	 *   
 	 *   // файлы аттрибутов формы
 	 *   $formName => [	// файлы аттрибутов с названием формы
-	 *   	$attribute => \dicrilestore\UploadFile[]
+	 *   	$attribute => \dicr\file\UploadFile[]
 	 *   ]
 	 * ]
 	 * 
@@ -331,7 +331,7 @@ class UploadFile extends BaseObject {
 	 * Создает UploadFile инициализированный из File
 	 * 
 	 * @param File $file
-	 * @return \dicr\filestore\UploadFile
+	 * @return \dicr\file\UploadFile
 	 */
 	public static function fromFile(File $file) {
 		return new static([

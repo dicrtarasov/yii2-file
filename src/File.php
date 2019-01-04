@@ -1,22 +1,19 @@
 <?php 
-namespace dicr\filestore;
+namespace dicr\file;
 
 use yii\base\BaseObject;
 use yii\base\InvalidConfigException;
-use yii\helpers\ArrayHelper;
 
 /**
  * Файл, хранящийся в файловой системе.
  * 
- * Если задано store, то путь файла относительно этого store,
- * иначе путь абсолютный.
+ * @property \dicr\filestore\FileStore $store хранилище с базовым путем
+ * @property string $path путь (если задан $store, то относительный, иначе абсолютный)
  * 
- * @property \dicr\filestore\FileStore $store базовый путь
- * @property string $relpath относительный путь. Если не задан store, то путь считается абсолютным
- * 
- * @property-read string $path полный путь без имени файла
- * @property string $name имя файла без пути
- * @property-read string $url полный url
+ * @property-read string $fullPath поный путь относительно $store или $path если $store не задан
+ * @property string $name имя файла (basename)
+ * @property-read string $dir полный путь директории
+ * @property-read string|null $url полный url относительно $store иначе null
  * 
  * @property-read bool $exists
  * @property-read bool $readable
@@ -34,11 +31,17 @@ use yii\helpers\ArrayHelper;
  */
 class File extends BaseObject {
 	
-	/** @var \dicr\filestore\FileStore */
+	/** @var \dicr\file\FileStore */
 	private $_store;
 	
 	/** @var string путь файла */
 	private $_path;
+	
+	/** @var int права на файлы */
+	public $filemode = 0644;
+	
+	/** @var int права на директории */
+	public $dirmode = 0755;
 	
 	/**
 	 * {@inheritDoc}
@@ -46,20 +49,16 @@ class File extends BaseObject {
 	 */
 	public function init() {
 		parent::init();
-
-		if (!($this->store instanceof FileStore)) {
-			throw new InvalidConfigException('store');
-		}
 		
-		if (!isset($this->relpath)) {
-			throw new InvalidConfigException('relpath');
+		if (empty($this->_path)) {
+			throw new InvalidConfigException('path');
 		}
 	}
 
 	/**
 	 * Возвращает хранилище
 	 * 
-	 * @return \dicr\filestore\FileStore
+	 * @return \dicr\file\FileStore
 	 */
 	public function getStore() {
 		return $this->_store;
@@ -68,111 +67,119 @@ class File extends BaseObject {
 	/**
 	 * Устанавливает хранилище
 	 *  
-	 * @param FileStore $store
+	 * @param FileStore|null $store
 	 * @return static
 	 */
 	public function setStore(FileStore $store) {
-		if (empty($store)) throw new \InvalidArgumentException('store');
 		$this->_store = $store;
 	}
 	
 	/**
-	 * Возвращает относительный путь
+	 * Возвращает путь
 	 * 
-	 * @param string|array|null $relpath путь, относительный текущего файла
-	 * @return string путь, относительно store->path
+	 * @return string
 	 */
-	public function getRelpath($relpath=null) {
-		$path = [];
-		if (!empty($this->_path)) $path[] = $this->_path;
-		
-		if (is_array($relpath)) $relpath = implode('/', $relpath);
-
-		$relpath = trim($relpath, '/');
-		if ($relpath !== '') $path[] = $relpath;
-
-		return !empty($path) ? implode('/', $path) : null;
+	public function getPath() {
+		return $this->_path;
 	}
 	
 	/**
-	 * Устанавливает относительный путь
+	 * Устанавливает путь
 	 * 
-	 * @param string|array $path путь, относительно store->path
+	 * @param string $path new path
+	 * @param bool $move переместить существующий файл
+	 * @throws \InvalidArgumentException
 	 * @return static
 	 */
-	public function setRelpath($path) {
-		// сохраняем старый путь
-		$oldpath = null;
-		if (isset($this->_path) && $this->exists) {
-			$oldpath = $this->path;
-		}
-		
-		// устанавливаем новый путь
-		if (is_array($path)) $path = implode('/', $path);
+	public function setPath(string $path, bool $move=false) {
 		$path = trim($path, '/');
-		if ($path === '') throw new \InvalidArgumentException('path');
-		$this->_path = $path;
-		
-		// если по старому имени был файл, то переименовываем
-		if (isset($oldpath) && !@rename($oldpath, $this->path)) {
-			throw new StoreException(sprintf('ошибка переименования файла: %s в %s', $oldpath, $this->path));
+		if (empty($path)) {
+			throw new \InvalidArgumentException('path');
+		}
+
+		if ($move && $this->getExists()) {
+			$oldPath = $this->getFullPath();
+			$this->_path = $path;
+			$this->checkDir();
+			$newPath = $this->getFullPath();
+			if ($newPath != $oldPath && !@rename($oldPath, $newPath)) {
+				throw new StoreException(null);
+			}
+		} else {
+			$this->_path = $path;
 		}
 		
 		return $this;
 	}
 	
 	/**
-	 * Возвращает полный путь
+	 * Перемещает файл по новому пути
 	 * 
-	 * @return string полный путь
-	 */
-	public function getPath() {
-		return !empty($this->store) ? $this->store->getPath($this->relpath) : $this->relpath;
-	}
-	
-	/**
-	 * Устаовить путь файла
-	 * 
-	 * @param string|array $path полный путь
+	 * @param string $path
+	 * @throws StoreException
 	 * @return static
 	 */
-	public function setPath($path) {
-		if (is_array($path)) $path = implode('/', $path);
+	public function move(string $path) {
+		return $this->setPath($path, true);
+	}
 
-		$path = trim($path, '/');
-		if ($path == '') throw new \InvalidArgumentException('path');
-		
-		// если не установлен store, то устанавливаем как абсолютный путь
-		if (!empty($this->store)) {
-			// вырезаем базовый путь store и получаем относительный
-			if (mb_strpos($path, $this->store->path.'/') === 0) {
-				$path = substr($path, mb_strlen($this->store->path) + 1);
-			}
+	/**
+	 * Возвращает полный путь
+	 * 
+	 * @return string
+	 */
+	public function getFullPath() {
+		$path = [];
+		if (!empty($this->_store)) {
+			$path[] = $this->store->path;
 		}
 		
-		$this->relpath = $path;
+		$path[] = trim($this->_path, '/');
+		return implode('/', $path);
+	}
+
+	/**
+	 * Возвращает url
+	 * 
+	 * @return string|null
+	 */
+	public function getUrl() {
+		if (empty($this->_store)) {
+			return null;
+		}
+		
+		$url = $this->_store->url;
+		if (empty($url)) {
+			return null;
+		}
+		
+		$url .= '/'.trim($this->_path, '/');
+		return $url;
 	}
 	
 	/**
 	 * Возвращает имя файла
-	 * 
-	 * @param array $options опции
+	 *
+	 * @param array|null $options
 	 * - bool $removePrefix удаляить префикс позиции (^\d+~)
 	 * - bool $removeExt удалить расширение
-	 * @return string|null basename($relpath)
+	 * @return string basename
 	 */
 	public function getName(array $options=[]) {
-		$name = basename($this->relpath);
-		if ($name == '') return null;
+		$name = basename($this->_path);
 		
-		if (ArrayHelper::getValue($options, 'removePrefix')) {
+		if (!empty($options['removePrefix'])) {
 			$matches = null;
-			if (preg_match('~^\d+\~(.+)$~uism', $name, $matches)) $name = $matches[1];
+			if (preg_match('~^\d+\~(.+)$~uism', $name, $matches)) {
+				$name = $matches[1];
+			}
 		}
 		
-		if (ArrayHelper::getValue($options, 'removeExt')) {
+		if (!empty($options['removeExt'])) {
 			$matches = null;
-			if (preg_match('~^(.+)\.[^\.]+$~uism', $name, $matches)) $name = $matches[1];
+			if (preg_match('~^(.+)\.[^\.]+$~uism', $name, $matches)) {
+				$name = $matches[1];
+			}
 		}
 		
 		return $name;
@@ -180,33 +187,61 @@ class File extends BaseObject {
 	
 	/**
 	 * Устанавливает имя файла
-	 * 
+	 *
 	 * @param string $name новое имя файла
+	 * @param bool $rename переименовать существующий файл
 	 * @return static
 	 */
-	public function setName(string $name) {
+	public function setName(string $name, bool $rename=false) {
 		$name = basename($name);
-		if ($name === '') throw new \InvalidArgumentException('name');
-		
-		$relpath = [];
-		
-		if (!empty($this->relpath)) {
-			$dirname = dirname($this->relpath);
-			if ($dirname !== '' && $dirname !== '.') $relpath[] = $dirname;
+		if ($name === '') {
+			throw new \InvalidArgumentException('name');
 		}
 		
-		$relpath[] = $name;
-		$this->relpath = $relpath;
-		return $this;
+		$path = [];
+		
+		$dirname = dirname(trim($this->_path, '/'));
+		if (!empty($dirname) && $dirname !== '.' && $dirname !== '/') {
+			$path[] = $dirname;
+		}
+		
+		$path[] = $name;
+		
+		return $this->setPath(implode('/', $path), $rename);
 	}
 	
 	/**
-	 * Возвращает полный URL
+	 * Переименовывает файл (только имя)
 	 * 
-	 * @return string|null полный URL
+	 * @param string $name новое имя файла без пути
+	 * @return \dicr\file\File
 	 */
-	public function getUrl() {
-		return !empty($this->store) ? $this->store->getUrl($this->relpath) : null;;
+	public function rename(string $name) {
+		return $this->setName($name, true);
+	}
+	
+	/**
+	 * Возвращает полную директорию файла
+	 * 
+	 * @return string
+	 */
+	public function getDir() {
+		return dirname($this->getFullPath());
+	}
+	
+	/**
+	 * Проверяет/создает директори файла
+	 * 
+	 * @throws StoreException
+	 * @return static
+	 */
+	public function checkDir() {
+		$dir = $this->getDir();
+		if (!file_exists($dir) && !@mkdir($dir, $this->dirmode, true)) {
+			$error = error_get_last();
+			throw new StoreException($error['message']);
+		}
+		return $this;
 	}
 	
 	/**
@@ -215,7 +250,7 @@ class File extends BaseObject {
 	 * @return bool
 	 */
 	public function getExists() {
-		return @file_exists($this->path);
+		return @file_exists($this->fullPath);
 	}
 	
 	/**
@@ -224,7 +259,7 @@ class File extends BaseObject {
 	 * @return bool 
 	 */
 	public function getReadable() {
-		return @is_readable($this->path);
+		return @is_readable($this->fullPath);
 	}
 	
 	/**
@@ -233,7 +268,7 @@ class File extends BaseObject {
 	 * @return bool
 	 */
 	public function getWriteable() {
-		return @is_writable($this->path);
+		return @is_writable($this->fullPath);
 	}
 	
 	/**
@@ -242,7 +277,7 @@ class File extends BaseObject {
 	 * @return bool
 	 */
 	public function getIsDir() {
-		return @is_dir($this->path);
+		return @is_dir($this->fullPath);
 	}
 	
 	/**
@@ -251,19 +286,19 @@ class File extends BaseObject {
 	 * @return bool
 	 */
 	public function getIsFile() {
-		return @is_file($this->path);
+		return @is_file($this->fullPath);
 	}
 	
 	/**
 	 * Возвращает размер
 	 *
-	 * @throws \dicr\filestore\StoreException
+	 * @throws \dicr\file\StoreException
 	 * @return int размер в байтах
 	 */
 	public function getSize() {
-		$size = @filesize($this->path);
+		$size = @filesize($this->fullPath);
 		if ($size === false) {
-			throw new StoreException('ошибка получения размера: '.$this->path);
+			throw new StoreException(null);
 		}
 		return $size;
 	}
@@ -274,28 +309,29 @@ class File extends BaseObject {
 	 * @return int
 	 */
 	public function getTime() {
-		$time = @filemtime($this->path);
+		$time = @filemtime($this->fullPath);
 		if ($time === false) {
-			throw new StoreException('ошибка получения времени: '.$this->path);
+			throw new StoreException(null);
 		}
 		return $time;
 	}
 	
 	/**
-	 * Возвращает дочерний файл
+	 * Возвращает дочерний файл с путем относительно данного файла.
 	 *
-	 * @param string|array $relpath относительный путь
-	 * @return self
+	 * @param string $relpath
+	 * @throws \InvalidArgumentException
+	 * @return \dicr\file\File
 	 */
-	public function child($relpath) {
-		if (is_array($relpath)) $relpath = implode('/', $relpath);
-		
+	public function child(string $relpath) {
 		$relpath = trim($relpath, '/');
-		if ($relpath === '') throw new \InvalidArgumentException('relpath');
+		if (empty($relpath)) {
+			throw new \InvalidArgumentException('relpath');
+		}
 		
 		return new static([
-			'store' => $this->store,
-			'relpath' => $this->getRelpath($relpath)
+			'store' => $this->_store,
+			'path' => $this->_path.'/'.$relpath
 		]);
 	}
 	
@@ -305,39 +341,28 @@ class File extends BaseObject {
 	 * @param array $options
 	 * - string|null $regex паттерн имени
 	 * - bool|null $dirs true - только директории, false - только файлы
-	 * @throws \dicr\filestore\StoreException
+	 * @throws \dicr\file\StoreException
 	 * @return self[]
-	 * @see \dicr\filestore\FileStore::list
+	 * @see \dicr\file\FileStore::list
 	 */
 	public function getList(array $options=[]) {
-		if (empty($this->store)) throw new InvalidConfigException('store');
-		return $this->store->list($this->relpath, $options);
-	}
-	
-	/**
-	 * Проверяет наличие/создает каталог для файла.
-	 *
-	 * @throws \dicr\filestore\StoreException
-	 * @return static
-	 */
-	public function checkDir() {
-		$dir = dirname($this->path);
-		if (!is_dir($dir) && !@mkdir($dir, 0777, true)) {
-			throw new StoreException('ошибка создания директории: '.$dir);
+		if (empty($this->store)) {
+			throw new InvalidConfigException('store');
 		}
-		return $this;
+		
+		return $this->store->list($this->_path, $options);
 	}
 	
 	/**
 	 * Возвращает содержимое файла
 	 *
-	 * @throws \dicr\filestore\StoreException
+	 * @throws \dicr\file\StoreException
 	 * @return string|false
 	 */
 	public function getContent() {
-		$content = @file_get_contents($this->path, false);
+		$content = @file_get_contents($this->fullPath, false);
 		if ($content === false) {
-			throw new StoreException('ошибка чтения файла: '.$this->path);
+			throw new StoreException(null);
 		}
 		return $content;
 	}
@@ -345,15 +370,27 @@ class File extends BaseObject {
 	/**
 	 * Записывает содержимое файла
 	 *
-	 * @param string $content
-	 * @throws \dicr\filestore\StoreException
+	 * @param string|resource $content
+	 * @throws \dicr\file\StoreException
 	 * @return static
 	 */
-	public function setContent(string $content) {
+	public function setContent($content) {
 		$this->checkDir();
-		if (@file_put_contents($this->path, $content, false) === false) {
-			throw new StoreException('ошибка записи: '.$this->path);
+		
+		if (is_resource($content)) {
+			$content = stream_get_contents($content);
 		}
+		
+		$fullPath = $this->getFullPath();
+		
+		if (@file_put_contents($fullPath, (string)$content, false) === false) {
+			throw new StoreException(null);
+		}
+		
+		if (!@chmod($fullPath, $this->filemode)) {
+			throw new StoreException(null);
+		}
+		
 		return $this;
 	}
 	
@@ -364,20 +401,25 @@ class File extends BaseObject {
 	 * @param array $options опции
 	 * - bool $move переместить файл при импорте, иначе скопировать (по-умолчанию false) 
 	 * - bool $ifModified - импортировать файл только если время новее или размер отличается (по-умолчанию true)
-	 * @throws \dicr\filestore\StoreException
+	 * @throws \dicr\file\StoreException
 	 * @return static
 	 */
 	public function import(string $src, array $options=[]) {
 		// проверяем аргументы
-		if (empty($src)) throw new \InvalidArgumentException('src');
-		if (!@is_file($src)) throw new StoreException('исходный файл не найден: '.$src);
+		if (empty($src)) {
+			throw new \InvalidArgumentException('src');
+		}
+		
+		if (!@is_file($src)) {
+			throw new StoreException('исходный файл не найден: '.$src);
+		}
 		
 		// получаем параметры
-		$ifModified = (bool)ArrayHelper::getValue($options, 'ifModified', true);
-		$move = (bool)ArrayHelper::getValue($options, 'move', false);
+		$ifModified = !empty($options['ifModified'] ?? 1);
+		$move = !empty($options['move'] ?? 0);
 		
 		// пропускаем старые файлы
-		if ($ifModified && $this->exists && @filesize($src) === $this->size && @filemtime($src) <= $this->time) {
+		if ($ifModified && $this->getExists() && @filesize($src) === $this->getSize() && @filemtime($src) <= $this->getTime()) {
 			return $this;
 		}
 		
@@ -385,8 +427,14 @@ class File extends BaseObject {
 		$this->checkDir();
 		
 		$func = $move ? 'rename' : 'copy';
-		if (!$func($src, $this->path)) {
-			throw new StoreException(sprintf('ошибка импортирования %s в %s', $src, $this->path));
+		$fullPath = $this->getFullPath();
+		
+		if (!@$func($src, $fullPath)) {
+			throw new StoreException(null);
+		}
+		
+		if (!@chmod($fullPath, $this->filemode)) {
+			throw new StoreException(null);
 		}
 
 		return $this;
@@ -396,19 +444,26 @@ class File extends BaseObject {
 	 * Удаляет файл
 	 *
 	 * @param bool|null $recursive рекурсивно для директорий
-	 * @throws \dicr\filestore\StoreException
+	 * @throws \dicr\file\StoreException
 	 * @return static
 	 */
 	public function delete(bool $recursive=false) {
-		if ($this->exists) {
-			if ($this->isDir) {
-				if ($recursive) foreach ($this->list as $file) {
-					$file->delete(true);
+		if ($this->getExists()) {
+			if ($this->getIsDir()) {
+				if ($recursive) {
+					foreach ($this->list as $file) {
+						$file->delete(true);
+					}
+				} else {
+					throw new StoreException('delete directory not recursive: '.$this->getFullPath());
 				}
-			} else if (!@unlink($this->path)) {
-				throw new StoreException('ошибка удаления файла: '.$this->path);
+			}
+			
+			if (!@unlink($this->getFullPath())) {
+				throw new StoreException(null);
 			}
 		}
+		
 		return $this;
 	}
 	

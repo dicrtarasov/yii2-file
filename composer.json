@@ -1,8 +1,8 @@
 {
-	"name" : "dicr/yii2-filestore",
+	"name" : "dicr/yii2-file",
 	"description" : "Компонент для работы с файлами",
 	"type" : "library",
-	"homepage" : "https://gitlab.com/dicrtarasov/yii2-filestore",
+	"homepage" : "https://gitlab.com/dicr/yii2-file",
 	"authors" : [{
 			"name" : "Igor Tarasov",
 			"email" : "develop@dicr.org",
@@ -24,10 +24,15 @@
 	],
 	"autoload" : {
 		"psr-4" : {
-			"dicr\\filestore\\" : "src"
+			"dicr\\file\\" : "src/"
 		}
 	},
 	"support" : {
-		"source" : "https://gitlab.com/dicrtarasov/yii2-filestore.git"
+		"source" : "https://gitlab.com/dicr/yii2-file.git"
+	},
+	"require-dev" : {
+		"phpunit/phpunit" : "~6",
+		"yiisoft/yii2-debug" : "~2.0",
+		"yiisoft/yii2-bootstrap" : "~2.0"
 	}
 }

@@ -1,17 +1,16 @@
 <?php 
-namespace dicr\filestore;
+namespace dicr\file;
 
 use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\base\Model;
 use yii\db\ActiveRecord;
-use yii\helpers\ArrayHelper;
 
 /**
  * Храниище в файловой системе.
  * 
- * @property string $path базовый путь
- * @property string|null $url базовый url
+ * @property string $basePath базовый путь
+ * @property string|null $baseUrl базовый url
  * 
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 180624
@@ -29,21 +28,26 @@ class FileStore extends Component {
 	 * @see \yii\base\BaseObject::init()
 	 */
 	public function init() {
-		if (!isset($this->_path)) throw new InvalidConfigException('path');
+		if (!isset($this->_path)) {
+			throw new InvalidConfigException('path');
+		}
 		parent::init();
 	}
 	
 	/**
 	 * Возвращает путь
 	 *
-	 * @param string|array|null $relpath относительный путь
+	 * @param string|null $relative относительный путь от базового
 	 * @return string абсолютный путь
 	 */
-	public function getPath($relpath=null) {
+	public function getPath(string $relative='') {
 		$path = [$this->_path];
-		if (is_array($relpath)) $relpath = implode('/', $relpath);
-		$relpath = trim($relpath, '/');
-		if ($relpath !== '') $path[] = $relpath;
+		
+		$relative = trim($relative, '/');
+		if ($relative != '') {
+			$path[] = $relative;
+		}
+		
 		return implode('/', $path);
 	}
 	
@@ -51,30 +55,49 @@ class FileStore extends Component {
 	 * Устанавливает корневой путь
 	 *
 	 * @param string $path
-	 * @throws \dicr\filestore\StoreException
+	 * @throws \dicr\file\StoreException
 	 * @return static
 	 */
 	public function setPath(string $path) {
 		$path = rtrim($path, '/');
-		if ($path === '') throw new \InvalidArgumentException('path');
-		$this->_path = \Yii::getAlias($path, true);
-		if (!file_exists($this->_path)) throw new StoreException('директория не существует: '.$this->_path);
-		if (!is_dir($this->_path)) throw new StoreException('не является директорией: '.$this->_path);
-		$this->_path = @realpath($this->_path);
+		if ($path === '') {
+			throw new \InvalidArgumentException('path');
+		}
+		
+		$path = \Yii::getAlias($path, true);
+		$path = realpath($path);
+		
+		if (!@file_exists($path)) {
+			throw new StoreException('директория не существует: '.$path);
+		}
+		
+		if (!@is_dir($path)) {
+			throw new StoreException('не является директорией: '.$path);
+		}
+		
+		$this->_path = $path;
+		
 		return $this;
 	}
 	
 	/**
 	 * Возвращает url
 	 *
-	 * @param string|array|null $relpath относительный путь
-	 * @return string полный url
+	 * @param string|null $relative относительный путь
+	 * @return string 
 	 */
-	public function getUrl($relpath=null) {
+	public function getUrl(string $relative='') {
+		if ($this->_url == '') {
+			return null;
+		}
+		
 		$url = [$this->_url];
-		if (is_array($relpath)) $relpath = implode('/', $relpath);
-		$relpath = trim($relpath, '/');
-		if ($relpath !== '') $url[] = $relpath;
+		
+		$relative = trim($relative, '/');
+		if ($relative != '') {
+			$url[] = $relative;
+		}
+		
 		return implode('/', $url);
 	}
 	
@@ -85,54 +108,73 @@ class FileStore extends Component {
 	 * @retun static
 	 */
 	public function setUrl(string $url) {
-		$this->_url = !empty($url) ? \Yii::getAlias($url, true) : null;
+		$url = trim($url);
+		$this->_url = $url != '' ? \Yii::getAlias($url, true) : null;
 		return $this;
 	}
 	
 	/**
 	 * Возвращает элемент файла
 	 *
-	 * @param string|array $relpath относительный путь файла
-	 * @return \dicr\filestore\File
+	 * @param string $relpath относительный путь файла
+	 * @return \dicr\file\File
 	 */
-	public function file($relpath) {
+	public function file(string $relpath) {
 		return new File([
 			'store' => $this, 
-			'relpath' => $relpath
+			'path' => $relpath
 		]);
 	}
 	
 	/**
 	 * Читает содержимое директории
 	 *
-	 * @param string|array|null $relpath относительное имя директории
+	 * @param string $relpath относительное имя директории
 	 * @param array $optons
 	 * - string $regex регулярная маска имени
 	 * - bool $dirs true - только директории, false - только файлы
-	 * @throws \dicr\filestore\StoreException
-	 * @return \dicr\filestore\File[]
+	 * @throws \dicr\file\StoreException
+	 * @return \dicr\file\File[]
 	 */
-	public function list($relpath=null, array $options=[]) {
-		$regex = ArrayHelper::getValue($options, 'regex');
-		$dirs = ArrayHelper::getValue($options, 'dirs');
+	public function list(string $relpath='', array $options=[]) {
+		$regex = $options['regex'] ?? null;
+		$dirs = $options['dirs'] ?? null;
 		
-		if (is_array($relpath)) $relpath = implode('/', $relpath);
 		$relpath = trim($relpath, '/');
-		
 		$path = $this->getPath($relpath);
-		if (!file_exists($path)) return [];
+		if (!@file_exists($path)) {
+			return [];
+		}
 		
-		$dir = opendir($path);
-		if (!$dir) throw new StoreException('ошибка чтения каталога: '.$path);
+		$dir = @opendir($path);
+		if (!$dir) {
+			throw new StoreException(null);
+		}
 		
 		$files = [];
 		while ($file = readdir($dir)) {
-			if ($file == '.' || $file == '..') continue;
-			if (!empty($regex) && !preg_match($regex, $file)) continue;
-			if (isset($dirs) && ($dirs && !@is_dir($path.'/'.$file) || !$dirs && is_dir($path.'/'.$file))) continue;
+			// пропускаем служебные файлы
+			if ($file == '.' || $file == '..') {
+				continue;
+			}
+			
+			// пропускаем скрытые файлы
+			if (mb_substr($file, 0, 1) == '.') {
+				continue;
+			}
+			
+			if (!empty($regex) && !preg_match($regex, $file)) {
+				continue;
+			}
+			
+			if (isset($dirs) && ($dirs && !@is_dir($path.'/'.$file) || !$dirs && is_dir($path.'/'.$file))) {
+				continue;
+			}
+			
 			$files[$file] = $this->file($relpath.'/'.$file);
 		}
-		closedir($dir);
+		
+		@closedir($dir);
 		ksort($files);
 		return array_values($files);
 	}
@@ -143,11 +185,16 @@ class FileStore extends Component {
 	 * @param \yii\base\Model $model модель
 	 * @param string|null $attribute имя аттрибута модели
 	 * @param string|null $file название файла
-	 * @return \dicr\filestore\File
+	 * @return \dicr\file\File
 	 */
-	public function getModelPath(Model $model, string $attribute=null, string $file=null) {
-		if (empty($model)) throw new \InvalidArgumentException('model');
-		if ($attribute == '') throw new \InvalidArgumentException('attribute');
+	public function getModelPath(Model $model, string $attribute, string $file=null) {
+		if (empty($model)) {
+			throw new \InvalidArgumentException('model');
+		}
+		
+		if ($attribute == '') {
+			throw new \InvalidArgumentException('attribute');
+		}
 		
 		$relpath = [
 			basename($model->formName())
@@ -155,10 +202,12 @@ class FileStore extends Component {
 		
 		if ($model instanceof ActiveRecord) {
 			$keyName = basename(implode('~', $model->getPrimaryKey(true)));
-			if ($keyName !== '') $relpath[] = $keyName;
+			if ($keyName !== '') {
+				$relpath[] = $keyName;
+			}
 		}
 		
-		$attribute = basename(trim($attribute));
+		$attribute = basename($attribute);
 		if ($attribute !== '') {
 			$relpath[] = $attribute;
 		}
@@ -167,6 +216,8 @@ class FileStore extends Component {
 		if ($file !== '') {
 			$relpath[] = $file;
 		}
+		
+		$relpath = implode('/', $relpath);
 		
 		return $this->file($relpath);
 	}

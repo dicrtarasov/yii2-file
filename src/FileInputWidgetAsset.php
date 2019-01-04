@@ -1,5 +1,5 @@
 <?php 
-namespace dicr\filestore;
+namespace dicr\file;
 
 use yii\jui\JuiAsset;
 use yii\web\AssetBundle;
@@ -13,6 +13,8 @@ use yii\web\JqueryAsset;
  * @version 2018
  */
 class FileInputWidgetAsset extends AssetBundle {
+	
+	public $sourcePath = '@dicr/file/assets';
 	
 	public $css = [
 		'file-input-widget.css'
@@ -31,8 +33,10 @@ class FileInputWidgetAsset extends AssetBundle {
 	 * {@inheritDoc}
 	 * @see \yii\web\AssetBundle::init()
 	 */
-	public function init() {
+	/*
+	 public function init() {
 		$path = preg_split('~\\\+~uism', static::class, -1, PREG_SPLIT_NO_EMPTY);
 		$this->sourcePath = '@'.dirname(implode('/', $path)).'/assets';
 	}
+	*/
 }
