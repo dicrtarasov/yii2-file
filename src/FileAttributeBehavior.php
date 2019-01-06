@@ -7,6 +7,7 @@ use yii\base\InvalidConfigException;
 use yii\base\Model;
 use yii\db\ActiveRecord;
 use yii\di\Instance;
+use yii\base\InvalidArgumentException;
 
 /**
  * Файловые аттрибуты модели.
@@ -60,9 +61,6 @@ use yii\di\Instance;
  */
 class FileAttributeBehavior extends Behavior
 {
-    /** @var \yii\base\Model|null the owner of this behavior */
-    public $owner;
-
     /** @var string|\dicr\file\FileStore хранилище файлов */
     public $store = 'fileStore';
 
@@ -83,6 +81,8 @@ class FileAttributeBehavior extends Behavior
      */
     public function init()
     {
+        // owner не инициализирован пока не вызван attach
+
         // получаем store
         $this->store = Instance::ensure($this->store, FileStore::class);
 
@@ -103,7 +103,6 @@ class FileAttributeBehavior extends Behavior
             $this->attributes[$attribute] = $params;
         }
 
-        // owner не инициализирован пока не вызван attach
         parent::init();
     }
 
@@ -127,8 +126,25 @@ class FileAttributeBehavior extends Behavior
      * @param string $attribute
      * @return boolean
      */
-    protected function isFileAttribute(string $attribute) {
+    protected function isFileAttribute(string $attribute)
+    {
         return array_key_exists($attribute, $this->attributes);
+    }
+
+    /**
+     * Возвращает директори аттрибута
+     *
+     * @param string $attribute
+     * @throws InvalidConfigException
+     * @return \dicr\file\File
+     */
+    protected function getAttributePath(string $attribute='')
+    {
+        if (!($this->owner instanceof Model)) {
+            throw new InvalidConfigException('owner');
+        }
+
+        return $this->store->getModelPath($this->owner, $attribute);
     }
 
     /**
@@ -156,8 +172,8 @@ class FileAttributeBehavior extends Behavior
         $this->checkFileAttribute($attribute);
 
         if (! isset($this->values[$attribute]) || $refresh) {
-            $modelPath = $this->store->getModelPath($this->owner, $attribute);
-            $this->values[$attribute] = $modelPath->getList([
+
+            $this->values[$attribute] = $this->getAttributePath($attribute)->getList([
                 'dirs' => false,
                 'skipHidden' => true
             ]);
@@ -177,8 +193,6 @@ class FileAttributeBehavior extends Behavior
      */
     public function setFileAttributeValue(string $attribute, $files)
     {
-        $this->checkFileAttribute($attribute);
-
         // конвертируем значение в массив (нельзя (array), потому что Model::toArray)
         if (empty($files)) {
             $files = [];
@@ -195,9 +209,11 @@ class FileAttributeBehavior extends Behavior
         // проверяем элементы массива
         foreach ($files as $file) {
             if (! ($file instanceof File)) {
-                throw new \InvalidArgumentException('неокрректный тип элемента');
+                throw new InvalidArgumentException('неокрректный тип элемента');
             }
         }
+
+        $this->checkFileAttribute($attribute);
 
         // ограничиваем размер по limit
         $limit = $this->attributes[$attribute]['limit'];
@@ -222,6 +238,10 @@ class FileAttributeBehavior extends Behavior
     {
         $this->checkFileAttribute($attribute);
 
+        if (!($this->owner instanceof Model)) {
+            throw new InvalidConfigException('owner');
+        }
+
         // имя формы
         if (empty($formName)) {
             $formName = $this->owner->formName();
@@ -236,7 +256,7 @@ class FileAttributeBehavior extends Behavior
         }
 
         // путь аттрибута модели
-        $attributePath = $this->store->getModelPath($this->owner, $attribute);
+        $attributePath = $this->getAttributePath($attribute);
 
         // новое значение аттрибута
         $value = [];
@@ -304,6 +324,10 @@ class FileAttributeBehavior extends Behavior
         // если новые значения не установлены, то валидацию проходить не нужно
         if (empty($files)) {
             return true;
+        }
+
+        if (!($this->owner instanceof Model)) {
+            throw new InvalidConfigException('owner');
         }
 
         foreach ($files as $file) {
@@ -424,7 +448,7 @@ class FileAttributeBehavior extends Behavior
         }
 
         // готовим путь модели
-        $modelPath = $this->store->getModelPath($this->owner, $attribute);
+        $modelPath = $this->getAttributePath($attribute);
 
         // получаем старые файлы
         $oldFiles = $modelPath->getList([
@@ -517,17 +541,14 @@ class FileAttributeBehavior extends Behavior
      *
      * @param string $attribute
      * @throws \InvalidArgumentException
-     * @return \dicr\file\FileAttributeBehavior
+     * @return bool
      */
     public function deleteFileAttribute(string $attribute)
     {
         $this->checkFileAttribute($attribute);
 
-        // получаем папку аттрибута
-        $attributePath = $this->store->getModelPath($this->owner, $attribute);
-
         // удаляем рекурсивно
-        $attributePath->delete(true);
+        $this->getAttributePath($attribute)->delete(true);
 
         // запоминаем значение
         $this->values[$attribute] = [];
@@ -560,7 +581,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function deleteModelFolder()
     {
-        return $this->store->getModelPath($this->owner)->delete(true);
+        return $this->getModelPath('')->delete(true);
     }
 
     /**
@@ -596,10 +617,10 @@ class FileAttributeBehavior extends Behavior
     public function __set($name, $value)
     {
         if ($this->isFileAttribute($name)) {
-            return $this->setFileAttributeValue($name, $value);
+            $this->setFileAttributeValue($name, $value);
+        } else {
+            parent::__set($name, $value);
         }
-
-        return parent::__set($name, $value);
     }
 
     /**

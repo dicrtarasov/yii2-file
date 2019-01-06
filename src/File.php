@@ -8,7 +8,7 @@ use yii\base\InvalidConfigException;
 /**
  * Файл, хранящийся в файловой системе.
  *
- * @property \dicr\filestore\FileStore $store хранилище с базовым путем
+ * @property \dicr\file\FileStore $store хранилище с базовым путем
  * @property string $path путь (если задан $store, то относительный, иначе абсолютный)
  * @property-read string $fullPath поный путь относительно $store или $path если $store не задан
  * @property string $name имя файла (basename)
@@ -407,7 +407,7 @@ class File extends BaseObject
 
         $fullPath = $this->fullPath;
 
-        if (@file_put_contents($fullPath, (string) $content, false) === false) {
+        if (@file_put_contents($fullPath, (string) $content) === false) {
             throw new StoreException(null);
         }
 

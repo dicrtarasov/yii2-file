@@ -9,8 +9,8 @@ use yii\db\ActiveRecord;
 /**
  * Храниище в файловой системе.
  *
- * @property string $basePath базовый путь
- * @property string|null $baseUrl базовый url
+ * @property string $path базовый путь
+ * @property string|null $url базовый url
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 180624
  */
@@ -123,8 +123,11 @@ class FileStore extends Component
      */
     public function setUrl(string $url)
     {
-        $url = trim($url);
-        $this->url = $url != '' ? \Yii::getAlias($url, true) : null;
+        $this->url = \Yii::getAlias($url, true);
+        if ($this->url == '') {
+            $this->url = null;
+        }
+
         return $this;
     }
 
@@ -161,7 +164,7 @@ class FileStore extends Component
         }
 
         $dir = @opendir($path);
-        if (! $dir) {
+        if ($dir === false) {
             throw new StoreException(null);
         }
 
@@ -191,7 +194,8 @@ class FileStore extends Component
             $files[$file] = $this->file($relpath . '/' . $file);
         }
 
-        @closedir($dir);
+        closedir($dir);
+
         ksort($files);
         return array_values($files);
     }

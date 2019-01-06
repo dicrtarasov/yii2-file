@@ -1,6 +1,6 @@
 "use strict";
 
-(function ($) {
+(function ($, URL) {
     $.fn.fileInputWidget =
         function (options) {
             options = $.extend({}, {
@@ -67,12 +67,13 @@
 
                     const fileInputId = 'file-input-widget-addinput' + Date.now();
                     const $fileInput = $(input).clone().attr('id', fileInputId);
-                    const $file =
-                        $('<label></label>', {
-                            'class' : 'file btn',
-                            'for' : fileInputId,
-                        }).append($fileInput, $('<img/>'), $('<div class="name"></div>'),
-                            $('<button class="del btn btn-link text-danger" title="удалить">&times;</button>')).insertBefore($btnAdd);
+
+                    $('<label></label>', {
+                        'class' : 'file btn',
+                        'for' : fileInputId,
+                    }).append($fileInput, $('<img/>'), $('<div class="name"></div>'),
+                        $('<button class="del btn btn-link text-danger" title="удалить">&times;</button>')
+                    ).insertBefore($btnAdd);
 
                     reindex();
                     $fileInput.trigger('change');
@@ -81,4 +82,4 @@
                 reindex();
             });
         }
-})(jQuery);
+})(jQuery, window.URL);
