@@ -66,6 +66,10 @@ class UploadFile extends File
      */
     public function getName(array $options = [])
     {
+        if (!isset($this->name)) {
+            $this->name = basename($this->path);
+        }
+
         return $this->name;
     }
 

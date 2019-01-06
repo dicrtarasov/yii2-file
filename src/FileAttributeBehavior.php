@@ -295,7 +295,7 @@ class FileAttributeBehavior extends Behavior
                     $this->owner->addError($attribute, 'ошибка загрузки файла');
                 } elseif (! isset($file->name) || $file->name == '') {
                     $this->owner->addError($attribute, 'не задано имя загруаемого файла: ' . $file->path);
-                } elseif (empty($file->size)) {
+                } elseif ($file->size !== null && $file->size <= 0) {
                     $this->owner->addError($attribute, 'пустой размер файла: ' . $file->name);
                 } elseif (! @is_file($file->fullPath)) {
                     $this->owner->addError($attribute, 'загружаемый файл не существует: ' . $file->fullPath);
@@ -421,7 +421,7 @@ class FileAttributeBehavior extends Behavior
             if (empty($file)) {
                 unset($files[$pos]);
             } elseif ($file instanceof UploadFile) { // новый загруженный файл
-                if (! empty($file->error) || empty($file->name) || empty($file->path)) {
+                if (! empty($file->error) || empty($file->path)) {
                     unset($files[$pos]); // пропускаем файлы с ошибками
                 } else {
                     // создаем и импортируем файл под временным именем
