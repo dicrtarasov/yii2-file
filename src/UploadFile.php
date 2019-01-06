@@ -16,7 +16,6 @@ use yii\helpers\ArrayHelper;
  */
 class UploadFile extends File
 {
-
     /** @var string наименование файла */
     public $name;
 
@@ -31,6 +30,23 @@ class UploadFile extends File
 
     /** @var array [$formName => [$attribute => \dicr\file\UploadFile[] ]] кэш распарсенных объектов */
     private static $instances;
+
+    /**
+     * Конструктор
+     *
+     * @param array|string $config конфиг объекта или путь файла
+     */
+    public function __construct($config = []) {
+        // конвертируем путь файла в конфиг
+        if (is_string($config)) {
+            $config = [
+                'path' => $config,
+                'name' => basename($config)
+            ];
+        }
+
+        parent::__construct($config);
+    }
 
     /**
      * {@inheritdoc}
