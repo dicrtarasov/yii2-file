@@ -83,15 +83,25 @@ class FileAttributeBehavior extends Behavior
      */
     public function init()
     {
+        // получаем store
+        $this->store = Instance::ensure($this->store, FileStore::class);
+
+        // проверяем наличие аттрибутов
         if (empty($this->attributes) || ! is_array($this->attributes)) {
             throw new InvalidConfigException('attributes');
         }
 
-        if (is_string($this->store)) {
-            $this->store = \Yii::$app->get($this->store, true);
+        // конвертируем упрощеный формат аттрибутов в полный
+        foreach ($this->attributes as $attribute => $params) {
+            if (is_array($params)) {
+                $params['limit'] = (int)($params['limit'] ?? 0);
+            } else {
+                $params = [
+                    'limit' => (int)$params
+                ];
+            }
+            $this->attributes[$attribute] = $params;
         }
-
-        Instance::ensure($this->store, FileStore::class);
 
         // owner не инициализирован пока не вызван attach
         parent::init();
@@ -115,11 +125,21 @@ class FileAttributeBehavior extends Behavior
      * Проверяет существование файлового атрибута
      *
      * @param string $attribute
+     * @return boolean
+     */
+    protected function isFileAttribute(string $attribute) {
+        return array_key_exists($attribute, $this->attributes);
+    }
+
+    /**
+     * Проверяет существование файлового атрибута
+     *
+     * @param string $attribute
      * @throws Exception
      */
-    protected function checkOwnAttribute(string $attribute)
+    protected function checkFileAttribute(string $attribute)
     {
-        if (! array_key_exists($attribute, $this->attributes)) {
+        if (!$this->isFileAttribute($attribute)) {
             throw new Exception('файловы аттрибут "' . $attribute . '" не существует');
         }
     }
@@ -133,7 +153,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function getFileAttributeValue(string $attribute, bool $refresh = false)
     {
-        $this->checkOwnAttribute($attribute);
+        $this->checkFileAttribute($attribute);
 
         if (! isset($this->values[$attribute]) || $refresh) {
             $modelPath = $this->store->getModelPath($this->owner, $attribute);
@@ -144,9 +164,8 @@ class FileAttributeBehavior extends Behavior
         }
 
         $value = $this->values[$attribute];
-        $limit = (int) ($this->attributes[$attribute] ?? 0);
 
-        return $limit == 1 ? array_shift($value) : $value;
+        return $this->attributes[$attribute]['limit'] == 1 ? array_shift($value) : $value;
     }
 
     /**
@@ -158,7 +177,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function setFileAttributeValue(string $attribute, $files)
     {
-        $this->checkOwnAttribute($attribute);
+        $this->checkFileAttribute($attribute);
 
         // конвертируем значение в массив (нельзя (array), потому что Model::toArray)
         if (empty($files)) {
@@ -181,7 +200,7 @@ class FileAttributeBehavior extends Behavior
         }
 
         // ограничиваем размер по limit
-        $limit = (int) ($this->attributes[$attribute] ?? 0);
+        $limit = $this->attributes[$attribute]['limit'];
         if ($limit > 0) {
             $files = array_slice($files, 0, $limit);
         }
@@ -201,7 +220,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function loadFileAttribute(string $attribute, string $formName = null)
     {
-        $this->checkOwnAttribute($attribute);
+        $this->checkFileAttribute($attribute);
 
         // имя формы
         if (empty($formName)) {
@@ -277,7 +296,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function validateFileAttribute(string $attribute)
     {
-        $this->checkOwnAttribute($attribute);
+        $this->checkFileAttribute($attribute);
 
         // получаем текущие значения
         $files = $this->values[$attribute] ?? null;
@@ -388,9 +407,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function saveFileAttribute(string $attribute)
     {
-        if (! isset($this->attributes[$attribute])) {
-            throw new \InvalidArgumentException('аттрибут "' . $attribute . '" не задан как файловый');
-        }
+        $this->checkFileAttribute($attribute);
 
         // текущее значение аттрибута
         $files = $this->values[$attribute] ?? null;
@@ -485,7 +502,6 @@ class FileAttributeBehavior extends Behavior
     public function saveFileAttributes()
     {
         $ret = true;
-
         foreach (array_keys($this->attributes) as $attribute) {
             $res = $this->saveFileAttribute($attribute);
             if (! $res) {
@@ -505,9 +521,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function deleteFileAttribute(string $attribute)
     {
-        if (! isset($this->attributes[$attribute])) {
-            throw new \InvalidArgumentException('аттрибут "' . $attribute . '" не задан как файловый');
-        }
+        $this->checkFileAttribute($attribute);
 
         // получаем папку аттрибута
         $attributePath = $this->store->getModelPath($this->owner, $attribute);
@@ -555,7 +569,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function __isset($name)
     {
-        if (array_key_exists($name, $this->attributes)) {
+        if ($this->isFileAttribute($name)) {
             return isset($this->attributes[$name]);
         }
 
@@ -568,7 +582,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function __get($name)
     {
-        if (array_key_exists($name, $this->attributes)) {
+        if ($this->isFileAttribute($name)) {
             return $this->getFileAttributeValue($name);
         }
 
@@ -581,7 +595,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function __set($name, $value)
     {
-        if (array_key_exists($name, $this->attributes)) {
+        if ($this->isFileAttribute($name)) {
             return $this->setFileAttributeValue($name, $value);
         }
 
@@ -594,7 +608,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function hasProperty($name, $checkVars = true)
     {
-        if (array_key_exists($name, $this->attributes)) {
+        if ($this->isFileAttribute($name)) {
             return true;
         }
 
@@ -607,7 +621,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function canGetProperty($name, $checkVars = true)
     {
-        if (array_key_exists($name, $this->attributes)) {
+        if ($this->isFileAttribute($name)) {
             return true;
         }
 
@@ -620,7 +634,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function canSetProperty($name, $checkVars = true)
     {
-        if (array_key_exists($name, $this->attributes)) {
+        if ($this->isFileAttribute($name)) {
             return true;
         }
 
