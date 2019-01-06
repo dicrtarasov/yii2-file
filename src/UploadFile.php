@@ -40,8 +40,7 @@ class UploadFile extends File
         // конвертируем путь файла в конфиг
         if (is_string($config)) {
             $config = [
-                'path' => $config,
-                'name' => basename($config)
+                'path' => $config
             ];
         }
 
@@ -54,23 +53,25 @@ class UploadFile extends File
      */
     public function init()
     {
-        $this->size = (int) $this->size;
+        if (isset($this->size)) {
+            $this->size = (int) $this->size;
+        }
+
         $this->error = (int) $this->error;
 
         // в случае ошибок name и path может быть пустым
         if (empty($this->error)) {
+
             // путь должен быть задан
             if (! isset($this->path)) {
                 throw new InvalidConfigException('path');
             }
 
-            // если имя не задано, берем basename из пути
-            if (! isset($this->name)) {
-                $this->name = $this->path;
+            if (isset($this->name)) {
+                $this->name = basename($this->name);
             }
 
-            $this->name = basename($this->name);
-            if ($this->name === '') {
+            if ($this->name == '') {
                 throw new InvalidConfigException('name');
             }
         }
@@ -82,11 +83,7 @@ class UploadFile extends File
      */
     public function getName(array $options = [])
     {
-        if (!isset($this->name)) {
-            $this->name = basename($this->path);
-        }
-
-        return $this->name;
+        return $this->name ?? parent::getName();
     }
 
     /**
@@ -95,7 +92,7 @@ class UploadFile extends File
      */
     public function getSize()
     {
-        return $this->size;
+        return $this->size ?? parent::getSize();
     }
 
     /**
