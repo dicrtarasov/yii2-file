@@ -11,8 +11,8 @@ use yii\base\InvalidConfigException;
  * @property \dicr\file\FileStore $store хранилище с базовым путем
  * @property string $path путь (если задан $store, то относительный, иначе абсолютный)
  * @property-read string $fullPath поный путь относительно $store или $path если $store не задан
- * @property string $name имя файла (basename)
  * @property-read string $dir полный путь директории
+ * @property string $name имя файла (basename)
  * @property-read string|null $url полный url относительно $store иначе null
  * @property-read bool $exists
  * @property-read bool $readable
