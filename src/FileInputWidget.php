@@ -2,7 +2,6 @@
 namespace dicr\file;
 
 use yii\base\InvalidConfigException;
-use yii\base\Model;
 use yii\bootstrap\InputWidget;
 use yii\di\Instance;
 use yii\helpers\ArrayHelper;
@@ -23,7 +22,7 @@ class FileInputWidget extends InputWidget
     /** @var string|false mime-типы в input type=file, например image/* */
     public $accept;
 
-    /** @var \dicr\file\FileStore */
+    /** @var \dicr\file\FileStore|string */
     public $store = 'fileStore';
 
     /** @var string название поля формы аттрибута */
@@ -38,7 +37,7 @@ class FileInputWidget extends InputWidget
      */
     public function init()
     {
-        if (! ($this->model instanceof Model)) {
+        if (!isset($this->model)) {
             throw new InvalidConfigException('model');
         }
 
@@ -47,25 +46,26 @@ class FileInputWidget extends InputWidget
         }
 
         // получаем store
-        if (is_string($this->store)) {
-            $this->store = \Yii::$app->get($this->store, true);
-        }
-
-        Instance::ensure($this->store, FileStore::class);
+        $this->store = Instance::ensure($this->store, FileStore::class);
 
         // получаем inputName
         $this->attribute = preg_replace('~\[\]$~uism', '', $this->attribute);
         $this->inputName = Html::getInputName($this->model, $this->attribute);
 
         // получаем файлы
-        $this->files = Html::getAttributeValue($this->model, $this->attribute);
-        if (empty($this->files)) {
+        $files = Html::getAttributeValue($this->model, $this->attribute);
+        if (empty($files)) {
             $this->files = [];
-        } elseif (! is_array($this->files)) {
+        } else if (is_array($files)) {
+            $this->files = $files;
+        } else {
             $this->files = [
-                $this->files
+                $files
             ];
-        } elseif ($this->limit > 0) {
+        }
+
+        // проверяем лимит
+        if ($this->limit > 0) {
             ksort($this->files);
             $this->files = array_slice($this->files, 0, $this->limit, true);
         }

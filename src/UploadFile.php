@@ -280,7 +280,7 @@ class UploadFile extends File
 
         // если не установлен name, то ошибка формата данных
         if (! isset($data['name'])) {
-            throw new Exception('Некорректная структура данных $_FILES: ' . var_export($data));
+            throw new Exception('Некорректная структура данных $_FILES: ' . var_export($data, true));
         }
 
         // если name не массив - однозначно не форма

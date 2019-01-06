@@ -60,9 +60,6 @@ use yii\di\Instance;
  */
 class FileAttributeBehavior extends Behavior
 {
-    /** @var \yii\base\Model|null the owner of this behavior */
-    public $owner;
-
     /** @var string|\dicr\file\FileStore хранилище файлов */
     public $store = 'fileStore';
 
@@ -83,6 +80,8 @@ class FileAttributeBehavior extends Behavior
      */
     public function init()
     {
+        // owner не инициализирован пока не вызван attach
+
         // получаем store
         $this->store = Instance::ensure($this->store, FileStore::class);
 
@@ -103,7 +102,6 @@ class FileAttributeBehavior extends Behavior
             $this->attributes[$attribute] = $params;
         }
 
-        // owner не инициализирован пока не вызван attach
         parent::init();
     }
 
@@ -145,6 +143,17 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
+     * Проверяет подключенную модель
+     *
+     * @throws InvalidConfigException
+     */
+    protected function checkOwner() {
+        if (!($this->owner instanceof Model)) {
+            throw new InvalidConfigException('owner');
+        }
+    }
+
+    /**
      * Возвращает значение файлового аттрибута
      *
      * @param string $attribute
@@ -154,6 +163,7 @@ class FileAttributeBehavior extends Behavior
     public function getFileAttributeValue(string $attribute, bool $refresh = false)
     {
         $this->checkFileAttribute($attribute);
+        $this->checkOwner();
 
         if (! isset($this->values[$attribute]) || $refresh) {
             $modelPath = $this->store->getModelPath($this->owner, $attribute);
@@ -221,6 +231,7 @@ class FileAttributeBehavior extends Behavior
     public function loadFileAttribute(string $attribute, string $formName = null)
     {
         $this->checkFileAttribute($attribute);
+        $this->checkOwner();
 
         // имя формы
         if (empty($formName)) {
@@ -297,6 +308,7 @@ class FileAttributeBehavior extends Behavior
     public function validateFileAttribute(string $attribute)
     {
         $this->checkFileAttribute($attribute);
+        $this->checkOwner();
 
         // получаем текущие значения
         $files = $this->values[$attribute] ?? null;
@@ -408,6 +420,7 @@ class FileAttributeBehavior extends Behavior
     public function saveFileAttribute(string $attribute)
     {
         $this->checkFileAttribute($attribute);
+        $this->checkOwner();
 
         // текущее значение аттрибута
         $files = $this->values[$attribute] ?? null;
@@ -517,11 +530,12 @@ class FileAttributeBehavior extends Behavior
      *
      * @param string $attribute
      * @throws \InvalidArgumentException
-     * @return \dicr\file\FileAttributeBehavior
+     * @return bool
      */
     public function deleteFileAttribute(string $attribute)
     {
         $this->checkFileAttribute($attribute);
+        $this->checkOwner();
 
         // получаем папку аттрибута
         $attributePath = $this->store->getModelPath($this->owner, $attribute);
@@ -560,6 +574,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function deleteModelFolder()
     {
+        $this->checkOwner();
         return $this->store->getModelPath($this->owner)->delete(true);
     }
 
@@ -596,10 +611,10 @@ class FileAttributeBehavior extends Behavior
     public function __set($name, $value)
     {
         if ($this->isFileAttribute($name)) {
-            return $this->setFileAttributeValue($name, $value);
+            $this->setFileAttributeValue($name, $value);
+        } else {
+            parent::__set($name, $value);
         }
-
-        return parent::__set($name, $value);
     }
 
     /**
