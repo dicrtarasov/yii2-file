@@ -161,6 +161,17 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
+     * Проверяет подключенную модель
+     *
+     * @throws InvalidConfigException
+     */
+    protected function checkOwner() {
+        if (!($this->owner instanceof Model)) {
+            throw new InvalidConfigException('owner');
+        }
+    }
+
+    /**
      * Возвращает значение файлового аттрибута
      *
      * @param string $attribute
@@ -170,9 +181,9 @@ class FileAttributeBehavior extends Behavior
     public function getFileAttributeValue(string $attribute, bool $refresh = false)
     {
         $this->checkFileAttribute($attribute);
+        $this->checkOwner();
 
         if (! isset($this->values[$attribute]) || $refresh) {
-
             $this->values[$attribute] = $this->getAttributePath($attribute)->getList([
                 'dirs' => false,
                 'skipHidden' => true
@@ -237,6 +248,7 @@ class FileAttributeBehavior extends Behavior
     public function loadFileAttribute(string $attribute, string $formName = null)
     {
         $this->checkFileAttribute($attribute);
+        $this->checkOwner();
 
         if (!($this->owner instanceof Model)) {
             throw new InvalidConfigException('owner');
@@ -317,6 +329,7 @@ class FileAttributeBehavior extends Behavior
     public function validateFileAttribute(string $attribute)
     {
         $this->checkFileAttribute($attribute);
+        $this->checkOwner();
 
         // получаем текущие значения
         $files = $this->values[$attribute] ?? null;
@@ -432,6 +445,7 @@ class FileAttributeBehavior extends Behavior
     public function saveFileAttribute(string $attribute)
     {
         $this->checkFileAttribute($attribute);
+        $this->checkOwner();
 
         // текущее значение аттрибута
         $files = $this->values[$attribute] ?? null;
@@ -546,6 +560,7 @@ class FileAttributeBehavior extends Behavior
     public function deleteFileAttribute(string $attribute)
     {
         $this->checkFileAttribute($attribute);
+        $this->checkOwner();
 
         // удаляем рекурсивно
         $this->getAttributePath($attribute)->delete(true);
