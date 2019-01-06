@@ -596,7 +596,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function deleteModelFolder()
     {
-        return $this->getModelPath('')->delete(true);
+        return $this->getAttributePath('')->delete(true);
     }
 
     /**

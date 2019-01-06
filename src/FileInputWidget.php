@@ -2,7 +2,6 @@
 namespace dicr\file;
 
 use yii\base\InvalidConfigException;
-use yii\base\InvalidValueException;
 use yii\bootstrap\InputWidget;
 use yii\di\Instance;
 use yii\helpers\ArrayHelper;
@@ -54,32 +53,22 @@ class FileInputWidget extends InputWidget
         $this->inputName = Html::getInputName($this->model, $this->attribute);
 
         // получаем файлы
-        $files = Html::getAttributeValue($this->model, $this->attribute);
-        if (empty($files)) {
+        $this->files = Html::getAttributeValue($this->model, $this->attribute);
+        if (empty($this->files)) {
             $this->files = [];
-        } elseif (is_array($files)) {
-            $this->files = $files;
-        } elseif ($files instanceof File) {
-            $this->files = [
-                $files
-            ];
-        } else {
-            throw new InvalidValueException($this->attribute);
-        }
-
-        // проверяем лимит
-        if ($this->limit > 0) {
+        } elseif (!is_array($this->files)) {
+            $this->files = [$this->files];
+        } elseif ($this->limit > 0) {
             ksort($this->files);
             $this->files = array_slice($this->files, 0, $this->limit, true);
         }
 
         // добавляем опции клиенту
-        $this->clientOptions = ArrayHelper::merge(
-            [
-                'accept' => $this->accept,
-                'limit' => $this->limit,
-                'inputName' => $this->inputName
-            ], $this->clientOptions);
+        $this->clientOptions = ArrayHelper::merge([
+            'accept' => $this->accept,
+            'limit' => $this->limit,
+            'inputName' => $this->inputName
+        ], $this->clientOptions);
 
         // добавляем нужные классы
         Html::addCssClass($this->options, 'file-input-widget');

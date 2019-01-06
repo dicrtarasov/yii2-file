@@ -124,7 +124,7 @@ class FileStore extends Component
     public function setUrl(string $url)
     {
         $this->url = \Yii::getAlias($url, true);
-        if ($this->url == '') {
+        if (empty($this->url)) {
             $this->url = null;
         }
 
