@@ -2,6 +2,7 @@
 namespace dicr\file;
 
 use yii\base\BaseObject;
+use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
 
 /**
@@ -22,7 +23,8 @@ use yii\base\InvalidConfigException;
  * @property-read int $time
  *
  * @property-read \dicr\filestore\File[] $list
- * @property string $content
+ * @property string $content содержимое файла в виде строки
+ * @property resource $stream содержимое файла в виде ресурса
  *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 180624
@@ -413,6 +415,41 @@ class File extends BaseObject
             throw new StoreException(null);
         }
 
+        return $this;
+    }
+
+    /**
+     * Возвращает контент в виде потока
+     *
+     * @param string $mode
+     * @throws StoreException
+     * @return resource
+     */
+    public function getStream(string $mode='rt') {
+        $stream = @fopen($this->fullPath, $mode);
+        if ($stream === false) {
+            throw new StoreException();
+        }
+        return $stream;
+    }
+
+    /**
+     * Записать файл из потока
+     *
+     * @param resource $stream
+     * @return self
+     */
+    public function setStream($stream) {
+        if (!is_resource($stream)) {
+            throw new InvalidArgumentException('stream');
+        }
+
+        $content = @stream_get_contents($stream);
+        if ($content === false) {
+            throw new StoreException();
+        }
+
+        $this->setContent($content);
         return $this;
     }
 
