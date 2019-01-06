@@ -1,6 +1,6 @@
 {
 	"name" : "dicr/yii2-file",
-	"description" : "Компонент для работы с файлами",
+	"description" : "Filesystem components for Yii2",
 	"type" : "yii2-extension",
 	"homepage" : "https://gitlab.com/dicr/yii2-file",
 	"authors" : [{
@@ -11,6 +11,7 @@
 		}
 	],
 	"require" : {
+		"php" : ">=7.0",
 		"yiisoft/yii2" : "~2.0",
 		"yiisoft/yii2-jui" : "~2.0"
 	},
