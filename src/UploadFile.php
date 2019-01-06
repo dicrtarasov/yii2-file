@@ -67,10 +67,11 @@ class UploadFile extends File
                 throw new InvalidConfigException('path');
             }
 
-            if (isset($this->name)) {
-                $this->name = basename($this->name);
+            if (!isset($this->name)) {
+                $this->name = $this->path;
             }
 
+            $this->name = basename($this->name);
             if ($this->name == '') {
                 throw new InvalidConfigException('name');
             }
