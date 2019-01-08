@@ -3,6 +3,7 @@ namespace dicr\file;
 
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
+use yii\base\NotSupportedException;
 use yii\helpers\ArrayHelper;
 
 /**
@@ -23,7 +24,7 @@ class UploadFile extends File
     public $size;
 
     /** @var string mime-type */
-    public $type;
+    public $mimeType;
 
     /** @var int ошибка загрузки */
     public $error;
@@ -36,12 +37,11 @@ class UploadFile extends File
      *
      * @param array|string $config конфиг объекта или путь файла
      */
-    public function __construct($config = []) {
+    public function __construct($config = [])
+    {
         // конвертируем путь файла в конфиг
         if (is_string($config)) {
-            $config = [
-                'path' => $config
-            ];
+            $config = ['path' => $config];
         }
 
         parent::__construct($config);
@@ -67,7 +67,7 @@ class UploadFile extends File
                 throw new InvalidConfigException('path');
             }
 
-            if (!isset($this->name)) {
+            if (! isset($this->name)) {
                 $this->name = $this->path;
             }
 
@@ -80,11 +80,110 @@ class UploadFile extends File
 
     /**
      * {@inheritdoc}
+     * @see \dicr\file\File::getPath()
+     */
+    public function getPath()
+    {
+        return $this->path;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::setPath()
+     */
+    public function setPath(string $path)
+    {
+        $this->path = rtrim($this->path);
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::getFullPath()
+     */
+    public function getFullPath()
+    {
+        return $this->path;
+    }
+
+    /**
+     * {@inheritdoc}
      * @see \dicr\file\File::getName()
      */
     public function getName(array $options = [])
     {
-        return $this->name ?? parent::getName();
+        return $this->name ?? basename($this->path);
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::setName()
+     */
+    public function setName(string $name)
+    {
+        $this->name = $name;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::rename()
+     */
+    public function rename()
+    {
+        throw new NotSupportedException();
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::getUrl()
+     */
+    public function getUrl()
+    {
+        return null;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::getExists()
+     */
+    public function getExists()
+    {
+        return @file_exists($this->path);
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::getType()
+     */
+    public function getType()
+    {
+        return File::TYPE_FILE;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::getAccess()
+     */
+    public function getAccess()
+    {
+        return File::ACCESS_PRIVATE;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::setAccess()
+     */
+    public function setAccess(string $access)
+    {
+        throw new NotSupportedException();
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::getIsHidden()
+     */
+    public function getIsHidden()
+    {
+        return false;
     }
 
     /**
@@ -93,7 +192,154 @@ class UploadFile extends File
      */
     public function getSize()
     {
-        return $this->size ?? parent::getSize();
+        if (! isset($this->size)) {
+            $this->size = @filesize($this->path);
+        }
+
+        if ($this->size === false) {
+            throw new StoreException($this->path);
+        }
+
+        return $this->size;
+    }
+
+    /**
+     * Возвращает время изменения файла
+     *
+     * @throws StoreException
+     * @return int timestamp
+     */
+    public function getMtime()
+    {
+        return @filemtime($this->path);
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::getMimeType()
+     */
+    public function getMimeType()
+    {
+        return $this->mimeType;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::getContents()
+     */
+    public function getContents()
+    {
+        $contents = @file_get_contents($this->path);
+        if ($contents === false) {
+            throw new StoreException();
+        }
+        return $contents;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::setContents()
+     */
+    public function setContents()
+    {
+        throw new NotSupportedException();
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::getStream()
+     */
+    public function getStream()
+    {
+        $stream = @fopen($this->path, 'rb');
+        if ($stream === false) {
+            throw new StoreException();
+        }
+        return $stream;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::setStream()
+     */
+    public function setStream()
+    {
+        throw new NotSupportedException();
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::copy()
+     */
+    public function copy(string $dst)
+    {
+        $ret = @copy($this->path, $dst);
+        if ($ret === false) {
+            throw new StoreException();
+        }
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::move()
+     */
+    public function move(string $dst)
+    {
+        $ret = @rename($this->path, $dst);
+        if ($ret === false) {
+            throw new StoreException();
+        }
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::mkdir()
+     */
+    public function mkdir()
+    {
+        throw new NotSupportedException();
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::checkDir()
+     */
+    public function checkDir()
+    {
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::child()
+     */
+    public function child(string $relpath)
+    {
+        throw new NotSupportedException();
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::getList()
+     */
+    public function getList(array $options = [])
+    {
+        throw new NotSupportedException();
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::delete()
+     */
+    public function delete()
+    {
+        $ret = @unkink($this->path);
+        if ($ret === false) {
+            throw new StoreException();
+        }
+        return $this;
     }
 
     /**
@@ -117,13 +363,8 @@ class UploadFile extends File
             }
 
             $instances[$pos] = new static(
-                [
-                    'name' => $name,
-                    'type' => $types[$pos] ?? null,
-                    'size' => $sizes[$pos] ?? null,
-                    'error' => $errors[$pos] ?? null,
-                    'path' => $paths[$pos] ?? null
-                ]);
+                ['name' => $name,'mimeType' => $types[$pos] ?? null,'size' => $sizes[$pos] ?? null,
+                    'error' => $errors[$pos] ?? null,'path' => $paths[$pos] ?? null]);
         }
 
         return $instances;
@@ -347,30 +588,12 @@ class UploadFile extends File
 
         $formName = trim($formName);
 
-        $path = [
-            $formName
-        ];
+        $path = [$formName];
 
         if (! empty($attribute)) {
             $path[] = $attribute;
         }
 
         return ArrayHelper::getValue(self::$instances, $path);
-    }
-
-    /**
-     * Создает UploadFile инициализированный из File
-     *
-     * @param File $file
-     * @return \dicr\file\UploadFile
-     */
-    public static function fromFile(File $file)
-    {
-        return new static([
-            'path' => $file->path,
-            'name' => $file->getName([
-                'removePrefix' => true
-            ])
-        ]);
     }
 }

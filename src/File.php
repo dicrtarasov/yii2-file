@@ -2,43 +2,56 @@
 namespace dicr\file;
 
 use yii\base\BaseObject;
-use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
 
 /**
  * Файл, хранящийся в файловой системе.
  *
- * @property \dicr\file\FileStore $store хранилище с базовым путем
- * @property string $path путь (если задан $store, то относительный, иначе абсолютный)
- * @property-read string $fullPath поный путь относительно $store или $path если $store не задан
+ * @property \dicr\file\AbstractFileStore $store хранилище
+ * @property string $path относительный путь
+ * @property-read string $fullPath полный путь
  * @property-read string $dir полный путь директории
  * @property string $name имя файла (basename)
- * @property-read string|null $url полный url относительно $store иначе null
+ * @property-read string|null $url
+ *
  * @property-read bool $exists
- * @property-read bool $readable
- * @property-read bool $writeable
+ *
+ * @property-read string $type
  * @property-read bool $isDir
  * @property-read bool $isFile
- * @property-read int $size
- * @property-read int $time
  *
- * @property-read \dicr\filestore\File[] $list
+ * @property string $access
+ * @property-read bool $isPublic
+ * @property-read bool $isHidden
+ *
+ * @property-read int $size
+ * @property-read int $mtime
+ * @property-read string $mimeType
+ *
  * @property string $content содержимое файла в виде строки
  * @property resource $stream содержимое файла в виде ресурса
+ * @property-read \dicr\filestore\File[] $list
  *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 180624
  */
 class File extends BaseObject
 {
+    /* тип файла/директория */
+    const TYPE_FILE = 'file';
+    const TYPE_DIR = 'dir';
 
-    /** @var \dicr\file\FileStore */
-    private $store;
+    /* тип доступа */
+    const ACCESS_PUBLIC = 'public';
+    const ACCESS_PRIVATE = 'private';
+
+    /** @var \dicr\file\AbstractFileStore */
+    private $_store;
 
     /** @var string путь файла */
-    private $path;
+    private $_path;
 
-    /** @var string|null кэш fullPath */
+    /** @var string полный путь */
     private $_fullPath;
 
     /**
@@ -49,7 +62,7 @@ class File extends BaseObject
     {
         parent::init();
 
-        if (empty($this->path)) {
+        if (! isset($this->_path)) {
             throw new InvalidConfigException('path');
         }
     }
@@ -57,22 +70,22 @@ class File extends BaseObject
     /**
      * Возвращает хранилище
      *
-     * @return \dicr\file\FileStore
+     * @return \dicr\file\AbstractFileStore
      */
     public function getStore()
     {
-        return $this->store;
+        return $this->_store;
     }
 
     /**
      * Устанавливает хранилище
      *
-     * @param FileStore|null $store
+     * @param \dicr\file\AbstractFileStore $store
      * @return static
      */
-    public function setStore(FileStore $store)
+    public function setStore(AbstractFileStore $store)
     {
-        $this->store = $store;
+        $this->_store = $store;
         $this->_fullPath = null;
         return $this;
     }
@@ -84,7 +97,7 @@ class File extends BaseObject
      */
     public function getPath()
     {
-        return $this->path;
+        return $this->_path;
     }
 
     /**
@@ -92,31 +105,35 @@ class File extends BaseObject
      *
      * @param string $path new path
      * @param bool $move переместить существующий файл
-     * @throws \InvalidArgumentException
+     * @throws \dicr\file\StoreException
      * @return static
      */
     public function setPath(string $path, bool $move = false)
     {
-        $path = trim($path, '/');
-        if (empty($path)) {
-            throw new \InvalidArgumentException('path');
+        $path = $this->store->normalizeRelativePath($path);
+
+        if ($move && $this->path != '' && $this->exists) {
+            $this->store->move($this->path, $path);
         }
 
-        if ($move && $this->exists) {
-            $oldPath = $this->fullPath;
-            $this->path = $path;
-            $this->_fullPath = null;
-            $this->checkDir();
-            $newPath = $this->fullPath;
-            if ($newPath != $oldPath && ! @rename($oldPath, $newPath)) {
-                throw new StoreException(null);
-            }
-        } else {
-            $this->path = $path;
-            $this->_fullPath = null;
-        }
-
+        $this->_path = $path;
+        $this->_fullPath = null;
         return $this;
+    }
+
+    /**
+     * Возвращает полный путь
+     *
+     * @throws StoreException
+     * @return string
+     */
+    public function getFullPath()
+    {
+        if (! isset($this->_fullPath)) {
+            $this->_fullPath = $this->store->getFullPath($this->path);
+        }
+
+        return $this->_fullPath;
     }
 
     /**
@@ -124,7 +141,7 @@ class File extends BaseObject
      *
      * @param string $path
      * @throws StoreException
-     * @return static
+     * @return self
      */
     public function move(string $path)
     {
@@ -132,40 +149,17 @@ class File extends BaseObject
     }
 
     /**
-     * Возвращает полный путь
+     * Возвращает полную директорию файла
      *
      * @return string
      */
-    public function getFullPath()
+    public function getDir()
     {
-        if (! isset($this->_fullPath)) {
-            $this->_fullPath = implode('/', [
-                ! empty($this->store) ? $this->store->path : '',
-                $this->path
-            ]);
+        $ret = @dirname($this->path);
+        if ($ret === false) {
+            throw new StoreException();
         }
-
-        return $this->_fullPath;
-    }
-
-    /**
-     * Возвращает url
-     *
-     * @return string|null
-     */
-    public function getUrl()
-    {
-        if (empty($this->store)) {
-            return null;
-        }
-
-        $url = $this->store->url;
-        if (empty($url)) {
-            return null;
-        }
-
-        $url .= '/' . trim($this->path, '/');
-        return $url;
+        return $ret;
     }
 
     /**
@@ -201,7 +195,8 @@ class File extends BaseObject
      *
      * @param string $name новое имя файла
      * @param bool $rename переименовать существующий файл
-     * @return static
+     * @throws StoreException
+     * @return self
      */
     public function setName(string $name, bool $rename = false)
     {
@@ -226,6 +221,7 @@ class File extends BaseObject
      * Переименовывает файл (только имя)
      *
      * @param string $name новое имя файла без пути
+     * @throws StoreException
      * @return \dicr\file\File
      */
     public function rename(string $name)
@@ -234,78 +230,102 @@ class File extends BaseObject
     }
 
     /**
-     * Возвращает полную директорию файла
+     * Возвращает url
      *
-     * @return string
+     * @return string|null
      */
-    public function getDir()
+    public function getUrl()
     {
-        return dirname($this->fullPath);
-    }
-
-    /**
-     * Проверяет/создает директори файла
-     *
-     * @throws StoreException
-     * @return static
-     */
-    public function checkDir()
-    {
-        $dir = $this->dir;
-        if (! @file_exists($dir) && ! @mkdir($dir, ! empty($this->store) ? $this->store->dirmode : 0755, true)) {
-            throw new StoreException(null);
-        }
-        return $this;
+        return $this->store->getUrl($this->path);
     }
 
     /**
      * Возвращает флаг существования файла
      *
+     * @throws StoreException
      * @return bool
      */
     public function getExists()
     {
-        return @file_exists($this->fullPath);
+        return $this->store->isExists($this->path);
     }
 
     /**
-     * Возвращает флаг доступности для чтения
+     * Возвращает тип файл/директория
      *
-     * @return bool
+     * @throws StoreException
+     * @return string TYPE_*
      */
-    public function getReadable()
+    public function getType()
     {
-        return @is_readable($this->fullPath);
+        return $this->store->getType($this->path);
     }
 
     /**
-     * Возвращает флаг доступности для записи
+     * Возвращает признак директории
      *
-     * @return bool
-     */
-    public function getWriteable()
-    {
-        return @is_writable($this->fullPath);
-    }
-
-    /**
-     * Проверяет флаг директории
-     *
-     * @return bool
+     * @throws StoreException
+     * @return boolean
      */
     public function getIsDir()
     {
-        return @is_dir($this->fullPath);
+        return $this->type == self::TYPE_DIR;
     }
 
     /**
-     * Проверяет флаг файла
+     * Возвращает признак файла
      *
-     * @return bool
+     * @throws StoreException
+     * @return boolean
      */
     public function getIsFile()
     {
-        return @is_file($this->fullPath);
+        return $this->type == self::TYPE_FILE;
+    }
+
+    /**
+     * Возвращает тип доступа
+     *
+     * @throws StoreException
+     * @return string ACCESS_*
+     */
+    public function getAccess()
+    {
+        return $this->store->getAccess($this->_path);
+    }
+
+    /**
+     * Возвращает признак публичного доступа
+     *
+     * @throws StoreException
+     * @return boolean
+     */
+    public function getIsPublic()
+    {
+        return $this->access == self::ACCESS_PUBLIC;
+    }
+
+    /**
+     * Устанавливает тип доступа
+     *
+     * @param string $access ACCESS_*
+     * @throws StoreException
+     * @return self
+     */
+    public function setAccess(string $access)
+    {
+        $this->store->setAccess($this->path, $access);
+        return $this;
+    }
+
+    /**
+     * Возвращает флаг скрытого файла
+     *
+     * @return boolean
+     */
+    public function getIsHidden()
+    {
+        return $this->store->isHidden($this->path);
     }
 
     /**
@@ -316,152 +336,88 @@ class File extends BaseObject
      */
     public function getSize()
     {
-        $size = @filesize($this->fullPath);
-        if ($size === false) {
-            throw new StoreException(null);
-        }
-        return $size;
+        return $this->store->getSize($this->_path);
     }
 
     /**
      * Возвращает время изменения файла
      *
-     * @return int
+     * @throws StoreException
+     * @return int timestamp
      */
-    public function getTime()
+    public function getMtime()
     {
-        $time = @filemtime($this->fullPath);
-        if ($time === false) {
-            throw new StoreException(null);
-        }
-        return $time;
+        return $this->store->getMtime($this->_path);
     }
 
     /**
-     * Возвращает дочерний файл с путем относительно данного файла.
+     * Возвращает Mime-ип файла
      *
-     * @param string $relpath
-     * @throws \InvalidArgumentException
-     * @return \dicr\file\File
+     * @throws StoreException
+     * @return string
      */
-    public function child(string $relpath)
+    public function getMimeType()
     {
-        $relpath = trim($relpath, '/');
-        if (empty($relpath)) {
-            throw new \InvalidArgumentException('relpath');
-        }
-
-        return new static([
-            'store' => $this->store,
-            'path' => $this->path . '/' . $relpath
-        ]);
-    }
-
-    /**
-     * Возвращает список файлов директории
-     *
-     * @param array $options - string|null $regex паттерн имени
-     *        - bool|null $dirs true - только директории, false - только файлы
-     * @throws \dicr\file\StoreException
-     * @return self[]
-     * @see \dicr\file\FileStore::list
-     */
-    public function getList(array $options = [])
-    {
-        if (empty($this->store)) {
-            throw new InvalidConfigException('store');
-        }
-
-        return $this->store->list($this->path, $options);
+        return $this->store->getMimeType($this->path);
     }
 
     /**
      * Возвращает содержимое файла
      *
      * @throws \dicr\file\StoreException
-     * @return string|false
+     * @return string
      */
-    public function getContent()
+    public function getContents()
     {
-        $content = @file_get_contents($this->fullPath, false);
-        if ($content === false) {
-            throw new StoreException(null);
-        }
-        return $content;
+        return $this->store->getContents($this->path);
     }
 
     /**
      * Записывает содержимое файла
      *
-     * @param string|resource $content
+     * @param string $contents
      * @throws \dicr\file\StoreException
      * @return static
      */
-    public function setContent($content)
+    public function setContents(string $contents)
     {
-        $this->checkDir();
-
-        if (is_resource($content)) {
-            $content = stream_get_contents($content);
-        }
-
-        $fullPath = $this->fullPath;
-
-        if (@file_put_contents($fullPath, (string) $content) === false) {
-            throw new StoreException(null);
-        }
-
-        if (! @chmod($fullPath, ! empty($this->store) ? $this->store->filemode : 0644)) {
-            throw new StoreException(null);
-        }
-
+        $this->store->setContents($this->path, $contents);
         return $this;
     }
 
     /**
      * Возвращает контент в виде потока
      *
-     * @param string $mode
      * @throws StoreException
      * @return resource
      */
-    public function getStream(string $mode='rt') {
-        $stream = @fopen($this->fullPath, $mode);
-        if ($stream === false) {
-            throw new StoreException();
-        }
-        return $stream;
+    public function getStream()
+    {
+        return $this->store->getStream($this->path);
     }
 
     /**
      * Записать файл из потока
      *
      * @param resource $stream
-     * @return self
+     * @throws StoreException
+     * @return static
      */
-    public function setStream($stream) {
-        if (!is_resource($stream)) {
-            throw new InvalidArgumentException('stream');
-        }
-
-        $content = @stream_get_contents($stream);
-        if ($content === false) {
-            throw new StoreException();
-        }
-
-        $this->setContent($content);
+    public function setStream($stream)
+    {
+        $this->store->setStream($this->path, $stream);
         return $this;
     }
 
     /**
      * Импорт файла в хранилище
      *
-     * @param string $src полный путь импортируемого файла
+     * @param string $src абсолютны путь импортируемого файла
      * @param array $options опции
-     *        - bool $move переместить файл при импорте, иначе скопировать (по-умолчанию false)
      *        - bool $ifModified - импортировать файл только если время новее или размер отличается (по-умолчанию true)
      * @throws \dicr\file\StoreException
      * @return static
+     * @todo move to AbstractStore
      */
     public function import(string $src, array $options = [])
     {
@@ -470,63 +426,108 @@ class File extends BaseObject
             throw new \InvalidArgumentException('src');
         }
 
-        if (! @is_file($src)) {
-            throw new StoreException('исходный файл не найден: ' . $src);
+        if (! file_exists($src)) {
+            throw new StoreException('файл не существует: ' . $src);
         }
 
-        // получаем параметры
-        $ifModified = ! empty($options['ifModified'] ?? 1);
-        $move = ! empty($options['move'] ?? 0);
+        if (! @is_file($src)) {
+            throw new StoreException('не является файлом: ' . $src);
+        }
 
         // пропускаем старые файлы
-        if ($ifModified && $this->exists && @filesize($src) === $this->size && @filemtime($src) <= $this->time) {
-            return $this;
+        try {
+            if (! empty($options['ifModified'] ?? 1) && $this->exists && @filesize($src) === $this->size && @filemtime($src) <= $this->mtime) {
+                return $this;
+            }
+        } catch (\Throwable $ex) {
+            if (stream_is_local($this->fullPath)) {
+                throw new StoreException($this->path, $ex);
+            }
         }
 
-        // проверяем существование директории
-        $this->checkDir();
-
-        $func = $move ? 'rename' : 'copy';
-        $fullPath = $this->fullPath;
-
-        if (! @$func($src, $fullPath)) {
-            throw new StoreException(null);
+        // получаем содержимое
+        $contents = @file_get_contents($src);
+        if ($contents === false) {
+            throw new StoreException();
         }
 
-        if (! @chmod($fullPath, ! empty($this->store) ? $this->store->filemode : 0644)) {
-            throw new StoreException(null);
-        }
+        // записываем в текущий файл
+        $this->setContents($contents);
 
         return $this;
     }
 
     /**
+     * Копирует файл
+     *
+     * @param string $newpath новый путь
+     * @throws StoreException
+     * @return self новый файл
+     */
+    public function copy(string $newpath)
+    {
+        $this->store->copy($this->path, $newpath);
+        return $this->store->file($newpath);
+    }
+
+    /**
+     * Создает директорию
+     *
+     * @throws StoreException
+     * @return self
+     */
+    public function mkdir()
+    {
+        $this->store->mkdir($this->path);
+        return $this;
+    }
+
+    /**
+     * Проверяет создает родительскую директорию
+     *
+     * @throws StoreException
+     * @return self
+     */
+    public function checkDir()
+    {
+        $this->store->checkDir($this->dir);
+        return $this;
+    }
+
+    /**
+     * Возвращает дочерний файл с путем относительно данного файла.
+     *
+     * @param string $relpath
+     * @return \dicr\file\File
+     */
+    public function child(string $relpath)
+    {
+        return $this->store->child($this->path, $relpath);
+    }
+
+    /**
+     * Возвращает список файлов директории
+     *
+     * @param array $options - string|null $regex паттерн имени
+     *        - bool|null $dirs true - только директории, false - только файлы
+     * @throws StoreException
+     * @return self[]
+     * @see \dicr\file\FileStoreInterface::list
+     */
+    public function getList(array $options = [])
+    {
+        return $this->store->list($this->path, $options);
+    }
+
+    /**
      * Удаляет файл
      *
-     * @param bool|null $recursive рекурсивно для директорий
      * @throws \dicr\file\StoreException
      * @return static
      */
-    public function delete(bool $recursive = false)
+    public function delete()
     {
-        if ($this->getExists()) {
-            if ($this->getIsDir()) {
-                if ($recursive) {
-                    foreach ($this->list as $file) {
-                        $file->delete(true);
-                    }
-
-                    if (! @rmdir($this->fullPath)) {
-                        throw new StoreException(null);
-                    }
-                } else {
-                    throw new StoreException('delete directory not recursive: ' . $this->getFullPath());
-                }
-            } elseif (! @unlink($this->getFullPath())) {
-                throw new StoreException(null);
-            }
-        }
-
+        $this->store->delete($this->path);
         return $this;
     }
 
