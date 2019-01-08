@@ -23,6 +23,7 @@ class StoreException extends Exception
     {
         if (! isset($msg)) {
             $error = error_get_last();
+            error_clear_last();
             $msg = $error['message'];
         }
 
