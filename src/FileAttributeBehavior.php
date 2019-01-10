@@ -9,59 +9,118 @@ use yii\db\ActiveRecord;
 use yii\di\Instance;
 use yii\base\InvalidArgumentException;
 
+// @formatter:off
 /**
  * Файловые аттрибуты модели.
+ *
+ * <xmp>
  * class TestModel extends Model {
- * public function behaviors() {
- * return [
- * 'fileAttribute' => [
- * 'class' => FileAttributeBehavior::class,
- * 'attributes' => [
- * 'icon' => 1,
- * 'pics' => false
- * ]
- * ]
- * ];
+ *  public function behaviors() {
+ *      return [
+ *          'fileAttribute' => [
+ *              'class' => FileAttributeBehavior::class,
+ *              'attributes' => [           // файловые аттрибуты модели
+ *                  'icon' => 1,            // значение аттрибута - один файл
+ *                  'thumb' => 10,          // значение аттрибута - массив до 10 файлов
+ *                  'pics' => [             // параметры в виде массива
+ *                      'limit' => 0        // массив файлов без ограничений по кол-ву
+ *                  ]
+ *              ]
+ *          ]
+ *      ]
+ *  }
  * }
- * }
+ * </xmp>
+ *
+ * <xmp>
  * attributes - массив обрабатываемых аттрибутов.
- * Ключ - название аттрибута,
- * значение - limit максимальное кол-во файлов.
- * Данный behavior реализует get/set заданных аттрибутов, поэтому эти свойства этих аттрибутов можно не объявляь в
- * модели.
- * Если задан limit = 1, то get/set возвращает элемент, иначе - массив.
- * Значением аттрибутов может быть элемент/массив элементов File и UploadFile.
- * class TestController extends Controller {
- * public action save() {
- * $model = new TestModel();
+ *  Ключ - название аттрибута,
+ *  Значение - массив параметров атрибута:
+ *      - int $limit - ограничение количества файлов.
+ *          - если $limit == 0,
+ *              то значение аттрибута - массив файлов \dicr\file\File[] без ограничения на кол-во
+ *          - если $limit - число,
+ *              то значение аттрибута - массив \dicr\file\File[] с ограничением кол-ва файлов limit
+ *          - если $limit == 1,
+ *              то значение атрибута - один файл \dicr\file\File
+ * </xmp>
+ *
+ * Если значение не массив, то оно принимается в качестве limit.
+ *
+ * Типы значения аттрибутов:
+ *    \dicr\file\File - для аттрибутов с limit = 1;
+ *    \dicr\file\File[] - для аттрибутов с limit != 1;
+ *
+ * Данный behavior реализует get/set методы для заданных аттрибутов,
+ * поэтому эти методы не должны быть отпередены в модели.
+ *
+ * Для установки значений нужно либо присвоить новые значени типа UploadFile:
+ *
+ * <xmp>
+ * $model->icon = new UploadFile('/tmp/new_file.jpg');
+ *
+ * $model->pics = [
+ *    new UploadFile('/tmp/pic1.jpg'),
+ *    new UploadFIle('/tmp/pic2.jpg')
+ * ];
+ * </xmp>
+ *
+ * Для установки значений из загруженных файлах в POST $_FILES нужно вызвать loadAttributes():
+ *
+ * $model->loadAttributes();
+ *
+ * По событию afterValidate выполняется проверка файловых аттрибутов на допустимые значения.
+ *
+ * Для сохранения значений файловых аттрибутов модели behavior реализует метод saveFileAttributes():
+ *
+ * $model->saveFileAttributes();
+ *
+ * Если модель типа ActiveRecord, то данный behavior перехватывает событие onSave и вызывает
+ * saveAttributes автоматически при сохранении модели:
+ *
+ * $model->save();
+ *
+ * При сохранении аттрибута все новые файлы UploadFiles импортируются в хранилище файлов
+ * модели и заменяются значениями типа File. Все существующие файлы в хранилище модели, которых
+ * нет среди значения аттрибута удаляются.
+ *
+ * Типичный сценарий обработки запроса POST модели с файловыми аттрибутами:
+ *
+ * <xmp>
  * if (\Yii::$app->request->isPost
- * && $model->load(\Yii::$app->request->post())
- * && $model->loadFileAttributes()
- * && $model->validate()) {
- * if ($model instanceof ActiveRecord) $model->save();
- * else $model->saveFileAttributes();
+ *      && $model->load(\Yii::$app->request->post())
+ *      && $model->loadFileAttributes()
+ *      && $model->validate()
+ * ) {
+ *      if ($model instanceof ActiveRecord) {
+ *          $model->save();
+ *      } else {
+ *          $model->saveFileAttributes();
+ *      }
  * }
- * }
- * }
- * Для загрузки значений аттрибутов модели при обработе POST формы нужно после $model->load()
- * дополнительно вызвать $model->loadFileAttributes().
- * Валидация данных аттрибутов выполняется по onBeforeValidate.
- * Сохранение загруженных файлов для ActiveRecord выполняется автоматически по onAfternsert/onAfterUpdate,
- * а для обычной модели необходимо вызвать $model->saveFileAttributes(), при котором выполнится импортирование
- * загруженных файлов
- * в директорию модели и удаление лишних.
- * view.php:
- * <?=Html::img($model->icon->url)?>
+ * </xmp>
+ *
+ * Для вывода картинок можно использовать такой сценарий. Если загрузка файлов не удалась
+ * или validate модели содержит ошибки и модель не сохранена, то UploadFiles не импортировались,
+ * а значит из нужно пропустить при выводе модели:
+ *
+ * <xmp>
+ * <?=$model->icon instanceof UploadFile ? '' : Html::img($model->icon->url)?>
+ *
  * <?php foreach ($model->pics as $pic) {?>
- * <?=Html::img($pic->url)?>
+ *      <?php if (!($pic instanceof UploadFile)) {?>
+ *          <?=Html::img($pic->url)?>
+ *      <?php }?>
  * <?php } ?>
+ * </xmp>
  *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2018
  */
+// @formatter:on
 class FileAttributeBehavior extends Behavior
 {
-    /** @var string|\dicr\file\FileStore хранилище файлов */
+    /** @var string|\dicr\file\FileStoreInterface хранилище файлов */
     public $store = 'fileStore';
 
     /**
@@ -84,7 +143,11 @@ class FileAttributeBehavior extends Behavior
         // owner не инициализирован пока не вызван attach
 
         // получаем store
-        $this->store = Instance::ensure($this->store, FileStore::class);
+        if (is_string($this->store)) {
+            $this->store = \Yii::$app->get($this->store, true);
+        }
+
+        $this->store = Instance::ensure($this->store, FileStoreInterface::class);
 
         // проверяем наличие аттрибутов
         if (empty($this->attributes) || ! is_array($this->attributes)) {
@@ -94,11 +157,9 @@ class FileAttributeBehavior extends Behavior
         // конвертируем упрощеный формат аттрибутов в полный
         foreach ($this->attributes as $attribute => $params) {
             if (is_array($params)) {
-                $params['limit'] = (int)($params['limit'] ?? 0);
+                $params['limit'] = (int) ($params['limit'] ?? 0);
             } else {
-                $params = [
-                    'limit' => (int)$params
-                ];
+                $params = ['limit' => (int) $params];
             }
             $this->attributes[$attribute] = $params;
         }
@@ -138,9 +199,9 @@ class FileAttributeBehavior extends Behavior
      * @throws InvalidConfigException
      * @return \dicr\file\File
      */
-    protected function getAttributePath(string $attribute='')
+    protected function getAttributePath(string $attribute = '')
     {
-        if (!($this->owner instanceof Model)) {
+        if (! ($this->owner instanceof Model)) {
             throw new InvalidConfigException('owner');
         }
 
@@ -155,7 +216,7 @@ class FileAttributeBehavior extends Behavior
      */
     protected function checkFileAttribute(string $attribute)
     {
-        if (!$this->isFileAttribute($attribute)) {
+        if (! $this->isFileAttribute($attribute)) {
             throw new Exception('файловы аттрибут "' . $attribute . '" не существует');
         }
     }
@@ -165,8 +226,9 @@ class FileAttributeBehavior extends Behavior
      *
      * @throws InvalidConfigException
      */
-    protected function checkOwner() {
-        if (!($this->owner instanceof Model)) {
+    protected function checkOwner()
+    {
+        if (! ($this->owner instanceof Model)) {
             throw new InvalidConfigException('owner');
         }
     }
@@ -208,9 +270,7 @@ class FileAttributeBehavior extends Behavior
         if (empty($files)) {
             $files = [];
         } elseif (! is_array($files)) {
-            $files = [
-                $files
-            ];
+            $files = [$files];
         }
 
         // переиндексируем
@@ -250,7 +310,7 @@ class FileAttributeBehavior extends Behavior
         $this->checkFileAttribute($attribute);
         $this->checkOwner();
 
-        if (!($this->owner instanceof Model)) {
+        if (! ($this->owner instanceof Model)) {
             throw new InvalidConfigException('owner');
         }
 
@@ -339,7 +399,7 @@ class FileAttributeBehavior extends Behavior
             return true;
         }
 
-        if (!($this->owner instanceof Model)) {
+        if (! ($this->owner instanceof Model)) {
             throw new InvalidConfigException('owner');
         }
 
@@ -457,18 +517,14 @@ class FileAttributeBehavior extends Behavior
             $files = [];
         } elseif (! is_array($files)) {
             $files = [ // нельзя (array), так как Mode преобразует в toArray();
-                $files
-            ];
+            $files];
         }
 
         // готовим путь модели
         $modelPath = $this->getAttributePath($attribute);
 
         // получаем старые файлы
-        $oldFiles = $modelPath->getList([
-            'dirs' => false,
-            'skipHidden' => true
-        ]);
+        $oldFiles = $modelPath->getList(['dirs' => false,'skipHidden' => true]);
 
         // импортируем новые и переименовываем старые во временные имена с точкой
         foreach ($files as $pos => $file) {

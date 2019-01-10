@@ -365,23 +365,21 @@ class UploadFile extends File
                 throw new Exception('empty upload file path path');
             }
 
-            $instances[$pos] = new static([
-                'path' => $path,
-                'name' => $name,
-                'mimeType' => $types[$pos] ?? null,
-                'size' => $sizes[$pos] ?? null,
-                'error' => $errors[$pos] ?? null,
-            ]);
+            $instances[$pos] = new static(
+                ['path' => $path,'name' => $name,'mimeType' => $types[$pos] ?? null,'size' => $sizes[$pos] ?? null,
+                    'error' => $errors[$pos] ?? null]);
         }
 
         return $instances;
     }
 
+    // @formatter:off
     /**
      * Парсит файлы аттрибута, отправленные без имени формы:
      *
-     * <input type="file" name="attribute"/>
+     * <xmp><input type="file" name="attribute"/></xmp>
      *
+     * <xmp>
      * $_FILES = [
      *  '$attribute' => [
      *      'name' => 'test.php',
@@ -391,9 +389,11 @@ class UploadFile extends File
      *      'size' => 41
      *  ]
      * ];
+     * </xmp>
      *
-     * <input type="file" name="attibute[]"/>
+     * <xmp><input type="file" name="attibute[]"/></xmp>
      *
+     * <xmp>
      * $_FILES = [
      *  '$attribute' => [
      *      'name' => [
@@ -418,26 +418,25 @@ class UploadFile extends File
      *      ],
      *  ],
      * ];
+     * </xmp>
      *
      * @param array $data данные аттрибута
      * @return \dicr\file\UploadFile[] файлы аттрибута
      */
+    // @formatter:on
     protected static function parseAttribData(array $data)
     {
-        return static::attributeInstances(
-            (array) ($data['name'] ?? []),
-            (array) ($data['type'] ?? []),
-            (array) ($data['size'] ?? []),
-            (array) ($data['error'] ?? []),
-            (array) ($data['tmp_name'] ?? [])
-        );
+        return static::attributeInstances((array) ($data['name'] ?? []), (array) ($data['type'] ?? []),
+            (array) ($data['size'] ?? []), (array) ($data['error'] ?? []), (array) ($data['tmp_name'] ?? []));
     }
 
+    // @formatter:off
     /**
      * Парсит файлы формы, отправленные с именем формы:
      *
-     * <input type="file" name="formName[attibute]"/>
+     * <xmp><input type="file" name="formName[attibute]"/></xmp>
      *
+     * <xmp>
      * $_FILES = [
      *  '$formName' => [
      *      'name' => [
@@ -457,9 +456,11 @@ class UploadFile extends File
      *      ]
      *  ]
      * ];
+     * </xmp>
      *
-     * <input type="file" name="formName[attibute][]"/>
+     * <xmp><input type="file" name="formName[attibute][]"/></xmp>
      *
+     * <xmp>
      * $_FILES = [
      *  '$formName' => [
      *      'name' => [
@@ -494,61 +495,67 @@ class UploadFile extends File
      *      ]
      *  ]
      * ];
+     * </xmp>
      *
      * @param array $data array данные аттрибутов формы
      * @return array [$attribute => \dicr\file\UploadFile[]] аттрибуты формы с файлами
      */
+    // @formatter:on
     protected static function parseFormData(array $data)
     {
         $instances = [];
 
         foreach (array_keys($data['name']) as $attribute) {
-            $instances[$attribute] = static::attributeInstances(
-                (array) $data['name'][$attribute],
-                (array) ($data['type'][$attribute] ?? []), (array)
-                ($data['size'][$attribute] ?? []),
-                (array) ($data['error'][$attribute] ?? []),
-                (array) ($data['tmp_name'][$attribute] ?? [])
-            );
+            $instances[$attribute] = static::attributeInstances((array) $data['name'][$attribute],
+                (array) ($data['type'][$attribute] ?? []), (array) ($data['size'][$attribute] ?? []),
+                (array) ($data['error'][$attribute] ?? []), (array) ($data['tmp_name'][$attribute] ?? []));
         }
 
         return $instances;
     }
 
+    // @formatter:off
     /**
      * Определяет тип структуры данных $_FILES.
      *
      * Структура без формы в name содержит либо строку имени файла, либо массив имен с порядковыми значениями:
      *
-     *  'name' => '2018-04-23-195938.jpg'
+     *  <xmp>'name' => '2018-04-23-195938.jpg'</xmp>
      *
      * или
      *
-     *  'name' => [
+     * <xmp>
+     * 'name' => [
      *      0 => '2018-04-23-195938.jpg',
      *      1 => 'test.php',
-     *  ]
+     * ]
+     * </xmp>
      *
      * Структура с именем формы в аттрибуте в name содержит массив имен аттрбутов, значениями которых являются массивы
      * имен файлов:
      *
+     * <xmp>
      * 'name' => [
      *      '$attribute' => 'test.php'
-     *  ]
+     * ]
+     * </xmp>
      *
-     *  или
+     * или
      *
-     *  'name' => [
+     * <xmp>
+     * 'name' => [
      *      '$attribute' => [
      *          0 => '2018-04-23-195938.jpg',
      *          1 => 'test.php'
      *      ]
-     *  ],
+     * ]
+     * </xmp>
      *
      * @param array $data
      * @throws Exception
      * @return boolean
      */
+    // @formatter:on
     protected static function detectFormData(array $data)
     {
 
@@ -572,15 +579,19 @@ class UploadFile extends File
         return ! preg_match('~^\d+$~', $keys[0]);
     }
 
+    // @formatter:off
     /**
      * Парсит структуру $_FILES и создает объекты
      *
-     * @return array [
+     * @return array
+     * <xmp>[
      *      $formName => [
      *          $attribute => \dicr\file\UploadFile[]
      *      ]
      * ]
+     * </xmp>
      */
+    // @formatter:on
     protected static function parseInstances()
     {
         $instances = [];
