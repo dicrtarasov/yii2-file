@@ -270,6 +270,8 @@ class FlysystemFileStore extends AbstractFileStore
     {
         $ret = null;
         try {
+            // FIXME clear stat cache for local filesystem
+            @clearstatcache(null, $this->getFullPath($path));
             $ret = $this->flysystem->getSize($path);
         } catch (\Throwable $ex) {
             throw new StoreException($path, $ex);

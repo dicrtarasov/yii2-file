@@ -335,10 +335,8 @@ class UploadFile extends File
      */
     public function delete()
     {
-        $ret = @unkink($this->path);
-        if ($ret === false) {
-            throw new StoreException();
-        }
+        // ошибки не важны, потому как загруженные файлы удаляются автоматически
+        @unkink($this->path);
         return $this;
     }
 
@@ -362,50 +360,63 @@ class UploadFile extends File
                 continue;
             }
 
-            $instances[$pos] = new static(
-                ['name' => $name,'mimeType' => $types[$pos] ?? null,'size' => $sizes[$pos] ?? null,
-                    'error' => $errors[$pos] ?? null,'path' => $paths[$pos] ?? null]);
+            $path = rtrim($paths[$pos] ?? '', DIRECTORY_SEPARATOR);
+            if ($path === '') {
+                throw new Exception('empty upload file path path');
+            }
+
+            $instances[$pos] = new static([
+                'path' => $path,
+                'name' => $name,
+                'mimeType' => $types[$pos] ?? null,
+                'size' => $sizes[$pos] ?? null,
+                'error' => $errors[$pos] ?? null,
+            ]);
         }
 
         return $instances;
     }
 
     /**
-     * Парсит файлы аттрибута, отправленные без имени формы
+     * Парсит файлы аттрибута, отправленные без имени формы:
+     *
      * <input type="file" name="attribute"/>
+     *
      * $_FILES = [
-     * '$attribute' => [
-     * 'name' => 'test.php',
-     * 'type' => 'application/x-php',
-     * 'tmp_name' => '/tmp/phpqmYDrQ',
-     * 'error' => 0,
-     * 'size' => 41
-     * ]
+     *  '$attribute' => [
+     *      'name' => 'test.php',
+     *      'type' => 'application/x-php',
+     *      'tmp_name' => '/tmp/phpqmYDrQ',
+     *      'error' => 0,
+     *      'size' => 41
+     *  ]
      * ];
+     *
      * <input type="file" name="attibute[]"/>
+     *
      * $_FILES = [
-     * '$attribute' => [
-     * 'name' => [
-     * 0 => '2018-04-23-195938.jpg',
-     * 1 => 'test.php',
-     * ],
-     * 'type' => [
-     * 0 => 'image/jpeg',
-     * 1 => 'application/x-php',
-     * ],
-     * 'tmp_name' => [
-     * 0 => '/tmp/php9PADWU',
-     * 1 => '/tmp/phpEarnq1',
-     * ],
-     * 'error' => [
-     * 0 => 0,
-     * 1 => 0,
-     * ],
-     * 'size' => [
-     * 0 => 166980,
-     * 1 => 41,
-     * ],
-     * ],
+     *  '$attribute' => [
+     *      'name' => [
+     *          0 => '2018-04-23-195938.jpg',
+     *          1 => 'test.php',
+     *      ],
+     *      'type' => [
+     *          0 => 'image/jpeg',
+     *          1 => 'application/x-php',
+     *      ],
+     *      'tmp_name' => [
+     *          0 => '/tmp/php9PADWU',
+     *          1 => '/tmp/phpEarnq1',
+     *      ],
+     *      'error' => [
+     *          0 => 0,
+     *          1 => 0,
+     *      ],
+     *      'size' => [
+     *          0 => 166980,
+     *          1 => 41,
+     *      ],
+     *  ],
      * ];
      *
      * @param array $data данные аттрибута
@@ -413,66 +424,75 @@ class UploadFile extends File
      */
     protected static function parseAttribData(array $data)
     {
-        return static::attributeInstances((array) ($data['name'] ?? []), (array) ($data['type'] ?? []),
-            (array) ($data['size'] ?? []), (array) ($data['error'] ?? []), (array) ($data['tmp_name'] ?? []));
+        return static::attributeInstances(
+            (array) ($data['name'] ?? []),
+            (array) ($data['type'] ?? []),
+            (array) ($data['size'] ?? []),
+            (array) ($data['error'] ?? []),
+            (array) ($data['tmp_name'] ?? [])
+        );
     }
 
     /**
      * Парсит файлы формы, отправленные с именем формы:
+     *
      * <input type="file" name="formName[attibute]"/>
+     *
      * $_FILES = [
-     * '$formName' => [
-     * 'name' => [
-     * '$attribute' => 'test.php'
-     * ],
-     * 'type' => [
-     * '$attribute' => 'application/x-php'
-     * ],
-     * 'tmp_name' => [
-     * '$attribute' => '/tmp/phpQ2c8T7'
-     * ],
-     * 'error' => [
-     * '$attribute' => 0
-     * ],
-     * 'size' => [
-     * '$attribute' => 41
-     * ]
-     * ]
+     *  '$formName' => [
+     *      'name' => [
+     *          '$attribute' => 'test.php'
+     *      ],
+     *      'type' => [
+     *          '$attribute' => 'application/x-php'
+     *      ],
+     *      'tmp_name' => [
+     *          '$attribute' => '/tmp/phpQ2c8T7'
+     *      ],
+     *      'error' => [
+     *          '$attribute' => 0
+     *      ],
+     *      'size' => [
+     *          '$attribute' => 41
+     *      ]
+     *  ]
      * ];
+     *
      * <input type="file" name="formName[attibute][]"/>
+     *
      * $_FILES = [
-     * '$formName' => [
-     * 'name' => [
-     * '$attribute' => [
-     * 0 => '2018-04-23-195938.jpg',
-     * 1 => 'test.php'
-     * ]
-     * ],
-     * 'type' => [
-     * '$attribute' => [
-     * 0 => 'image/jpeg',
-     * 1 => 'application/x-php'
-     * ]
-     * ],
-     * 'tmp_name' => [
-     * '$attribute' => [
-     * 0 => '/tmp/phpqZNTne',
-     * 1 => '/tmp/phpvK409l'
-     * ],
-     * ],
-     * 'error' => [
-     * '$attribute' => [
-     * 0 => 0,
-     * 1 => 0
-     * ]
-     * ],
-     * 'size' => [
-     * 'attribute' => [
-     * 0 => 166980,
-     * 1 => 41
-     * ]
-     * ]
-     * ]
+     *  '$formName' => [
+     *      'name' => [
+     *          '$attribute' => [
+     *              0 => '2018-04-23-195938.jpg',
+     *              1 => 'test.php'
+     *          ]
+     *      ],
+     *      'type' => [
+     *          '$attribute' => [
+     *              0 => 'image/jpeg',
+     *              1 => 'application/x-php'
+     *          ]
+     *      ],
+     *      'tmp_name' => [
+     *          '$attribute' => [
+     *              0 => '/tmp/phpqZNTne',
+     *              1 => '/tmp/phpvK409l'
+     *          ],
+     *      ],
+     *      'error' => [
+     *          '$attribute' => [
+     *              0 => 0,
+     *              1 => 0
+     *          ]
+     *      ],
+     *      'size' => [
+     *          'attribute' => [
+     *              0 => 166980,
+     *              1 => 41
+     *          ]
+     *      ]
+     *  ]
      * ];
      *
      * @param array $data array данные аттрибутов формы
@@ -483,34 +503,47 @@ class UploadFile extends File
         $instances = [];
 
         foreach (array_keys($data['name']) as $attribute) {
-            $instances[$attribute] = static::attributeInstances((array) $data['name'][$attribute],
-                (array) ($data['type'][$attribute] ?? []), (array) ($data['size'][$attribute] ?? []),
-                (array) ($data['error'][$attribute] ?? []), (array) ($data['tmp_name'][$attribute] ?? []));
+            $instances[$attribute] = static::attributeInstances(
+                (array) $data['name'][$attribute],
+                (array) ($data['type'][$attribute] ?? []), (array)
+                ($data['size'][$attribute] ?? []),
+                (array) ($data['error'][$attribute] ?? []),
+                (array) ($data['tmp_name'][$attribute] ?? [])
+            );
         }
 
         return $instances;
     }
 
     /**
-     * Определяет тип структуры данных $_FILES
-     * Структура без формы в name содержит либо строку имени файла, либо массив имен с порядковыми значениями.
-     * 'name' => '2018-04-23-195938.jpg'
+     * Определяет тип структуры данных $_FILES.
+     *
+     * Структура без формы в name содержит либо строку имени файла, либо массив имен с порядковыми значениями:
+     *
+     *  'name' => '2018-04-23-195938.jpg'
+     *
      * или
-     * 'name' => [
-     * 0 => '2018-04-23-195938.jpg',
-     * 1 => 'test.php',
-     * ];
+     *
+     *  'name' => [
+     *      0 => '2018-04-23-195938.jpg',
+     *      1 => 'test.php',
+     *  ]
+     *
      * Структура с именем формы в аттрибуте в name содержит массив имен аттрбутов, значениями которых являются массивы
-     * имен файлов
+     * имен файлов:
+     *
      * 'name' => [
-     * '$attribute' => 'test.php'
-     * ],
-     * 'name' => [
-     * '$attribute' => [
-     * 0 => '2018-04-23-195938.jpg',
-     * 1 => 'test.php'
-     * ]
-     * ],
+     *      '$attribute' => 'test.php'
+     *  ]
+     *
+     *  или
+     *
+     *  'name' => [
+     *      '$attribute' => [
+     *          0 => '2018-04-23-195938.jpg',
+     *          1 => 'test.php'
+     *      ]
+     *  ],
      *
      * @param array $data
      * @throws Exception
@@ -542,17 +575,11 @@ class UploadFile extends File
     /**
      * Парсит структуру $_FILES и создает объекты
      *
-     * @return array [$formName => [$attribute => \dicr\file\UploadFile[]]]
-     *         [
-     *         // файлы аттрибутов без формы
-     *         '' => [
-     *         $attribute => \dicr\file\UploadFile[]
-     *         ],
-     *         // файлы аттрибутов формы
-     *         $formName => [ // файлы аттрибутов с названием формы
-     *         $attribute => \dicr\file\UploadFile[]
-     *         ]
-     *         ]
+     * @return array [
+     *      $formName => [
+     *          $attribute => \dicr\file\UploadFile[]
+     *      ]
+     * ]
      */
     protected static function parseInstances()
     {
@@ -561,7 +588,7 @@ class UploadFile extends File
         if (! empty($_FILES)) {
             foreach ($_FILES as $key => $data) {
                 if (static::detectFormData($data)) {
-                    // аттрибуты формы, $key == $formName, $data == аттрибуты в формате формы
+                    // аттрибуты формы: $key == $formName, $data == аттрибуты в формате формы
                     $instances[$key] = static::parseFormData($data);
                 } else {
                     // аттрибут без формы, $formName == '', $key == $attribute, $data == данные в формате одного аттрибуты
@@ -576,21 +603,19 @@ class UploadFile extends File
     /**
      * Возвращает файлы аттрибутов формы загруженные в $_FILES или null.
      *
-     * @param string|null $formName имя формы для которой возвращает аттрибуты
-     * @param string|null $attribute если задан, то возвращает файлы только для аттрибута
+     * @param string $formName имя формы для которой возвращает аттрибуты
+     * @param string $attribute если задан, то возвращает файлы только для аттрибута
      * @return mixed
      */
-    public static function instances(string $formName = '', $attribute = null)
+    public static function instances(string $formName = '', string $attribute = '')
     {
         if (! isset(self::$instances)) {
             self::$instances = self::parseInstances();
         }
 
-        $formName = trim($formName);
+        $path = [trim($formName)];
 
-        $path = [$formName];
-
-        if (! empty($attribute)) {
+        if ($attribute !== '') {
             $path[] = $attribute;
         }
 
