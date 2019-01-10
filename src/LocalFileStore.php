@@ -11,6 +11,7 @@ use yii\base\InvalidConfigException;
  * @see http://php.net/manual/en/wrappers.php
  *
  * /opt/files
+ *
  * zip://test.zip#path/file.txt, context => ['password' => your_pass]
  *
  * ftp://user:pass@server.net/path/file.txt
@@ -101,7 +102,7 @@ class LocalFileStore extends AbstractFileStore
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::getFullPath()
      */
-    public function getFullPath(string $path)
+    public function getFullPath($path)
     {
         $p = [$this->path];
 
@@ -133,7 +134,7 @@ class LocalFileStore extends AbstractFileStore
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::list()
      */
-    public function list(string $path, array $options = [])
+    public function list($path, array $options = [])
     {
         if (! $this->isExists($path)) {
             return [];
@@ -150,7 +151,7 @@ class LocalFileStore extends AbstractFileStore
                 $iterator = new \DirectoryIterator($fullPath);
             }
         } catch (\Throwable $ex) {
-            throw new StoreException($path, $ex);
+            throw new StoreException($fullPath, $ex);
         }
 
         $files = [];
@@ -177,7 +178,7 @@ class LocalFileStore extends AbstractFileStore
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::isExists()
      */
-    public function isExists(string $path)
+    public function isExists($path)
     {
         $path = $this->normalizeRelativePath($path);
         if ($path === '') {
@@ -191,7 +192,7 @@ class LocalFileStore extends AbstractFileStore
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::getType()
      */
-    public function getType(string $path)
+    public function getType($path)
     {
         $path = $this->normalizeRelativePath($path);
         if ($path === '') {
@@ -200,7 +201,7 @@ class LocalFileStore extends AbstractFileStore
 
         $fullPath = $this->getFullPath($path);
         if (! @file_exists($fullPath)) {
-            throw new StoreException();
+            throw new StoreException('not exits: ' . $path);
         }
 
         return @is_dir($fullPath) ? File::TYPE_DIR : File::TYPE_FILE;
@@ -256,7 +257,7 @@ class LocalFileStore extends AbstractFileStore
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::getAccess()
      */
-    public function getAccess(string $path)
+    public function getAccess($path)
     {
         $fullPath = $this->getFullPath($path);
         if (! @file_exists($fullPath)) {
@@ -276,7 +277,7 @@ class LocalFileStore extends AbstractFileStore
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::setAccess()
      */
-    public function setAccess(string $path, string $access)
+    public function setAccess($path, string $access)
     {
         $path = $this->normalizeRelativePath($path);
         if ($path === '') {
@@ -303,7 +304,7 @@ class LocalFileStore extends AbstractFileStore
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::getSize()
      */
-    public function getSize(string $path)
+    public function getSize($path)
     {
         $path = $this->normalizeRelativePath($path);
         if ($path === '') {
@@ -321,12 +322,13 @@ class LocalFileStore extends AbstractFileStore
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::getMtime()
      */
-    public function getMtime(string $path)
+    public function getMtime($path)
     {
         $time = @filemtime($this->getFullPath($path));
         if ($time === false) {
             throw new StoreException();
         }
+
         return $time;
     }
 
@@ -334,7 +336,7 @@ class LocalFileStore extends AbstractFileStore
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::getMimeType()
      */
-    public function getMimeType(string $path)
+    public function getMimeType($path)
     {
         $path = $this->normalizeRelativePath($path);
         if ($path === '') {
@@ -346,6 +348,7 @@ class LocalFileStore extends AbstractFileStore
         if ($type === false) {
             throw new StoreException();
         }
+
         return $type;
     }
 
@@ -353,7 +356,7 @@ class LocalFileStore extends AbstractFileStore
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::move()
      */
-    public function move(string $path, string $newpath)
+    public function move($path, $newpath)
     {
         $path = $this->normalizeRelativePath($path);
         if ($path === '') {
@@ -363,6 +366,10 @@ class LocalFileStore extends AbstractFileStore
         $newpath = $this->normalizeRelativePath($newpath);
         if ($newpath === '') {
             throw new StoreException('root path');
+        }
+
+        if ($path === $newpath) {
+            throw new \LogicException('path == newpath');
         }
 
         $this->checkDir(dirname($newpath));
@@ -378,7 +385,7 @@ class LocalFileStore extends AbstractFileStore
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::copy()
      */
-    public function copy(string $path, string $newpath)
+    public function copy($path, $newpath)
     {
         $path = $this->normalizeRelativePath($path);
         if ($path === '') {
@@ -388,6 +395,10 @@ class LocalFileStore extends AbstractFileStore
         $newpath = $this->normalizeRelativePath($newpath);
         if ($newpath === '') {
             throw new StoreException('root path');
+        }
+
+        if ($path === $newpath) {
+            throw new \LogicException('path == newpath');
         }
 
         $this->checkDir(dirname($newpath));
@@ -403,7 +414,7 @@ class LocalFileStore extends AbstractFileStore
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::getContents()
      */
-    public function getContents(string $path)
+    public function getContents($path)
     {
         $path = $this->normalizeRelativePath($path);
         if ($path === '') {
@@ -423,7 +434,7 @@ class LocalFileStore extends AbstractFileStore
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::setContents()
      */
-    public function setContents(string $path, string $contents)
+    public function setContents($path, string $contents)
     {
         $path = $this->normalizeRelativePath($path);
         if ($path === '') {
@@ -461,7 +472,7 @@ class LocalFileStore extends AbstractFileStore
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::getStream()
      */
-    public function getStream(string $path)
+    public function getStream($path)
     {
         $path = $this->normalizeRelativePath($path);
         if ($path === '') {
@@ -480,7 +491,7 @@ class LocalFileStore extends AbstractFileStore
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::setStream()
      */
-    public function setStream(string $path, $stream)
+    public function setStream($path, $stream)
     {
         $path = $this->normalizeRelativePath($path);
         if ($path === '') {
@@ -499,11 +510,11 @@ class LocalFileStore extends AbstractFileStore
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::mkdir()
      */
-    public function mkdir(string $path)
+    public function mkdir($path)
     {
         $path = $this->normalizeRelativePath($path);
         if ($path == '') {
-            throw new StoreException('mkdir in root path');
+            throw new StoreException('root path');
         }
 
         $fullPath = $this->getFullPath($path);
@@ -522,7 +533,7 @@ class LocalFileStore extends AbstractFileStore
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::delete()
      */
-    public function delete(string $path)
+    public function delete($path)
     {
         $path = $this->normalizeRelativePath($path);
         if ($path == '') {
@@ -569,5 +580,14 @@ class LocalFileStore extends AbstractFileStore
         clearstatcache(null, $fullPath); // for ssh2 wrapper
 
         return $this;
+    }
+
+    /**
+     * Конвертирует в строку
+     *
+     * @return string
+     */
+    public function __toString() {
+        return $this->path;
     }
 }

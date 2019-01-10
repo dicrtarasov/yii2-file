@@ -58,28 +58,54 @@ abstract class AbstractFileStore extends Component implements FileStoreInterface
     }
 
     /**
+     * Разбивает путь на элементы
+     *
+     * @param string|array $path
+     * @return array
+     */
+    protected function splitPath($path) {
+        if (!is_array($path)) {
+            $regex = sprintf('~[%s\\\/]+~uism', preg_quote($this->pathSeparator));
+            $path = preg_split($regex, $path, -1, PREG_SPLIT_NO_EMPTY);
+        }
+
+        return $path;
+    }
+
+    /**
      * Нормализирует относительный путь
      *
-     * @param string $path
+     * @param string|array $path
      * @return string
      */
-    public function normalizeRelativePath(string $path) {
-        return trim($path, $this->pathSeparator);
+    public function normalizeRelativePath($path) {
+        $path = $this->splitPath($path);
+
+        $relpath = [];
+        foreach ($path as $p) {
+            if ($p == '..') {
+                array_pop($relpath);
+            } elseif ($p !== '' && $p !== '.') {
+                $relpath[] = $p;
+            }
+        }
+
+        return implode($this->pathSeparator, $relpath);
     }
 
     /**
      * Возвращает полный путь
      *
-     * @param string $path
+     * @param string|array $path
      * @return string
      */
-    abstract public function getFullPath(string $path);
+    abstract public function getFullPath($path);
 
     /**
      * {@inheritDoc}
      * @see \dicr\file\FileStoreInterface::file()
      */
-    public function file(string $path)
+    public function file($path)
     {
         return \Yii::createObject(array_merge($this->fileConfig, [
             'store' => $this,
@@ -90,26 +116,18 @@ abstract class AbstractFileStore extends Component implements FileStoreInterface
     /**
      * Возвращает дочерний элемент относительно path
      *
-     * @param string $path относительный путь
-     * @param string $child дочерний относительный путь
+     * @param string|array $path относительный путь
+     * @param string|array $child дочерний относительный путь
      * @throws StoreException
      * @return \dicr\file\File
      */
-    public function child(string $path, string $child)
+    public function child($path, $child)
     {
-        $relpath = [];
-
+        $path = $this->splitPath($path);
+        $path = array_merge($path, $this->splitPath($child));
         $path = $this->normalizeRelativePath($path);
-        if ($path !== '') {
-            $relpath[] = $path;
-        }
 
-        $child = $this->normalizeRelativePath($child);
-        if ($child !== '') {
-            $relpath[] = $child;
-        }
-
-        return $this->file(implode($this->pathSeparator, $relpath));
+        return $this->file($path);
     }
 
     /**
@@ -159,15 +177,15 @@ abstract class AbstractFileStore extends Component implements FileStoreInterface
      * {@inheritDoc}
      * @see \dicr\file\FileStoreInterface::list()
      */
-    abstract public function list(string $path, array $options=[]);
+    abstract public function list($path, array $options=[]);
 
     /**
      * Возвращает URL файла
      *
-     * @param string $path
+     * @param string|array $path
      * @return string|null URL файла
      */
-    public function getUrl(string $path) {
+    public function getUrl($path) {
         if (empty($this->url)) {
             return null;
         }
@@ -181,10 +199,8 @@ abstract class AbstractFileStore extends Component implements FileStoreInterface
             $url
         ];
 
-        $path = trim($path, '\\/');
-        if ($path !== '') {
-            $url[] = $path;
-        }
+        $path = $this->normalizeRelativePath($path);
+        $url = array_merge($url, $this->splitPath($path));
 
         return implode('/', $url);
     }
@@ -192,48 +208,49 @@ abstract class AbstractFileStore extends Component implements FileStoreInterface
     /**
      * Проверяет существование файла
      *
-     * @param string $path
+     * @param string|array $path
      * @throws StoreException
      * @return boolean
      */
-    abstract public function isExists(string $path);
+    abstract public function isExists($path);
 
     /**
      * Возвращает тип файла
      *
-     * @param string $path
+     * @param string|array $path
      * @throws StoreException
      * @return string File::TYPE_*
      */
-    abstract public function getType(string $path);
+    abstract public function getType($path);
 
     /**
      * Возвращает доступность файла (публичная приватная)
      *
-     * @param string $path
+     * @param string|array $path
      * @throws StoreException
      * @return string File::ACCESS_TYPE
      */
-    abstract public function getAccess(string $path);
+    abstract public function getAccess($path);
 
     /**
      * Устанавливает права доступа
      *
-     * @param string $path
+     * @param string|array $path
      * @param string $access File::ACCESS_*
      * @throws StoreException
      * @return static
      */
-    abstract public function setAccess(string $path, string $access);
+    abstract public function setAccess($path, string $access);
 
     /**
      * Возвращает флаг скрытого элемента
      *
-     * @param string $path
+     * @param string|array $path
      * @return boolean
      */
-    public function isHidden(string $path)
+    public function isHidden($path)
     {
+        $path = $this->normalizeRelativePath($path);
         $name = basename($path);
         return mb_substr($name, 0, 1) == '.';
     }
@@ -241,117 +258,120 @@ abstract class AbstractFileStore extends Component implements FileStoreInterface
     /**
      * Возвращает размер файла
      *
-     * @param string $path
+     * @param string|array $path
      * @throws StoreException
      * @return int
      */
-    abstract public function getSize(string $path);
+    abstract public function getSize($path);
 
     /**
      * Возвращает время изменения
      *
-     * @param string $path
+     * @param string|array $path
      * @throws StoreException
      * @return int timestamp
      */
-    abstract public function getMtime(string $path);
+    abstract public function getMtime($path);
 
     /**
      * Возвращает MIME-тип файла
      *
-     * @param string $path
+     * @param string|array $path
      * @throws StoreException
      * @return string
      */
-    abstract public function getMimeType(string $path);
+    abstract public function getMimeType($path);
 
     /**
      * Rename/move file
      *
-     * @param string $path
-     * @param string $newpath
+     * @param string|array $path
+     * @param string|array $newpath
      * @throws StoreException
      * @return static
      */
-    abstract public function move(string $path, string $newpath);
+    abstract public function move($path, $newpath);
 
     /**
      * Copy file
      *
-     * @param string $path
-     * @param string $newpath
+     * @param string|array $path
+     * @param string|array $newpath
      * @throws StoreException
      * @return static
      */
-    abstract public function copy(string $path, string $newpath);
+    abstract public function copy($path, $newpath);
 
     /**
      * Возвращает содержимое файла в строке
      *
-     * @param string $path
+     * @param string|array $path
      * @throws StoreException
      * @return string
      */
-    abstract public function getContents(string $path);
+    abstract public function getContents($path);
 
     /**
      * Записывает содержиме файла из строки
      *
-     * @param string $path
+     * @param string|array $path
      * @param string $contents содержимое
      * @throws StoreException
      * @return int размер записанных даннных
      */
-    abstract public function setContents(string $path, string $contents);
+    abstract public function setContents($path, string $contents);
 
     /**
      * Возвращает открытый поток файла
      *
-     * @param string $path
+     * @param string|array $path
      * @throws StoreException
      * @return resource
      */
-    abstract public function getStream(string $path);
+    abstract public function getStream($path);
 
     /**
      * Записывает файл из потока
      *
-     * @param string $path
+     * @param string|array $path
      * @param resource $stream
      * @throws StoreException
      * @return int кол-во данных
      */
-    abstract public function setStream(string $path, $stream);
+    abstract public function setStream($path, $stream);
 
     /**
      * Создает директорию
      *
-     * @param string $path
+     * @param string|array $path
      * @throws StoreException
      * @return static
      */
-    abstract public function mkdir(string $path);
+    abstract public function mkdir($path);
 
     /**
      * Проверяет/создает директорию
      *
      * @throws StoreException
-     * @param string $dir
+     * @param string|array $dir
      * return static
      */
-    public function checkDir(string $dir) {
-        if ($dir !== '' && !$this->isExists($dir)) {
+    public function checkDir($dir) {
+        $dir = $this->normalizeRelativePath($dir);
+
+        if ($dir !== '' && $this->getType($dir) !== File::TYPE_DIR) {
             $this->mkdir($dir);
         }
+
         return $this;
     }
 
     /**
      * Удаляет файл/директорию
      *
-     * @param string $path
+     * @param string|array $path
      * @throws StoreException
      * @return static
      */
-    abstract public function delete(string $path);
+    abstract public function delete($path);
 }

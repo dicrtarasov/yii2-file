@@ -135,12 +135,12 @@ class FlysystemFileStore extends AbstractFileStore
      * {@inheritDoc}
      * @see \dicr\file\AbstractFileStore::getFullPath()
      */
-    public function getFullPath(string $path) {
+    public function getFullPath($path) {
+        $path = $this->normalizeRelativePath($path);
+
         $adapter = $this->adapter;
-        if (isset($adapter)) {
-            if (is_callable([$adapter, 'applyPathPrefix'])) {
-                return $adapter->applyPathPrefix($path);
-            }
+        if (isset($adapter) && is_callable([$adapter, 'applyPathPrefix'])) {
+            return $adapter->applyPathPrefix($path);
         }
 
         throw new StoreException($path, new NotSupportedException());
@@ -150,8 +150,10 @@ class FlysystemFileStore extends AbstractFileStore
      * {@inheritDoc}
      * @see \dicr\file\AbstractFileStore::list()
      */
-    public function list(string $path, array $options=[])
+    public function list($path, array $options=[])
     {
+        $path = $this->normalizeRelativePath($path);
+
         $items = null;
         try {
             $items = $this->flysystem->listContents($path, $options['recursive'] ?? false);
@@ -180,8 +182,10 @@ class FlysystemFileStore extends AbstractFileStore
      * {@inheritDoc}
      * @see \dicr\file\AbstractFileStore::isExists()
      */
-    public function isExists(string $path)
+    public function isExists($path)
     {
+        $path = $this->normalizeRelativePath($path);
+
         $ret = null;
         try {
             $ret =$this->flysystem->has($path);
@@ -196,9 +200,11 @@ class FlysystemFileStore extends AbstractFileStore
      * {@inheritDoc}
      * @see \dicr\file\AbstractFileStore::getType()
      */
-    public function getType(string $path)
+    public function getType($path)
     {
+        $path = $this->normalizeRelativePath($path);
         $ret = null;
+
         try {
             $ret = $this->flysystem->getMetadata($path);
         } catch (\Throwable $ex) {
@@ -220,9 +226,11 @@ class FlysystemFileStore extends AbstractFileStore
      * {@inheritDoc}
      * @see \dicr\file\AbstractFileStore::getAccess()
      */
-    public function getAccess(string $path)
+    public function getAccess($path)
     {
+        $path = $this->normalizeRelativePath($path);
         $ret = null;
+
         try {
             $ret = $this->flysystem->getVisibility($path);
         } catch (\Throwable $ex) {
@@ -244,11 +252,12 @@ class FlysystemFileStore extends AbstractFileStore
      * {@inheritDoc}
      * @see \dicr\file\AbstractFileStore::setAccess()
      */
-    public function setAccess(string $path, string $access)
+    public function setAccess($path, string $access)
     {
+        $path = $this->normalizeRelativePath($path);
         $visibility = self::access2visibility($access);
-
         $ret = null;
+
         try {
             $ret = $this->flysystem->setVisibility($path, $visibility);
         } catch (\Throwable $ex) {
@@ -266,9 +275,11 @@ class FlysystemFileStore extends AbstractFileStore
      * {@inheritDoc}
      * @see \dicr\file\AbstractFileStore::getSize()
      */
-    public function getSize(string $path)
+    public function getSize($path)
     {
+        $path = $this->normalizeRelativePath($path);
         $ret = null;
+
         try {
             // FIXME clear stat cache for local filesystem
             @clearstatcache(null, $this->getFullPath($path));
@@ -292,8 +303,9 @@ class FlysystemFileStore extends AbstractFileStore
      * {@inheritDoc}
      * @see \dicr\file\AbstractFileStore::getMtime()
      */
-    public function getMtime(string $path)
+    public function getMtime($path)
     {
+        $path = $this->normalizeRelativePath($path);
         $ret = null;
 
         try {
@@ -317,9 +329,11 @@ class FlysystemFileStore extends AbstractFileStore
      * {@inheritDoc}
      * @see \dicr\file\AbstractFileStore::getMimeType()
      */
-    public function getMimeType(string $path)
+    public function getMimeType($path)
     {
+        $path = $this->normalizeRelativePath($path);
         $ret = null;
+
         try {
             $ret = $this->flysystem->getMimetype($path);
         } catch (\Throwable $ex) {
@@ -341,8 +355,11 @@ class FlysystemFileStore extends AbstractFileStore
      * {@inheritDoc}
      * @see \dicr\file\AbstractFileStore::move()
      */
-    public function move(string $path, string $newpath)
+    public function move($path, $newpath)
     {
+        $path = $this->normalizeRelativePath($path);
+        $newpath = $this->normalizeRelativePath($newpath);
+
         if ($path === $newpath) {
             throw new \LogicException('equal path: ' . $path);
         }
@@ -366,8 +383,11 @@ class FlysystemFileStore extends AbstractFileStore
      * {@inheritDoc}
      * @see \dicr\file\AbstractFileStore::copy()
      */
-    public function copy(string $path, string $newpath)
+    public function copy($path, $newpath)
     {
+        $path = $this->normalizeRelativePath($path);
+        $newpath = $this->normalizeRelativePath($newpath);
+
         if ($path === $newpath) {
             throw new \LogicException('equal path: ' . $path);
         }
@@ -391,9 +411,11 @@ class FlysystemFileStore extends AbstractFileStore
      * {@inheritDoc}
      * @see \dicr\file\AbstractFileStore::getContents()
      */
-    public function getContents(string $path)
+    public function getContents($path)
     {
+        $path = $this->normalizeRelativePath($path);
         $ret = null;
+
         try {
             $ret = $this->flysystem->read($path);
         } catch (\Throwable $ex) {
@@ -415,9 +437,11 @@ class FlysystemFileStore extends AbstractFileStore
      * {@inheritDoc}
      * @see \dicr\file\AbstractFileStore::setContents()
      */
-    public function setContents(string $path, string $contents)
+    public function setContents($path, string $contents)
     {
+        $path = $this->normalizeRelativePath($path);
         $ret = null;
+
         try {
             $ret = $this->flysystem->put($path, $contents);
         } catch (\THrowable $ex) {
@@ -445,9 +469,11 @@ class FlysystemFileStore extends AbstractFileStore
      * {@inheritDoc}
      * @see \dicr\file\AbstractFileStore::getStream()
      */
-    public function getStream(string $path)
+    public function getStream($path)
     {
+        $path = $this->normalizeRelativePath($path);
         $ret = null;
+
         try {
             $ret = $this->flysystem->readStream($path);
         } catch (\Throwable $ex) {
@@ -470,9 +496,11 @@ class FlysystemFileStore extends AbstractFileStore
      * @see \dicr\file\AbstractFileStore::setStream()
      * @todo implement return size
      */
-    public function setStream(string $path, $stream)
+    public function setStream($path, $stream)
     {
+        $path = $this->normalizeRelativePath($path);
         $ret = null;
+
         try {
             $ret = $this->flysystem->putStream($path, $stream);
         } catch (\Throwable $ex) {
@@ -490,9 +518,11 @@ class FlysystemFileStore extends AbstractFileStore
      * {@inheritDoc}
      * @see \dicr\file\AbstractFileStore::mkdir()
      */
-    public function mkdir(string $path)
+    public function mkdir($path)
     {
+        $path = $this->normalizeRelativePath($path);
         $ret = null;
+
         try {
             $ret = $this->flysystem->createDir($path);
         } catch (\Throwable $ex) {
@@ -510,11 +540,12 @@ class FlysystemFileStore extends AbstractFileStore
      * {@inheritDoc}
      * @see \dicr\file\AbstractFileStore::delete()
      */
-    public function delete(string $path)
+    public function delete($path)
     {
+        $path = $this->normalizeRelativePath($path);
         $type = $this->getType($path);
-
         $ret = null;
+
         try {
             $ret = $type === File::TYPE_FILE ?
                 $this->flysystem->delete($path) :

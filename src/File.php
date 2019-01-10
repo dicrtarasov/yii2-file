@@ -55,6 +55,21 @@ class File extends BaseObject
     private $_fullPath;
 
     /**
+     * Конструктор
+     *
+     * @param string|array $config если string, то принимается как path
+     */
+    public function __construct($config=[]) {
+        if (is_string($config)) {
+            $config = [
+                'path' => $config
+            ];
+        }
+
+        parent::__construct($config);
+    }
+
+    /**
      * {@inheritdoc}
      * @see \yii\base\BaseObject::init()
      */
@@ -103,12 +118,12 @@ class File extends BaseObject
     /**
      * Устанавливает путь
      *
-     * @param string $path new path
+     * @param string|array $path new path
      * @param bool $move переместить существующий файл
      * @throws \dicr\file\StoreException
      * @return static
      */
-    public function setPath(string $path, bool $move = false)
+    public function setPath($path, bool $move = false)
     {
         $path = $this->store->normalizeRelativePath($path);
 
@@ -139,11 +154,11 @@ class File extends BaseObject
     /**
      * Перемещает файл по новому пути
      *
-     * @param string $path
+     * @param string|array $path
      * @throws StoreException
      * @return self
      */
-    public function move(string $path)
+    public function move($path)
     {
         return $this->setPath($path, true);
     }
@@ -207,14 +222,14 @@ class File extends BaseObject
 
         $path = [];
 
-        $dirname = dirname(trim($this->path, '/'));
+        $dirname = dirname($this->path);
         if (! empty($dirname) && $dirname !== '.' && $dirname !== '/') {
             $path[] = $dirname;
         }
 
         $path[] = $name;
 
-        return $this->setPath(implode('/', $path), $rename);
+        return $this->setPath($path, $rename);
     }
 
     /**
@@ -460,11 +475,11 @@ class File extends BaseObject
     /**
      * Копирует файл
      *
-     * @param string $newpath новый путь
+     * @param string|array $newpath новый путь
      * @throws StoreException
      * @return self новый файл
      */
-    public function copy(string $newpath)
+    public function copy($newpath)
     {
         $this->store->copy($this->path, $newpath);
         return $this->store->file($newpath);
@@ -497,10 +512,10 @@ class File extends BaseObject
     /**
      * Возвращает дочерний файл с путем относительно данного файла.
      *
-     * @param string $relpath
+     * @param string|array $relpath
      * @return \dicr\file\File
      */
-    public function child(string $relpath)
+    public function child($relpath)
     {
         return $this->store->child($this->path, $relpath);
     }

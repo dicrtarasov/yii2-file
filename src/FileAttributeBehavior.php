@@ -192,6 +192,37 @@ class FileAttributeBehavior extends Behavior
         return array_key_exists($attribute, $this->attributes);
     }
 
+
+    if (empty($model)) {
+            throw new \InvalidArgumentException('model');
+        }
+
+        $relpath = [
+            basename($model->formName())
+        ];
+
+        if ($model instanceof ActiveRecord) {
+            $keyName = basename(implode('~', $model->getPrimaryKey(true)));
+            if ($keyName !== '') {
+                $relpath[] = $keyName;
+            }
+        }
+
+        $attribute = basename(trim($attribute, '/'));
+        if ($attribute !== '') {
+            $relpath[] = $attribute;
+        }
+
+        $file = basename(trim($file, '/'));
+        if ($file !== '') {
+            $relpath[] = $file;
+        }
+
+        $relpath = implode('/', $relpath);
+
+        return $this->file($relpath);
+
+
     /**
      * Возвращает директори аттрибута
      *
