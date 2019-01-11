@@ -83,15 +83,6 @@ class File extends BaseObject
     }
 
     /**
-     * Нормализирует относительный путь
-     *
-     * @param string|array $path
-     */
-    public function normalizePath($path) {
-        return $this->store->normalizeRelativePath($path);
-    }
-
-    /**
      * Возвращает хранилище
      *
      * @return \dicr\file\AbstractFileStore
@@ -112,6 +103,15 @@ class File extends BaseObject
         $this->_store = $store;
         $this->_fullPath = null;
         return $this;
+    }
+
+    /**
+     * Нормализирует относительный путь
+     *
+     * @param string|array $path
+     */
+    public function normalizePath($path) {
+        return $this->store->normalizeRelativePath($path);
     }
 
     /**
