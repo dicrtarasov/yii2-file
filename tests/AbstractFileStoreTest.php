@@ -184,8 +184,7 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertInstanceOf(File::class, $file->delete());
         self::assertFalse($file->exists);
 
-        self::expectException(StoreException::class);
-        $this->store->file(md5(time()))->delete();
+        self::assertInstanceOf(File::class, $this->store->file(md5(time()))->delete());
     }
 
     public function testFileListChild() {

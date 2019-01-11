@@ -22,7 +22,7 @@ class FileInputWidget extends InputWidget
     /** @var string|false mime-типы в input type=file, например image/* */
     public $accept;
 
-    /** @var \dicr\file\FileStore|string */
+    /** @var \dicr\file\FileStoreInterface|array|string */
     public $store = 'fileStore';
 
     /** @var string название поля формы аттрибута */
@@ -37,7 +37,7 @@ class FileInputWidget extends InputWidget
      */
     public function init()
     {
-        if (!isset($this->model)) {
+        if (! isset($this->model)) {
             throw new InvalidConfigException('model');
         }
 
@@ -46,7 +46,11 @@ class FileInputWidget extends InputWidget
         }
 
         // получаем store
-        $this->store = Instance::ensure($this->store, FileStore::class);
+        if (is_string($this->store)) {
+            $this->store = \Yii::$app->get($this->store, true);
+        }
+
+        $this->store = Instance::ensure($this->store, FileStoreInterface::class);
 
         // получаем inputName
         $this->attribute = preg_replace('~\[\]$~uism', '', $this->attribute);
@@ -56,19 +60,16 @@ class FileInputWidget extends InputWidget
         $this->files = Html::getAttributeValue($this->model, $this->attribute);
         if (empty($this->files)) {
             $this->files = [];
-        } elseif (!is_array($this->files)) {
-            $this->files = [$this->files];
+        } elseif (! is_array($this->files)) {
+            $this->files = [$this->files]; // нельзя применять (array) потому как File::toArray
         } elseif ($this->limit > 0) {
             ksort($this->files);
             $this->files = array_slice($this->files, 0, $this->limit, true);
         }
 
         // добавляем опции клиенту
-        $this->clientOptions = ArrayHelper::merge([
-            'accept' => $this->accept,
-            'limit' => $this->limit,
-            'inputName' => $this->inputName
-        ], $this->clientOptions);
+        $this->clientOptions = ArrayHelper::merge(
+            ['accept' => $this->accept,'limit' => $this->limit,'inputName' => $this->inputName], $this->clientOptions);
 
         // добавляем нужные классы
         Html::addCssClass($this->options, 'file-input-widget');
@@ -101,22 +102,11 @@ class FileInputWidget extends InputWidget
 
         return Html::tag('label',
             Html::hiddenInput($this->inputName . '[' . $pos . ']', $file->name) .
-            Html::fileInput($this->inputName . '[' . $pos . ']', null, [
-                'id' => $fileId,
-                'accept' => $this->accept
-            ]) . Html::img($isImage ? $file->url : null) .
-            Html::tag('div', $file->getName([
-                'removePrefix' => 1,
-                'removeExt' => 1
-            ]), [
-                'class' => 'name'
-            ]) . Html::button('&times;', [
-                'class' => 'del btn btn-link text-danger',
-                'title' => 'удалить'
-            ]), [
-                'class' => 'file btn',
-                'for' => $fileId
-            ]);
+            Html::fileInput($this->inputName . '[' . $pos . ']', null, ['id' => $fileId,'accept' => $this->accept]) .
+            Html::img($isImage ? $file->url : null) .
+            Html::tag('div', $file->getName(['removePrefix' => 1,'removeExt' => 1]), ['class' => 'name']) .
+            Html::button('&times;', ['class' => 'del btn btn-link text-danger','title' => 'удалить']),
+            ['class' => 'file btn','for' => $fileId]);
     }
 
     /**
@@ -128,7 +118,9 @@ class FileInputWidget extends InputWidget
     {
         $content = '';
         foreach ($this->files as $pos => $file) {
-            $content .= $this->renderFileBlock((int) $pos, $file);
+            if (! ($file instanceof UploadFile)) {
+                $content .= $this->renderFileBlock((int) $pos, $file);
+            }
         }
         return $content;
     }
@@ -142,19 +134,10 @@ class FileInputWidget extends InputWidget
     {
         $fileInputId = $this->id . '-addinput-' . rand(1, 999999);
         return Html::label(
-            Html::fileInput(null, null, [
-                'accept' => $this->accept ?: null,
-                'id' => $fileInputId
-            ]) . Html::tag('i', '', [
-                'class' => 'fa fas fa-plus-circle text-success'
-            ]), $fileInputId,
-            [
-                'class' => 'add btn',
-                'title' => 'Выбрать файл',
-                'style' => [
-                    'display' => $this->limit > 0 && count($this->files) >= $this->limit ? 'none' : 'flex'
-                ]
-            ]);
+            Html::fileInput(null, null, ['accept' => $this->accept ?: null,'id' => $fileInputId]) .
+            Html::tag('i', '', ['class' => 'fa fas fa-plus-circle text-success']), $fileInputId,
+            ['class' => 'add btn','title' => 'Выбрать файл',
+                'style' => ['display' => $this->limit > 0 && count($this->files) >= $this->limit ? 'none' : 'flex']]);
     }
 
     /**

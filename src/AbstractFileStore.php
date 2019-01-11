@@ -359,7 +359,7 @@ abstract class AbstractFileStore extends Component implements FileStoreInterface
     public function checkDir($dir) {
         $dir = $this->normalizeRelativePath($dir);
 
-        if ($dir !== '' && $this->getType($dir) !== File::TYPE_DIR) {
+        if ($dir !== '' && !$this->isExists($dir)) {
             $this->mkdir($dir);
         }
 

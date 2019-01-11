@@ -83,6 +83,15 @@ class File extends BaseObject
     }
 
     /**
+     * Нормализирует относительный путь
+     *
+     * @param string|array $path
+     */
+    public function normalizePath($path) {
+        return $this->store->normalizeRelativePath($path);
+    }
+
+    /**
      * Возвращает хранилище
      *
      * @return \dicr\file\AbstractFileStore
@@ -125,7 +134,7 @@ class File extends BaseObject
      */
     public function setPath($path, bool $move = false)
     {
-        $path = $this->store->normalizeRelativePath($path);
+        $path = $this->normalizePath($path);
 
         if ($move && $this->path != '' && $this->exists) {
             $this->store->move($this->path, $path);
@@ -133,6 +142,7 @@ class File extends BaseObject
 
         $this->_path = $path;
         $this->_fullPath = null;
+
         return $this;
     }
 
@@ -149,18 +159,6 @@ class File extends BaseObject
         }
 
         return $this->_fullPath;
-    }
-
-    /**
-     * Перемещает файл по новому пути
-     *
-     * @param string|array $path
-     * @throws StoreException
-     * @return self
-     */
-    public function move($path)
-    {
-        return $this->setPath($path, true);
     }
 
     /**
@@ -230,18 +228,6 @@ class File extends BaseObject
         $path[] = $name;
 
         return $this->setPath($path, $rename);
-    }
-
-    /**
-     * Переименовывает файл (только имя)
-     *
-     * @param string $name новое имя файла без пути
-     * @throws StoreException
-     * @return \dicr\file\File
-     */
-    public function rename(string $name)
-    {
-        return $this->setName($name, true);
     }
 
     /**
@@ -470,6 +456,30 @@ class File extends BaseObject
         $this->setContents($contents);
 
         return $this;
+    }
+
+    /**
+     * Перемещает файл по новому пути
+     *
+     * @param string|array $path
+     * @throws StoreException
+     * @return self
+     */
+    public function move($path)
+    {
+        return $this->setPath($path, true);
+    }
+
+    /**
+     * Переименовывает файл (только имя)
+     *
+     * @param string $name новое имя файла без пути
+     * @throws StoreException
+     * @return \dicr\file\File
+     */
+    public function rename(string $name)
+    {
+        return $this->setName($name, true);
     }
 
     /**

@@ -3,6 +3,7 @@ use app\models\TestModel;
 use yii\base\Exception;
 use yii\db\Schema;
 use yii\web\Application;
+use dicr\file\LocalFileStore;
 
 error_reporting(-1);
 ini_set('display_errors', 1);
@@ -46,13 +47,17 @@ $app = new Application([
 			'appendTimestamp' => true
 		],
 		'fileStore' => [
-			'class' => 'dicr\file\FileStore',
+			'class' => LocalFileStore::class,
 			'path' => '@webroot/files',
 			'url' => '@web/files'
 		]
 	],
-	 'modules' => ['debug' => 'yii\debug\Module'],
-	 'bootstrap' => ['debug'],
+    'modules' => [
+        'debug' => \yii\debug\Module::class
+    ],
+    'bootstrap' => [
+        'debug'
+    ],
 ]);
 
 $app->db->createCommand()->createTable('test', [

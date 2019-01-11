@@ -3,11 +3,11 @@ namespace dicr\file;
 
 use yii\base\Behavior;
 use yii\base\Exception;
+use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
 use yii\base\Model;
 use yii\db\ActiveRecord;
 use yii\di\Instance;
-use yii\base\InvalidArgumentException;
 
 // @formatter:off
 /**
@@ -58,7 +58,9 @@ use yii\base\InvalidArgumentException;
  *
  * <xmp>
  * $model->icon = new UploadFile('/tmp/new_file.jpg');
+ * </xmp>
  *
+ * <xmp>
  * $model->pics = [
  *    new UploadFile('/tmp/pic1.jpg'),
  *    new UploadFIle('/tmp/pic2.jpg')
@@ -106,7 +108,9 @@ use yii\base\InvalidArgumentException;
  *
  * <xmp>
  * <?=$model->icon instanceof UploadFile ? '' : Html::img($model->icon->url)?>
+ * </xmp>
  *
+ * <xmp>
  * <?php foreach ($model->pics as $pic) {?>
  *      <?php if (!($pic instanceof UploadFile)) {?>
  *          <?=Html::img($pic->url)?>
@@ -173,12 +177,22 @@ class FileAttributeBehavior extends Behavior
      */
     public function events()
     {
-        return [
-            Model::EVENT_BEFORE_VALIDATE => 'validateFileAttributes',
+        return [Model::EVENT_BEFORE_VALIDATE => 'validateFileAttributes',
             ActiveRecord::EVENT_AFTER_INSERT => 'saveFileAttributes',
             ActiveRecord::EVENT_AFTER_UPDATE => 'saveFileAttributes',
-            ActiveRecord::EVENT_AFTER_DELETE => 'deleteModelFolder'
-        ];
+            ActiveRecord::EVENT_AFTER_DELETE => 'deleteModelFolder'];
+    }
+
+    /**
+     * Проверяет подключенную модель
+     *
+     * @throws InvalidConfigException
+     */
+    protected function checkOwner()
+    {
+        if (! ($this->owner instanceof Model)) {
+            throw new InvalidConfigException('owner');
+        }
     }
 
     /**
@@ -190,53 +204,6 @@ class FileAttributeBehavior extends Behavior
     protected function isFileAttribute(string $attribute)
     {
         return array_key_exists($attribute, $this->attributes);
-    }
-
-
-    if (empty($model)) {
-            throw new \InvalidArgumentException('model');
-        }
-
-        $relpath = [
-            basename($model->formName())
-        ];
-
-        if ($model instanceof ActiveRecord) {
-            $keyName = basename(implode('~', $model->getPrimaryKey(true)));
-            if ($keyName !== '') {
-                $relpath[] = $keyName;
-            }
-        }
-
-        $attribute = basename(trim($attribute, '/'));
-        if ($attribute !== '') {
-            $relpath[] = $attribute;
-        }
-
-        $file = basename(trim($file, '/'));
-        if ($file !== '') {
-            $relpath[] = $file;
-        }
-
-        $relpath = implode('/', $relpath);
-
-        return $this->file($relpath);
-
-
-    /**
-     * Возвращает директори аттрибута
-     *
-     * @param string $attribute
-     * @throws InvalidConfigException
-     * @return \dicr\file\File
-     */
-    protected function getAttributePath(string $attribute = '')
-    {
-        if (! ($this->owner instanceof Model)) {
-            throw new InvalidConfigException('owner');
-        }
-
-        return $this->store->getModelPath($this->owner, $attribute);
     }
 
     /**
@@ -253,15 +220,31 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
-     * Проверяет подключенную модель
+     * Возвращает директори аттрибута
      *
+     * @param string $attribute
      * @throws InvalidConfigException
+     * @return \dicr\file\File
      */
-    protected function checkOwner()
+    protected function getAttributePath(string $attribute = '')
     {
-        if (! ($this->owner instanceof Model)) {
-            throw new InvalidConfigException('owner');
+        $this->checkOwner();
+        $this->checkFileAttribute($attribute);
+
+        $relpath = [$this->owner->formName()];
+
+        if ($this->owner instanceof ActiveRecord) {
+            $keyName = basename(implode('~', $this->owner->getPrimaryKey(true)));
+            if ($keyName !== '') {
+                $relpath[] = $keyName;
+            }
         }
+
+        if ($attribute !== '') {
+            $relpath[] = $attribute;
+        }
+
+        return $this->store->file($relpath);
     }
 
     /**
@@ -273,14 +256,9 @@ class FileAttributeBehavior extends Behavior
      */
     public function getFileAttributeValue(string $attribute, bool $refresh = false)
     {
-        $this->checkFileAttribute($attribute);
-        $this->checkOwner();
-
         if (! isset($this->values[$attribute]) || $refresh) {
-            $this->values[$attribute] = $this->getAttributePath($attribute)->getList([
-                'dirs' => false,
-                'skipHidden' => true
-            ]);
+            $this->values[$attribute] = $this->getAttributePath($attribute)->getList(
+                ['dirs' => false,'skipHidden' => true]);
         }
 
         $value = $this->values[$attribute];
@@ -297,6 +275,8 @@ class FileAttributeBehavior extends Behavior
      */
     public function setFileAttributeValue(string $attribute, $files)
     {
+        $this->checkFileAttribute($attribute);
+
         // конвертируем значение в массив (нельзя (array), потому что Model::toArray)
         if (empty($files)) {
             $files = [];
@@ -314,8 +294,6 @@ class FileAttributeBehavior extends Behavior
                 throw new InvalidArgumentException('неокрректный тип элемента');
             }
         }
-
-        $this->checkFileAttribute($attribute);
 
         // ограничиваем размер по limit
         $limit = $this->attributes[$attribute]['limit'];
@@ -338,12 +316,8 @@ class FileAttributeBehavior extends Behavior
      */
     public function loadFileAttribute(string $attribute, string $formName = null)
     {
-        $this->checkFileAttribute($attribute);
         $this->checkOwner();
-
-        if (! ($this->owner instanceof Model)) {
-            throw new InvalidConfigException('owner');
-        }
+        $this->checkFileAttribute($attribute);
 
         // имя формы
         if (empty($formName)) {
@@ -411,7 +385,7 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
-     * Проводит валидацию файлового аттрибута.
+     * Проводит валидацию файлового аттрибута и загруженных файлов.
      * Добавляет ошибки модели по addError
      *
      * @param string $attribute
@@ -419,8 +393,8 @@ class FileAttributeBehavior extends Behavior
      */
     public function validateFileAttribute(string $attribute)
     {
-        $this->checkFileAttribute($attribute);
         $this->checkOwner();
+        $this->checkFileAttribute($attribute);
 
         // получаем текущие значения
         $files = $this->values[$attribute] ?? null;
@@ -430,29 +404,26 @@ class FileAttributeBehavior extends Behavior
             return true;
         }
 
-        if (! ($this->owner instanceof Model)) {
-            throw new InvalidConfigException('owner');
-        }
-
-        foreach ($files as $file) {
+        foreach ($files as $i => $file) {
             if (empty($file)) {
                 $this->owner->addError($attribute, 'пустое значение файла');
             } elseif ($file instanceof UploadFile) {
                 if (! empty($file->error)) {
                     $this->owner->addError($attribute, 'ошибка загрузки файла');
+                    unset($files[$i]);
                 } elseif (! isset($file->name) || $file->name == '') {
                     $this->owner->addError($attribute, 'не задано имя загруаемого файла: ' . $file->path);
-                } elseif ($file->size !== null && $file->size <= 0) {
-                    $this->owner->addError($attribute, 'пустой размер файла: ' . $file->name);
+                    unset($files[$i]);
                 } elseif (! @is_file($file->fullPath)) {
                     $this->owner->addError($attribute, 'загружаемый файл не существует: ' . $file->fullPath);
+                    unset($files[$i]);
+                } elseif ((int) $file->size <= 0) {
+                    $this->owner->addError($attribute, 'пустой размер файла: ' . $file->name);
+                    unset($files[$i]);
                 }
-            } elseif ($file instanceof File) {
-                if (! $file->exists) {
-                    $this->owner->addError($attribute, 'старый файл не существует: ' . $file->name);
-                }
-            } else {
+            } elseif (! ($file instanceof File)) {
                 $this->owner->addError($attribute, 'неизвестный тип значения');
+                unset($files[$i]);
             }
         }
 
@@ -535,20 +506,20 @@ class FileAttributeBehavior extends Behavior
      */
     public function saveFileAttribute(string $attribute)
     {
-        $this->checkFileAttribute($attribute);
         $this->checkOwner();
+        $this->checkFileAttribute($attribute);
 
         // текущее значение аттрибута
         $files = $this->values[$attribute] ?? null;
 
         // если новые значения не установлены, то сохранять не нужно
         if (! isset($files)) {
-            return false;
+            return true;
         } elseif (empty($files)) {
             $files = [];
         } elseif (! is_array($files)) {
-            $files = [ // нельзя (array), так как Mode преобразует в toArray();
-            $files];
+            // нельзя (array), так как Mode преобразует в toArray();
+            $files = [$files];
         }
 
         // готовим путь модели

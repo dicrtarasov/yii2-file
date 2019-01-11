@@ -33,21 +33,6 @@ class UploadFile extends File
     private static $instances;
 
     /**
-     * Конструктор
-     *
-     * @param array|string $config конфиг объекта или путь файла
-     */
-    public function __construct($config = [])
-    {
-        // конвертируем путь файла в конфиг
-        if (is_string($config)) {
-            $config = ['path' => $config];
-        }
-
-        parent::__construct($config);
-    }
-
-    /**
      * {@inheritdoc}
      * @see \yii\base\BaseObject::init()
      */
@@ -63,7 +48,7 @@ class UploadFile extends File
         if (empty($this->error)) {
 
             // путь должен быть задан
-            if (! isset($this->path)) {
+            if (empty($this->path)) {
                 throw new InvalidConfigException('path');
             }
 
@@ -75,25 +60,45 @@ class UploadFile extends File
             if ($this->name == '') {
                 throw new InvalidConfigException('name');
             }
+        } else {
+            $this->path = '';   // для прохождения File::init
         }
+
+        parent::init();
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\File::getPath()
+     * {@inheritDoc}
+     * @see \dicr\file\File::setStore()
      */
-    public function getPath()
+    public function setStore(AbstractFileStore $store)
     {
-        return $this->path;
+        throw new NotSupportedException();
+    }
+
+    /**
+     * Нормализация пути
+     *
+     * @param string|array $path
+     * @return string
+     */
+    public function normalizePath($path) {
+        if (is_array($path)) {
+            $path = DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $path);
+        } else {
+            $path = rtrim($path, DIRECTORY_SEPARATOR);
+        }
+
+        return $path;
     }
 
     /**
      * {@inheritdoc}
      * @see \dicr\file\File::setPath()
      */
-    public function setPath(string $path)
+    public function setPath($path, bool $move = false)
     {
-        $this->path = rtrim($this->path);
+        return parent::setPath($path, false);
     }
 
     /**
@@ -118,18 +123,9 @@ class UploadFile extends File
      * {@inheritdoc}
      * @see \dicr\file\File::setName()
      */
-    public function setName(string $name)
+    public function setName(string $name, bool $rename = false)
     {
         $this->name = $name;
-    }
-
-    /**
-     * {@inheritdoc}
-     * @see \dicr\file\File::rename()
-     */
-    public function rename()
-    {
-        throw new NotSupportedException();
     }
 
     /**
@@ -147,7 +143,7 @@ class UploadFile extends File
      */
     public function getExists()
     {
-        return @file_exists($this->path);
+        return @file_exists($this->fullPath);
     }
 
     /**
@@ -156,7 +152,7 @@ class UploadFile extends File
      */
     public function getType()
     {
-        return File::TYPE_FILE;
+        return @is_di($this->fullPath) ? File::TYPE_DIR : File::TYPE_FILE;
     }
 
     /**
@@ -193,11 +189,11 @@ class UploadFile extends File
     public function getSize()
     {
         if (! isset($this->size)) {
-            $this->size = @filesize($this->path);
+            $this->size = @filesize($this->fullPath);
         }
 
         if ($this->size === false) {
-            throw new StoreException($this->path);
+            throw new StoreException($this->fullPath);
         }
 
         return $this->size;
@@ -211,7 +207,7 @@ class UploadFile extends File
      */
     public function getMtime()
     {
-        return @filemtime($this->path);
+        return @filemtime($this->fullPath);
     }
 
     /**
@@ -229,7 +225,7 @@ class UploadFile extends File
      */
     public function getContents()
     {
-        $contents = @file_get_contents($this->path);
+        $contents = @file_get_contents($this->fullPath);
         if ($contents === false) {
             throw new StoreException();
         }
@@ -240,7 +236,7 @@ class UploadFile extends File
      * {@inheritdoc}
      * @see \dicr\file\File::setContents()
      */
-    public function setContents()
+    public function setContents(string $contents)
     {
         throw new NotSupportedException();
     }
@@ -251,7 +247,7 @@ class UploadFile extends File
      */
     public function getStream()
     {
-        $stream = @fopen($this->path, 'rb');
+        $stream = @fopen($this->fullPath, 'rb');
         if ($stream === false) {
             throw new StoreException();
         }
@@ -262,7 +258,16 @@ class UploadFile extends File
      * {@inheritdoc}
      * @see \dicr\file\File::setStream()
      */
-    public function setStream()
+    public function setStream($stream)
+    {
+        throw new NotSupportedException();
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\File::rename()
+     */
+    public function rename(string $name)
     {
         throw new NotSupportedException();
     }
@@ -271,9 +276,11 @@ class UploadFile extends File
      * {@inheritdoc}
      * @see \dicr\file\File::copy()
      */
-    public function copy(string $dst)
+    public function copy($dst)
     {
-        $ret = @copy($this->path, $dst);
+        $dst = $this->normalizePath($dst);
+
+        $ret = @copy($this->fullPath, $dst);
         if ($ret === false) {
             throw new StoreException();
         }
@@ -284,9 +291,11 @@ class UploadFile extends File
      * {@inheritdoc}
      * @see \dicr\file\File::move()
      */
-    public function move(string $dst)
+    public function move($dst)
     {
-        $ret = @rename($this->path, $dst);
+        $dst = $this->normalizePath($dst);
+
+        $ret = @rename($this->fullPath, $dst);
         if ($ret === false) {
             throw new StoreException();
         }
@@ -315,7 +324,7 @@ class UploadFile extends File
      * {@inheritdoc}
      * @see \dicr\file\File::child()
      */
-    public function child(string $relpath)
+    public function child($relpath)
     {
         throw new NotSupportedException();
     }
@@ -336,7 +345,7 @@ class UploadFile extends File
     public function delete()
     {
         // ошибки не важны, потому как загруженные файлы удаляются автоматически
-        @unkink($this->path);
+        @unkink($this->fullPath);
         return $this;
     }
 
@@ -365,9 +374,13 @@ class UploadFile extends File
                 throw new Exception('empty upload file path path');
             }
 
-            $instances[$pos] = new static(
-                ['path' => $path,'name' => $name,'mimeType' => $types[$pos] ?? null,'size' => $sizes[$pos] ?? null,
-                    'error' => $errors[$pos] ?? null]);
+            $instances[$pos] = new static([
+                'path' => $path,
+                'name' => $name,
+                'mimeType' => $types[$pos] ?? null,
+                'size' => $sizes[$pos] ?? null,
+                'error' => $errors[$pos] ?? null
+            ]);
         }
 
         return $instances;

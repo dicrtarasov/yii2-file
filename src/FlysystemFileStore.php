@@ -543,6 +543,10 @@ class FlysystemFileStore extends AbstractFileStore
     public function delete($path)
     {
         $path = $this->normalizeRelativePath($path);
+        if (!$this->isExists($path)) {
+            return $this;
+        }
+
         $type = $this->getType($path);
         $ret = null;
 

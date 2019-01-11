@@ -541,8 +541,8 @@ class LocalFileStore extends AbstractFileStore
         }
 
         $fullPath = $this->getFullPath($path);
-        if (! file_exists($fullPath)) {
-            throw new StoreException($path);
+        if (!@file_exists($fullPath)) {
+            return $this;
         }
 
         $delTree = null;
