@@ -10,7 +10,6 @@ use yii\base\NotSupportedException;
 /**
  * FileStore based on FLYsystem adapters.
  *
- * @property-read \League\Flysystem\FilesystemInterface $flysystem
  * @property-read \League\Flysystem\AdapterInterface|null $adapter
  *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
@@ -60,7 +59,7 @@ class FlysystemFileStore extends AbstractFileStore
      * @return \League\Flysystem\AdapterInterface|NULL
      */
     public function getAdapter() {
-        if (is_callable([$this->flysystem, 'getAdapter'])) {
+        if (!empty($this->flysystem) && is_callable([$this->flysystem, 'getAdapter'])) {
             return $this->flysystem->getAdapter();
         }
 
@@ -154,15 +153,10 @@ class FlysystemFileStore extends AbstractFileStore
     {
         $path = $this->normalizeRelativePath($path);
 
-        $items = null;
         try {
             $items = $this->flysystem->listContents($path, $options['recursive'] ?? false);
         } catch (\Throwable $ex) {
             throw new StoreException($path, $ex);
-        }
-
-        if (!is_array($items) && !($items instanceof \Traversable)) {
-            throw new \ErrorException('not traversable');
         }
 
         $files = [];
@@ -187,8 +181,9 @@ class FlysystemFileStore extends AbstractFileStore
         $path = $this->normalizeRelativePath($path);
 
         $ret = null;
+
         try {
-            $ret =$this->flysystem->has($path);
+            $ret = $this->flysystem->has($path);
         } catch (\Throwable $ex) {
             throw new StoreException($path, $ex);
         }
@@ -203,7 +198,6 @@ class FlysystemFileStore extends AbstractFileStore
     public function getType($path)
     {
         $path = $this->normalizeRelativePath($path);
-        $ret = null;
 
         try {
             $ret = $this->flysystem->getMetadata($path);
@@ -237,11 +231,7 @@ class FlysystemFileStore extends AbstractFileStore
             throw new StoreException($path, $ex);
         }
 
-        if (is_array($ret)) {
-            $ret = $ret['visibility'] ?? false;
-        }
-
-        if ($ret === false) {
+        if (empty($ret)) {
             throw new StoreException($path);
         }
 
@@ -256,7 +246,6 @@ class FlysystemFileStore extends AbstractFileStore
     {
         $path = $this->normalizeRelativePath($path);
         $visibility = self::access2visibility($access);
-        $ret = null;
 
         try {
             $ret = $this->flysystem->setVisibility($path, $visibility);
@@ -278,21 +267,17 @@ class FlysystemFileStore extends AbstractFileStore
     public function getSize($path)
     {
         $path = $this->normalizeRelativePath($path);
-        $ret = null;
 
         try {
             // FIXME clear stat cache for local filesystem
-            @clearstatcache(null, $this->getFullPath($path));
+            clearstatcache(null, $this->getFullPath($path));
+
             $ret = $this->flysystem->getSize($path);
         } catch (\Throwable $ex) {
             throw new StoreException($path, $ex);
         }
 
-        if (is_array($ret)) {
-            $ret = $ret['size'] ?? false;
-        }
-
-        if ($ret === false || $ret === null) {
+        if ($ret === false) {
             throw new StoreException($path);
         }
 
@@ -306,16 +291,11 @@ class FlysystemFileStore extends AbstractFileStore
     public function getMtime($path)
     {
         $path = $this->normalizeRelativePath($path);
-        $ret = null;
 
         try {
             $ret = $this->flysystem->getTimestamp($path);
         } catch (\Exception $ex) {
             throw new StoreException($path, $ex);
-        }
-
-        if (is_array($ret)) {
-            $ret = $ret['timestamp'] ?? false;
         }
 
         if ($ret === false) {
@@ -332,16 +312,11 @@ class FlysystemFileStore extends AbstractFileStore
     public function getMimeType($path)
     {
         $path = $this->normalizeRelativePath($path);
-        $ret = null;
 
         try {
             $ret = $this->flysystem->getMimetype($path);
         } catch (\Throwable $ex) {
             throw new StoreException($path, $ex);
-        }
-
-        if (is_array($ret)) {
-            $ret = $ret['mimetype'] ?? false;
         }
 
         if ($ret === false) {
@@ -364,8 +339,6 @@ class FlysystemFileStore extends AbstractFileStore
             throw new \LogicException('equal path: ' . $path);
         }
 
-        $ret = null;
-
         try {
             $ret = $this->flysystem->rename($path, $newpath);
         } catch (\Throwable $ex) {
@@ -376,7 +349,7 @@ class FlysystemFileStore extends AbstractFileStore
             throw new StoreException($path);
         }
 
-        return true;
+        return $this;
     }
 
     /**
@@ -392,10 +365,8 @@ class FlysystemFileStore extends AbstractFileStore
             throw new \LogicException('equal path: ' . $path);
         }
 
-        $ret = null;
-
         try {
-            $ret = $this->adapter->copy($path, $newpath);
+            $ret = $this->flysystem->copy($path, $newpath);
         } catch (\Throwable $ex) {
             throw new StoreException($path, $ex);
         }
@@ -404,7 +375,7 @@ class FlysystemFileStore extends AbstractFileStore
             throw new StoreException($path);
         }
 
-        return true;
+        return $this;
     }
 
     /**
@@ -414,16 +385,11 @@ class FlysystemFileStore extends AbstractFileStore
     public function getContents($path)
     {
         $path = $this->normalizeRelativePath($path);
-        $ret = null;
 
         try {
             $ret = $this->flysystem->read($path);
         } catch (\Throwable $ex) {
             throw new StoreException($path, $ex);
-        }
-
-        if (is_array($ret)) {
-            $ret = $ret['contents'] ?? false;
         }
 
         if ($ret === false) {
@@ -440,7 +406,6 @@ class FlysystemFileStore extends AbstractFileStore
     public function setContents($path, string $contents)
     {
         $path = $this->normalizeRelativePath($path);
-        $ret = null;
 
         try {
             $ret = $this->flysystem->put($path, $contents);
@@ -454,7 +419,7 @@ class FlysystemFileStore extends AbstractFileStore
             } else if (isset($ret['contents'])) {
                 $ret = strlen($ret['contents']);
             }
-        } elseif (!is_string($ret)) {
+        } elseif (is_string($ret)) {
             $ret = strlen($ret);
         }
 
@@ -472,16 +437,11 @@ class FlysystemFileStore extends AbstractFileStore
     public function getStream($path)
     {
         $path = $this->normalizeRelativePath($path);
-        $ret = null;
 
         try {
             $ret = $this->flysystem->readStream($path);
         } catch (\Throwable $ex) {
             throw new StoreException($path, $ex);
-        }
-
-        if (is_array($ret)) {
-            $ret = $ret['stream'] ?? false;
         }
 
         if ($ret === false) {
@@ -499,7 +459,6 @@ class FlysystemFileStore extends AbstractFileStore
     public function setStream($path, $stream)
     {
         $path = $this->normalizeRelativePath($path);
-        $ret = null;
 
         try {
             $ret = $this->flysystem->putStream($path, $stream);
@@ -521,7 +480,6 @@ class FlysystemFileStore extends AbstractFileStore
     public function mkdir($path)
     {
         $path = $this->normalizeRelativePath($path);
-        $ret = null;
 
         try {
             $ret = $this->flysystem->createDir($path);
@@ -533,7 +491,7 @@ class FlysystemFileStore extends AbstractFileStore
             throw new StoreException($path);
         }
 
-        return true;
+        return $this;
     }
 
     /**
@@ -548,7 +506,6 @@ class FlysystemFileStore extends AbstractFileStore
         }
 
         $type = $this->getType($path);
-        $ret = null;
 
         try {
             $ret = $type === File::TYPE_FILE ?
@@ -562,6 +519,6 @@ class FlysystemFileStore extends AbstractFileStore
             throw new StoreException($path);
         }
 
-        return true;
+        return $this;
     }
 }

@@ -124,7 +124,7 @@ use yii\di\Instance;
 // @formatter:on
 class FileAttributeBehavior extends Behavior
 {
-    /** @var string|\dicr\file\FileStoreInterface хранилище файлов */
+    /** @var \dicr\file\FileStoreInterface хранилище файлов */
     public $store = 'fileStore';
 
     /**
@@ -147,10 +147,6 @@ class FileAttributeBehavior extends Behavior
         // owner не инициализирован пока не вызван attach
 
         // получаем store
-        if (is_string($this->store)) {
-            $this->store = \Yii::$app->get($this->store, true);
-        }
-
         $this->store = Instance::ensure($this->store, FileStoreInterface::class);
 
         // проверяем наличие аттрибутов
@@ -580,7 +576,7 @@ class FileAttributeBehavior extends Behavior
             }
         } else {
             // удаляем директорию аттрибута
-            $modelPath->delete(true);
+            $modelPath->delete();
         }
 
         // обновляем значение аттрибута модели
@@ -654,7 +650,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function deleteModelFolder()
     {
-        return $this->getAttributePath('')->delete(true);
+        return $this->getAttributePath('')->delete();
     }
 
     /**

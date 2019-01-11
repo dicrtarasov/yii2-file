@@ -152,7 +152,7 @@ class UploadFile extends File
      */
     public function getType()
     {
-        return @is_di($this->fullPath) ? File::TYPE_DIR : File::TYPE_FILE;
+        return @is_dir($this->fullPath) ? File::TYPE_DIR : File::TYPE_FILE;
     }
 
     /**
@@ -345,7 +345,7 @@ class UploadFile extends File
     public function delete()
     {
         // ошибки не важны, потому как загруженные файлы удаляются автоматически
-        @unkink($this->fullPath);
+        @unlink($this->fullPath);
         return $this;
     }
 

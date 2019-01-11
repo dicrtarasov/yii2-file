@@ -3,7 +3,6 @@ namespace dicr\file;
 
 use yii\base\InvalidConfigException;
 use yii\bootstrap\InputWidget;
-use yii\di\Instance;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 
@@ -22,7 +21,7 @@ class FileInputWidget extends InputWidget
     /** @var string|false mime-типы в input type=file, например image/* */
     public $accept;
 
-    /** @var \dicr\file\FileStoreInterface|array|string */
+    /** @var \dicr\file\FileStoreInterface */
     public $store = 'fileStore';
 
     /** @var string название поля формы аттрибута */
@@ -47,10 +46,14 @@ class FileInputWidget extends InputWidget
 
         // получаем store
         if (is_string($this->store)) {
-            $this->store = \Yii::$app->get($this->store, true);
+            $this->store = \Yii::$app->get($this->store);
+        } elseif (is_array($this->store)) {
+            $this->store = \Yii::createObject($this->store);
         }
 
-        $this->store = Instance::ensure($this->store, FileStoreInterface::class);
+        if (!($this->store instanceof FileStoreInterface)) {
+            throw new InvalidConfigException('store');
+        }
 
         // получаем inputName
         $this->attribute = preg_replace('~\[\]$~uism', '', $this->attribute);
@@ -68,8 +71,11 @@ class FileInputWidget extends InputWidget
         }
 
         // добавляем опции клиенту
-        $this->clientOptions = ArrayHelper::merge(
-            ['accept' => $this->accept,'limit' => $this->limit,'inputName' => $this->inputName], $this->clientOptions);
+        $this->clientOptions = ArrayHelper::merge([
+            'accept' => $this->accept,
+            'limit' => $this->limit,
+            'inputName' => $this->inputName
+        ], $this->clientOptions);
 
         // добавляем нужные классы
         Html::addCssClass($this->options, 'file-input-widget');
@@ -135,9 +141,16 @@ class FileInputWidget extends InputWidget
         $fileInputId = $this->id . '-addinput-' . rand(1, 999999);
         return Html::label(
             Html::fileInput(null, null, ['accept' => $this->accept ?: null,'id' => $fileInputId]) .
-            Html::tag('i', '', ['class' => 'fa fas fa-plus-circle text-success']), $fileInputId,
-            ['class' => 'add btn','title' => 'Выбрать файл',
-                'style' => ['display' => $this->limit > 0 && count($this->files) >= $this->limit ? 'none' : 'flex']]);
+            Html::tag('i', '', [
+                'class' => 'fa fas fa-plus-circle text-success'
+            ]), $fileInputId, [
+                'class' => 'add btn',
+                'title' => 'Выбрать файл',
+                'style' => [
+                    'display' => $this->limit > 0 && count($this->files) >= $this->limit ? 'none' : 'flex'
+                ]
+            ]
+        );
     }
 
     /**
@@ -149,6 +162,8 @@ class FileInputWidget extends InputWidget
         return Html::tag('div',
             // для того чтобы имя аттрибута было в $_POST[formName][attribute] как делает Yii
             // если дальше отсутствуют input с таким же именем которые перезапишут это поле
-            Html::hiddenInput($this->inputName) . $this->renderFiles() . $this->renderAddButton(), $this->options);
+            Html::hiddenInput($this->inputName) . $this->renderFiles() . $this->renderAddButton(),
+            $this->options
+        );
     }
 }

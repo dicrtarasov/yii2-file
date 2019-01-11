@@ -19,7 +19,7 @@ abstract class AbstractFileStore extends Component implements FileStoreInterface
     /** @var string режим доступа создаваемых файлов */
     public $access = File::ACCESS_PUBLIC;
 
-    /** @var string|array конфиг создания файлов */
+    /** @var array конфиг создания файлов */
     public $fileConfig = [
         'class' => File::class
     ];
@@ -34,10 +34,12 @@ abstract class AbstractFileStore extends Component implements FileStoreInterface
     public function init() {
 
         if (is_string($this->url)) {
-            $this->url = \Yii::getAlias(rtrim($this->url, '/'));
-            if ($this->url === false) {
+            $url = \Yii::getAlias(rtrim($this->url, '/'));
+            if ($url === false) {
                 throw new InvalidConfigException('url');
             }
+
+            $this->url = $url;
         }
 
         if (empty($this->fileConfig)) {
@@ -156,7 +158,7 @@ abstract class AbstractFileStore extends Component implements FileStoreInterface
         }
 
         // фильтруем скрытые
-        if (isset($filter['hidden']) && $file->hidden != $filter['hidden']) {
+        if (isset($filter['hidden']) && $file->isHidden != $filter['hidden']) {
             return false;
         }
 

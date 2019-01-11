@@ -35,7 +35,7 @@ class LocalFileStore extends AbstractFileStore
     /** @var string mode for fopen for reading stream */
     public $readMode = 'rb';
 
-    /** @var array|resource stream_context options */
+    /** @var resource stream_context options */
     public $context = [];
 
     /**
@@ -549,6 +549,7 @@ class LocalFileStore extends AbstractFileStore
 
         $delTree = function ($path) use (&$delTree) {
             if (@is_dir($path)) {
+
                 $dir = @opendir($path, $this->context);
                 if ($dir === false) {
                     throw new StoreException();
@@ -562,7 +563,7 @@ class LocalFileStore extends AbstractFileStore
                         $delTree($path . '/' . $file);
                     }
                 } finally {
-                    if (! empty($dir)) {
+                    if (is_resource($dir)) {
                         @closedir($dir);
                     }
                 }
