@@ -35,7 +35,7 @@ abstract class AbstractFileStore extends Component implements FileStoreInterface
 
         if (is_string($this->url)) {
             $url = \Yii::getAlias(rtrim($this->url, '/'));
-            if ($url === false) {
+            if (!is_string($url)) {
                 throw new InvalidConfigException('url');
             }
 

@@ -180,8 +180,6 @@ class FlysystemFileStore extends AbstractFileStore
     {
         $path = $this->normalizeRelativePath($path);
 
-        $ret = null;
-
         try {
             $ret = $this->flysystem->has($path);
         } catch (\Throwable $ex) {
@@ -223,7 +221,6 @@ class FlysystemFileStore extends AbstractFileStore
     public function getAccess($path)
     {
         $path = $this->normalizeRelativePath($path);
-        $ret = null;
 
         try {
             $ret = $this->flysystem->getVisibility($path);
