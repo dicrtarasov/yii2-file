@@ -12,6 +12,7 @@
 >
     <testsuites>
         <testsuite name="Dicr Test Suite">
+        
             <!-- directory>./tests/*Test.php</directory -->
             <file>tests/LocalFileStoreTest.php</file>
             <file>tests/LocalFlysystemStoreTest.php</file>
