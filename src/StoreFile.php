@@ -151,7 +151,7 @@ class StoreFile extends AbstractFile
         $newpath = $parent->store->childname($parent->store->dirname($parent->path), $this->store->basename($this->path));
 
         // копируем в новое хранилище
-        $parent->store->writeContents($newpath, $this->content);
+        $parent->store->writeContents($newpath, $this->contents);
 
         // удаляем в текущем хранилище
         $this->delete();

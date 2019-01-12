@@ -262,7 +262,7 @@ class UploadFile extends AbstractFile
     public function delete()
     {
         // ошибки не важны, потому как загруженные файлы удаляются автоматически
-        @unlink($this->path);
+        unlink($this->path);
 
         return $this;
     }

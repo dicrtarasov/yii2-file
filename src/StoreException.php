@@ -19,9 +19,9 @@ class StoreException extends Exception
      *            если не задано, то берется из error_get_last
      * @param \Throwable $prev
      */
-    public function __construct(string $msg = null, \Throwable $prev = null)
+    public function __construct(string $msg = '', \Throwable $prev = null)
     {
-        if (! isset($msg)) {
+        if ($msg == '') {
             $error = error_get_last();
             error_clear_last();
             $msg = $error['message'];

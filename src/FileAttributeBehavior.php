@@ -147,7 +147,7 @@ class FileAttributeBehavior extends Behavior
 
         // получаем store
         if (is_string($this->store)) {
-            $this->store = \Yii::$app->get($this->store);
+            $this->store = \Yii::$app->get($this->store, true);
         } elseif (is_array($this->store)) {
             $this->store = \Yii::createObject($this->store);
         }

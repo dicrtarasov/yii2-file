@@ -21,7 +21,7 @@ class FileInputWidget extends InputWidget
     /** @var string|false mime-типы в input type=file, например image/* */
     public $accept;
 
-    /** @var \dicr\file\AbstractFileStore */
+    /** @var \dicr\file\AbstractFileStore|string */
     public $store = 'fileStore';
 
     /** @var string название поля формы аттрибута */

@@ -51,7 +51,7 @@ abstract class AbstractFileStore extends Component {
             $this->fileConfig = [
                 'class' => $this->fileConfig
             ];
-        } elseif (!is_array($this->fileConfig)) {
+        } elseif (! is_array($this->fileConfig)) {
             throw new InvalidConfigException('fileConfig');
         }
 

@@ -177,7 +177,7 @@ class LocalFileStore extends AbstractFileStore
     public function isDir($path)
     {
         if (!$this->exists($path)) {
-            throw new StoreException('not exists: ' . $path);
+            throw new StoreException('not exists: ' . $this->normalizePath($path));
         }
 
         return @is_dir($this->absolutePath($path));
@@ -190,7 +190,7 @@ class LocalFileStore extends AbstractFileStore
     public function isFile($path)
     {
         if (!$this->exists($path)) {
-            throw new StoreException('not exists: ' . $path);
+            throw new StoreException('not exists: ' . $this->normalizePath($path));
         }
 
         return @is_file($this->absolutePath($path));
@@ -202,17 +202,16 @@ class LocalFileStore extends AbstractFileStore
      */
     public function isPublic($path)
     {
-        $fullPath = $this->absolutePath($path);
-        if (! @file_exists($fullPath)) {
-            throw new StoreException($path);
+        if (! $this->exists($path)) {
+            throw new StoreException('not found: ' . $this->normalizePath($path));
         }
 
-        $perms = @fileperms($fullPath);
+        $perms = @fileperms($this->absolutePath($path));
         if ($perms === false) {
-            throw new StoreException($path);
+            throw new StoreException('');
         }
 
-        return $this->publicByPerms(@is_dir($fullPath), $perms);
+        return $this->publicByPerms($this->isDir($path), $perms);
     }
 
     /**
@@ -221,20 +220,18 @@ class LocalFileStore extends AbstractFileStore
      */
     public function setPublic($path, bool $public)
     {
-        $path = $this->guardRootPath($path);
-
-        $fullPath = $this->absolutePath($path);
-        if (! @file_exists($fullPath)) {
-            throw new StoreException($path);
+        if (!$this->exists($path)) {
+            throw new StoreException('not exists: ' . $this->guardRootPath($path));
         }
 
-        $perms = $this->permsByPublic(@is_dir($fullPath), $public);
+        $absolute = $this->absolutePath($path);
+        $perms = $this->permsByPublic($this->isDir($path), $public);
 
-        if (@chmod($fullPath, $perms) === false) {
-            throw new StoreException($path);
+        if (@chmod($absolute, $perms) === false) {
+            throw new StoreException('');
         }
 
-        clearstatcache(null, $fullPath);
+        clearstatcache(null, $absolute);
 
         return $this;
     }
@@ -247,7 +244,7 @@ class LocalFileStore extends AbstractFileStore
     {
         $size = @filesize($this->absolutePath($path));
         if ($size === false) {
-            throw new StoreException($path);
+            throw new StoreException('');
         }
 
         return $size;
@@ -261,7 +258,7 @@ class LocalFileStore extends AbstractFileStore
     {
         $time = @filemtime($this->absolutePath($path));
         if ($time === false) {
-            throw new StoreException($path);
+            throw new StoreException('');
         }
 
         return $time;
@@ -277,7 +274,7 @@ class LocalFileStore extends AbstractFileStore
 
         $type = @$finfo->file($this->absolutePath($path), null, $this->context);
         if ($type === false) {
-            throw new StoreException($path);
+            throw new StoreException('');
         }
 
         return $type;
@@ -291,7 +288,7 @@ class LocalFileStore extends AbstractFileStore
     {
         $ret = @file_get_contents($this->absolutePath($path), false, $this->context);
         if ($ret === false) {
-            throw new StoreException($path);
+            throw new StoreException('');
         }
 
         return $ret;
@@ -303,16 +300,17 @@ class LocalFileStore extends AbstractFileStore
      */
     public function writeContents($path, string $contents)
     {
+        $path = $this->guardRootPath($path);
         $fullPath = $this->absolutePath($path);
         $exists = $this->exists($path);
 
         if (! $exists) {
-            $this->checkDir(dirname($path));
+            $this->checkDir($this->dirname($path));
         }
 
         $bytes = @file_put_contents($fullPath, $contents, $this->writeFlags, $this->context);
         if ($bytes === false) {
-            throw new StoreException();
+            throw new StoreException('');
         }
 
         try {
@@ -338,7 +336,7 @@ class LocalFileStore extends AbstractFileStore
     {
         $stream = @fopen($this->absolutePath($path), $this->readMode, false, $this->context);
         if ($stream === false) {
-            throw new StoreException($path);
+            throw new StoreException('');
         }
 
         return $stream;
@@ -352,7 +350,7 @@ class LocalFileStore extends AbstractFileStore
     {
         $contents = @stream_get_contents($stream);
         if ($contents === false) {
-            throw new StoreException($path);
+            throw new StoreException('');
         }
 
         return $this->writeContents($path, $contents);
@@ -374,7 +372,7 @@ class LocalFileStore extends AbstractFileStore
         $this->checkDir($this->dirname($newpath));
 
         if (@rename($this->absolutePath($path), $this->absolutePath($newpath), $this->context) === false) {
-            throw new StoreException($path);
+            throw new StoreException('');
         }
 
         return $this;
@@ -396,7 +394,7 @@ class LocalFileStore extends AbstractFileStore
         $this->checkDir($this->dirname($newpath));
 
         if (@copy($this->absolutePath($path), $this->absolutePath($newpath), $this->context) === false) {
-            throw new StoreException($path);
+            throw new StoreException('');
         }
 
         return $this;
@@ -417,7 +415,7 @@ class LocalFileStore extends AbstractFileStore
         $perms = $this->permsByPublic(true, $this->public);
 
         if (@mkdir($this->absolutePath($path), $perms, true, $this->context) === false) {
-            throw new StoreException(null);
+            throw new StoreException('');
         }
 
         return $this;
