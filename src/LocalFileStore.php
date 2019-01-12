@@ -1,23 +1,17 @@
 <?php
 namespace dicr\file;
 
-use yii\base\InvalidArgumentException;
+use InvalidArgumentException;
 use yii\base\InvalidConfigException;
 
 /**
  * Local file store.
- *
  * Also support ftp://, ssh2:// throught wrappers:
- * @see http://php.net/manual/en/wrappers.php
  *
- * /opt/files
- *
- * zip://test.zip#path/file.txt, context => ['password' => your_pass]
- *
- * ftp://user:pass@server.net/path/file.txt
- * @see http://php.net/manual/en/context.ftp.php
- *
- * ssh2.sftp://user:pass@example.com:22/path/file.txt
+ * @see http://php.net/manual/en/wrappers.php /opt/files
+ *      zip://test.zip#path/file.txt, context => ['password' => your_pass]
+ *      ftp://user:pass@server.net/path/file.txt
+ * @see http://php.net/manual/en/context.ftp.php ssh2.sftp://user:pass@example.com:22/path/file.txt
  * @see http://php.net/manual/en/wrappers.ssh2.php
  *
  * @property string $path путь корня файлового хранилища
@@ -42,7 +36,7 @@ class LocalFileStore extends AbstractFileStore
      * @var array публичные права доступа на создаваемые файла и директории.
      *      Приватные получаются путем маски & 0x700
      */
-    public $perms = [File::TYPE_DIR => 0755,File::TYPE_FILE => 0644];
+    public $perms = ['dir' => 0755,'file' => 0644];
 
     /**
      * {@inheritdoc}
@@ -56,11 +50,15 @@ class LocalFileStore extends AbstractFileStore
             throw new InvalidConfigException('path');
         }
 
+        if (! isset($this->perms['dir']) || ! isset($this->perms['file'])) {
+            throw new InvalidConfigException('perms');
+        }
+
         if (is_array($this->context)) {
             $this->context = stream_context_create($this->context);
         }
 
-        if (!is_resource($this->context)) {
+        if (! is_resource($this->context)) {
             throw new InvalidConfigException('context');
         }
     }
@@ -100,18 +98,11 @@ class LocalFileStore extends AbstractFileStore
 
     /**
      * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::getFullPath()
+     * @see \dicr\file\AbstractFileStore::absolutePath()
      */
-    public function getFullPath($path)
+    public function absolutePath($path)
     {
-        $p = [$this->path];
-
-        $path = $this->normalizeRelativePath($path);
-        if ($path !== '') {
-            $p[] = $path;
-        }
-
-        return implode($this->pathSeparator, $p);
+        return implode($this->pathSeparator, array_merge([$this->path], $this->filterPath($path)));
     }
 
     /**
@@ -123,8 +114,7 @@ class LocalFileStore extends AbstractFileStore
     public function getRelPath(string $fullPath)
     {
         if (mb_strpos($fullPath, $this->path) === 0) {
-            $relpath = mb_substr($fullPath, mb_strlen($this->path));
-            return $this->normalizeRelativePath($relpath);
+            return mb_substr($fullPath, mb_strlen($this->path));
         }
 
         return false;
@@ -134,17 +124,13 @@ class LocalFileStore extends AbstractFileStore
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::list()
      */
-    public function list($path, array $options = [])
+    public function list($path, array $filter = [])
     {
-        if (! $this->isExists($path)) {
-            return [];
-        }
-
-        $fullPath = $this->getFullPath($path);
+        $fullPath = $this->absolutePath($path);
 
         $iterator = null;
         try {
-            if (! empty($options['recursive'])) {
+            if (! empty($filter['recursive'])) {
                 $dirIterator = new \RecursiveDirectoryIterator($fullPath, \FilesystemIterator::CURRENT_AS_FILEINFO);
                 $iterator = new \RecursiveIteratorIterator($dirIterator, \RecursiveIteratorIterator::CHILD_FIRST);
             } else {
@@ -166,7 +152,8 @@ class LocalFileStore extends AbstractFileStore
             }
 
             $file = $this->file($item);
-            if ($this->fileMatchFilter($file, $options)) {
+
+            if ($this->fileMatchFilter($file, $filter)) {
                 $files[] = $file;
             }
         }
@@ -176,123 +163,75 @@ class LocalFileStore extends AbstractFileStore
 
     /**
      * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::isExists()
+     * @see \dicr\file\AbstractFileStore::exists()
      */
-    public function isExists($path)
+    public function exists($path)
     {
-        $path = $this->normalizeRelativePath($path);
-        if ($path === '') {
-            return true;
-        }
-
-        return @file_exists($this->getFullPath($path));
+        return @file_exists($this->absolutePath($path));
     }
 
     /**
      * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::getType()
+     * @see \dicr\file\AbstractFileStore::isDir()
      */
-    public function getType($path)
+    public function isDir($path)
     {
-        $path = $this->normalizeRelativePath($path);
-        if ($path === '') {
-            return File::TYPE_DIR;
+        if (!$this->exists($path)) {
+            throw new StoreException('not exists: ' . $path);
         }
 
-        $fullPath = $this->getFullPath($path);
-        if (! @file_exists($fullPath)) {
-            throw new StoreException('not exits: ' . $path);
-        }
-
-        return @is_dir($fullPath) ? File::TYPE_DIR : File::TYPE_FILE;
-    }
-
-    /**
-     * Возвращает права доступа для заданного типа файла и типа доступа.
-     *
-     * @param string $type тип файла File::TYPE_*
-     * @param string $access тип доступа File::ACCESS_*
-     * @return int права доступа
-     */
-    protected function permsByAccess(string $type, string $access)
-    {
-        $perms = $this->perms[$type] ?? null;
-        if (! isset($perms)) {
-            throw new InvalidArgumentException('type');
-        }
-
-        switch ($access) {
-            case File::ACCESS_PUBLIC:
-                break;
-
-            case File::ACCESS_PRIVATE:
-                $perms &= 0700;
-                break;
-
-            default:
-                throw new InvalidArgumentException('access');
-        }
-
-        return $perms;
-    }
-
-    /**
-     * Возвращает тип доступа по правам
-     *
-     * @param string $type тип файла File::TYPE_*
-     * @param int $perms права доступа
-     * @return string режим доступа File::ACCESS_*
-     */
-    protected function accessByPerms(string $type, int $perms)
-    {
-        $publicPerms = $this->perms[$type] ?? null;
-        if (! isset($publicPerms)) {
-            throw new InvalidArgumentException('type');
-        }
-
-        return ($publicPerms & 0007) == ($perms & 0007) ? File::ACCESS_PUBLIC : File::ACCESS_PRIVATE;
+        return @is_dir($this->absolutePath($path));
     }
 
     /**
      * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::getAccess()
+     * @see \dicr\file\AbstractFileStore::isFile()
      */
-    public function getAccess($path)
+    public function isFile($path)
     {
-        $fullPath = $this->getFullPath($path);
+        if (!$this->exists($path)) {
+            throw new StoreException('not exists: ' . $path);
+        }
+
+        return @is_file($this->absolutePath($path));
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\AbstractFileStore::isPublic()
+     */
+    public function isPublic($path)
+    {
+        $fullPath = $this->absolutePath($path);
         if (! @file_exists($fullPath)) {
             throw new StoreException($path);
         }
 
         $perms = @fileperms($fullPath);
         if ($perms === false) {
-            throw new StoreException();
+            throw new StoreException($path);
         }
 
-        $access = $this->accessByPerms(@is_dir($fullPath) ? File::TYPE_DIR : File::TYPE_FILE, $perms);
-        return $access;
+        return $this->publicByPerms(@is_dir($fullPath), $perms);
     }
 
     /**
      * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::setAccess()
+     * @see \dicr\file\AbstractFileStore::setPublic()
      */
-    public function setAccess($path, string $access)
+    public function setPublic($path, bool $public)
     {
-        $path = $this->normalizeRelativePath($path);
-        if ($path === '') {
-            throw new StoreException('root path');
-        }
+        $path = $this->guardRootPath($path);
 
-        $fullPath = $this->getFullPath($path);
+        $fullPath = $this->absolutePath($path);
         if (! @file_exists($fullPath)) {
             throw new StoreException($path);
         }
 
-        $perms = $this->permsByAccess(@is_dir($fullPath) ? File::TYPE_DIR : File::TYPE_FILE, $access);
+        $perms = $this->permsByPublic(@is_dir($fullPath), $public);
 
         if (@chmod($fullPath, $perms) === false) {
-            throw new StoreException();
+            throw new StoreException($path);
         }
 
         clearstatcache(null, $fullPath);
@@ -302,31 +241,27 @@ class LocalFileStore extends AbstractFileStore
 
     /**
      * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::getSize()
+     * @see \dicr\file\AbstractFileStore::size()
      */
-    public function getSize($path)
+    public function size($path)
     {
-        $path = $this->normalizeRelativePath($path);
-        if ($path === '') {
-            throw new StoreException('root path');
+        $size = @filesize($this->absolutePath($path));
+        if ($size === false) {
+            throw new StoreException($path);
         }
 
-        $size = @filesize($this->getFullPath($path));
-        if ($size === false) {
-            throw new StoreException();
-        }
         return $size;
     }
 
     /**
      * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::getMtime()
+     * @see \dicr\file\AbstractFileStore::mtime()
      */
-    public function getMtime($path)
+    public function mtime($path)
     {
-        $time = @filemtime($this->getFullPath($path));
+        $time = @filemtime($this->absolutePath($path));
         if ($time === false) {
-            throw new StoreException();
+            throw new StoreException($path);
         }
 
         return $time;
@@ -334,19 +269,15 @@ class LocalFileStore extends AbstractFileStore
 
     /**
      * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::getMimeType()
+     * @see \dicr\file\AbstractFileStore::mimeType()
      */
-    public function getMimeType($path)
+    public function mimeType($path)
     {
-        $path = $this->normalizeRelativePath($path);
-        if ($path === '') {
-            throw new StoreException('root path');
-        }
-
         $finfo = new \finfo(FILEINFO_MIME_TYPE);
-        $type = @$finfo->file($this->getFullPath($path), null, $this->context);
+
+        $type = @$finfo->file($this->absolutePath($path), null, $this->context);
         if ($type === false) {
-            throw new StoreException();
+            throw new StoreException($path);
         }
 
         return $type;
@@ -354,77 +285,13 @@ class LocalFileStore extends AbstractFileStore
 
     /**
      * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::move()
+     * @see \dicr\file\AbstractFileStore::readContents()
      */
-    public function move($path, $newpath)
+    public function readContents($path)
     {
-        $path = $this->normalizeRelativePath($path);
-        if ($path === '') {
-            throw new StoreException('root path');
-        }
-
-        $newpath = $this->normalizeRelativePath($newpath);
-        if ($newpath === '') {
-            throw new StoreException('root path');
-        }
-
-        if ($path === $newpath) {
-            throw new \LogicException('path == newpath');
-        }
-
-        $this->checkDir(dirname($newpath));
-
-        if (@rename($this->getFullPath($path), $this->getFullPath($newpath), $this->context) === false) {
-            throw new StoreException();
-        }
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::copy()
-     */
-    public function copy($path, $newpath)
-    {
-        $path = $this->normalizeRelativePath($path);
-        if ($path === '') {
-            throw new StoreException('root path');
-        }
-
-        $newpath = $this->normalizeRelativePath($newpath);
-        if ($newpath === '') {
-            throw new StoreException('root path');
-        }
-
-        if ($path === $newpath) {
-            throw new \LogicException('path == newpath');
-        }
-
-        $this->checkDir(dirname($newpath));
-
-        if (@copy($this->getFullPath($path), $this->getFullPath($newpath), $this->context) === false) {
-            throw new StoreException();
-        }
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::getContents()
-     */
-    public function getContents($path)
-    {
-        $path = $this->normalizeRelativePath($path);
-        if ($path === '') {
-            throw new StoreException('root path');
-        }
-
-        $ret = @file_get_contents($this->getFullPath($path), false, $this->context);
-
+        $ret = @file_get_contents($this->absolutePath($path), false, $this->context);
         if ($ret === false) {
-            throw new StoreException();
+            throw new StoreException($path);
         }
 
         return $ret;
@@ -432,17 +299,12 @@ class LocalFileStore extends AbstractFileStore
 
     /**
      * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::setContents()
+     * @see \dicr\file\AbstractFileStore::writeContents()
      */
-    public function setContents($path, string $contents)
+    public function writeContents($path, string $contents)
     {
-        $path = $this->normalizeRelativePath($path);
-        if ($path === '') {
-            throw new StoreException('root path');
-        }
-
-        $fullPath = $this->getFullPath($path);
-        $exists = @file_exists($fullPath);
+        $fullPath = $this->absolutePath($path);
+        $exists = $this->exists($path);
 
         if (! $exists) {
             $this->checkDir(dirname($path));
@@ -455,7 +317,7 @@ class LocalFileStore extends AbstractFileStore
 
         try {
             if (! $exists) {
-                $this->setAccess($path, $this->access);
+                $this->setPublic($path, $this->public);
             } else {
                 clearstatcache(null, $fullPath);
             }
@@ -470,18 +332,13 @@ class LocalFileStore extends AbstractFileStore
 
     /**
      * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::getStream()
+     * @see \dicr\file\AbstractFileStore::readStream()
      */
-    public function getStream($path)
+    public function readStream($path)
     {
-        $path = $this->normalizeRelativePath($path);
-        if ($path === '') {
-            throw new StoreException('root path');
-        }
-
-        $stream = @fopen($this->getFullPath($path), $this->readMode, false, $this->context);
+        $stream = @fopen($this->absolutePath($path), $this->readMode, false, $this->context);
         if ($stream === false) {
-            throw new StoreException();
+            throw new StoreException($path);
         }
 
         return $stream;
@@ -489,21 +346,60 @@ class LocalFileStore extends AbstractFileStore
 
     /**
      * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::setStream()
+     * @see \dicr\file\AbstractFileStore::writeStream()
      */
-    public function setStream($path, $stream)
+    public function writeStream($path, $stream)
     {
-        $path = $this->normalizeRelativePath($path);
-        if ($path === '') {
-            throw new StoreException('root path');
-        }
-
         $contents = @stream_get_contents($stream);
         if ($contents === false) {
-            throw new StoreException();
+            throw new StoreException($path);
         }
 
-        return $this->setContents($path, $contents);
+        return $this->writeContents($path, $contents);
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\AbstractFileStore::move()
+     */
+    public function move($path, $newpath)
+    {
+        $path = $this->guardRootPath($path);
+        $newpath = $this->guardRootPath($newpath);
+
+        if ($path === $newpath) {
+            throw new \LogicException('path == newpath');
+        }
+
+        $this->checkDir($this->dirname($newpath));
+
+        if (@rename($this->absolutePath($path), $this->absolutePath($newpath), $this->context) === false) {
+            throw new StoreException($path);
+        }
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\AbstractFileStore::copy()
+     */
+    public function copy($path, $newpath)
+    {
+        $path = $this->guardRootPath($path);
+        $newpath = $this->guardRootPath($newpath);
+
+        if ($path === $newpath) {
+            throw new \LogicException('path == newpath');
+        }
+
+        $this->checkDir($this->dirname($newpath));
+
+        if (@copy($this->absolutePath($path), $this->absolutePath($newpath), $this->context) === false) {
+            throw new StoreException($path);
+        }
+
+        return $this;
     }
 
     /**
@@ -512,18 +408,16 @@ class LocalFileStore extends AbstractFileStore
      */
     public function mkdir($path)
     {
-        $path = $this->normalizeRelativePath($path);
-        if ($path == '') {
-            throw new StoreException('root path');
+        $path = $this->guardRootPath($path);
+
+        if ($this->exists($path)) {
+            throw new StoreException('уже существует: ' . $path);
         }
 
-        $fullPath = $this->getFullPath($path);
-        if (! @is_dir($fullPath)) {
-            $perms = $this->permsByAccess(File::TYPE_DIR, $this->access);
+        $perms = $this->permsByPublic(true, $this->public);
 
-            if (@mkdir($fullPath, $perms, true, $this->context) === false) {
-                throw new StoreException();
-            }
+        if (@mkdir($this->absolutePath($path), $perms, true, $this->context) === false) {
+            throw new StoreException(null);
         }
 
         return $this;
@@ -535,13 +429,10 @@ class LocalFileStore extends AbstractFileStore
      */
     public function delete($path)
     {
-        $path = $this->normalizeRelativePath($path);
-        if ($path == '') {
-            throw new StoreException('delete root path');
-        }
+        $path = $this->guardRootPath($path);
 
-        $fullPath = $this->getFullPath($path);
-        if (!@file_exists($fullPath)) {
+        $fullPath = $this->absolutePath($path);
+        if (! @file_exists($fullPath)) {
             return $this;
         }
 
@@ -588,7 +479,32 @@ class LocalFileStore extends AbstractFileStore
      *
      * @return string
      */
-    public function __toString() {
+    public function __toString()
+    {
         return $this->path;
+    }
+
+    /**
+     * Возвращает права доступа для заданного типа файла и типа доступа.
+     *
+     * @param bool $dir - директория или файл
+     * @param bool $public - публичный доступ или приватный
+     * @return int права доступа
+     */
+    protected function permsByPublic(bool $dir, bool $public)
+    {
+        return $this->perms[$dir ? 'dir' : 'file'] & ($public ? 0777 : 0700);
+    }
+
+    /**
+     * Возвращает тип доступа по правам
+     *
+     * @param bool $dir - директория или файл
+     * @param int $perms права доступа
+     * @return bool $public
+     */
+    protected function publicByPerms(bool $dir, int $perms)
+    {
+        return ($this->perms[$dir ? 'dir' : 'file'] & 0007) == ($perms & 0007);
     }
 }

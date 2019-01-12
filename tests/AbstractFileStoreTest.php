@@ -1,9 +1,9 @@
 <?php
 namespace dicr\tests;
 
-use dicr\file\File;
-use dicr\file\FileStoreInterface;
+use dicr\file\StoreFile;
 use dicr\file\StoreException;
+use dicr\file\AbstractFileStore;
 
 /**
  * LocalStore Test
@@ -30,12 +30,25 @@ abstract class AbstractFileStoreTest extends TestCase
      */
     public function testComponentExists()
     {
-        self::assertInstanceOf(FileStoreInterface::class, $this->store);
-        self::assertInstanceOf(FileStoreInterface::class, $this->store->file('')->store);
+        self::assertInstanceOf(AbstractFileStore::class, $this->store);
+        self::assertInstanceOf(StoreFile::class, $this->store->file(''));
     }
 
-    public function testPathName() {
-        self::assertEquals('', $this->store->file('')->child('')->path);
+    public function testNormalizePath() {
+        $tests = [
+            ''  => '',
+            '/' => '',
+            '/././../.' => '',
+            '/dir/to/file' => 'dir/to/file',
+        ];
+
+        foreach ($tests as $quetion => $answer) {
+            self::assertSame($answer, $this->store->normalizePath($quetion));
+        }
+
+        self::expectException(\InvalidArgumentException::class);
+        $this->store->file('')->child('')->path;
+
         self::assertEquals('', $this->store->file('/')->path);
         self::assertEquals('', $this->store->file('/')->child('/')->path);
         self::assertEquals('123', $this->store->file('123')->child('')->path);
@@ -50,64 +63,82 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertEquals('d1/d2/f2', $file->path);
     }
 
+    public function testPathRelations() {
+        self::assertNull($this->store->file('')->parent);
+
+        $file = $this->store->file('/1/2/3/');
+
+        // parent
+        self::assertSame('1/2', $file->parent->path);
+        self::assertSame('', $file->parent->parent->parent->path);
+        self::assertNull($file->parent->parent->parent->parent);
+
+        // basename
+        self::assertSame('3', $file->name);
+
+        self::expectException(StoreException::class);
+        $this->store->file('')->name;
+
+        // child
+        self::assertSame('1/2/3/4', $file->child('4'));
+    }
+
     public function testType() {
         $file = $this->store->file('test-dir');
         if (!$file->exists) {
-            self::assertInstanceOf(File::class, $file->mkdir());
+            self::assertInstanceOf(StoreFile::class, $file->mkdir());
         }
 
-        self::assertEquals(File::TYPE_DIR, $file->type);
         self::assertTrue($file->isDir);
         self::assertFalse($file->isFile);
 
         $file = $this->store->file('test-file');
         if (!$file->exists) {
-            self::assertInstanceOf(File::class, $file->setContents(''));
+            self::assertInstanceOf(StoreFile::class, $file->setContents(''));
         }
 
-        self::assertEquals(File::TYPE_FILE, $file->type);
         self::assertFalse($file->isDir);
         self::assertTrue($file->isFile);
 
         self::expectException(StoreException::class);
-        $this->store->file(md5(time()))->type;
+        $this->store->file(md5(time()))->isDir;
     }
 
-    public function testAccess() {
+    public function testPublic() {
         $file = $this->store->file('test-file');
         if (!$file->exists) {
-            self::assertInstanceOf(File::class, $file->setContents(''));
+            self::assertInstanceOf(StoreFile::class, $file->setContents(''));
         }
 
-        self::assertInstanceOf(File::class, $file->setAccess(File::ACCESS_PRIVATE));
-        self::assertEquals(File::ACCESS_PRIVATE, $file->access);
-        self::assertFalse($file->isPublic);
+        self::assertInstanceOf(StoreFile::class, $file->setPublic(false));
+        self::assertFalse($file->public);
 
-        self::assertInstanceOf(File::class, $file->setAccess(File::ACCESS_PUBLIC));
-        self::assertEquals(File::ACCESS_PUBLIC, $file->access);
-        self::assertTrue($file->isPublic);
+        self::assertInstanceOf(StoreFile::class, $file->setPublic(true));
+        self::assertTrue($file->public);
 
         self::expectException(StoreException::class);
-        $this->store->file(md5(time()))->access;
+        $this->store->file(md5(time()))->public;
 
         self::expectException(StoreException::class);
-        $this->store->file(md5(time()))->access = File::ACCESS_PRIVATE;
+        $this->store->file(md5(time()))->public = true;
     }
 
     public function testHidden() {
-        self::assertFalse($this->store->file('')->isHidden);
-        self::assertFalse($this->store->file('s/s')->isHidden);
-        self::assertFalse($this->store->file('.s/s')->isHidden);
-        self::assertTrue($this->store->file('.s')->isHidden);
-        self::assertTrue($this->store->file('s/.s')->isHidden);
+        self::expectException(StoreException::class);
+        $this->store->file('')->hidden;
+
+        self::assertFalse($this->store->file('s/s')->hidden);
+        self::assertFalse($this->store->file('.s/s')->hidden);
+        self::assertTrue($this->store->file('.s')->hidden);
+        self::assertTrue($this->store->file('s/.s')->hidden);
     }
 
     public function testSize() {
         $file = $this->store->file('test-file');
 
-        self::assertInstanceOf(File::class, $file->setContents('1234567890'));
+        self::assertInstanceOf(StoreFile::class, $file->setContents('1234567890'));
         self::assertEquals(10, $file->size);
-        self::assertInstanceOf(File::class, $file->setContents(''));
+        self::assertInstanceOf(StoreFile::class, $file->setContents(''));
         self::assertEquals(0, $file->size);
 
         self::expectException(StoreException::class);
@@ -129,7 +160,7 @@ abstract class AbstractFileStoreTest extends TestCase
     }
 
     public function testContents() {
-        self::assertInstanceOf(File::class, $this->store->file('test-file')->setContents('12345'));
+        self::assertInstanceOf(StoreFile::class, $this->store->file('test-file')->setContents('12345'));
         self::assertSame(5, $this->store->file('test-file')->size);
 
         self::assertSame('12345', $this->store->file('test-file')->contents);
@@ -147,7 +178,7 @@ abstract class AbstractFileStoreTest extends TestCase
         fputs($stream, 'test');
         rewind($stream);
 
-        self::assertInstanceOf(File::class, $this->store->file('test-file')->setStream($stream));
+        self::assertInstanceOf(StoreFile::class, $this->store->file('test-file')->setStream($stream));
         self::assertSame(4, $this->store->file('test-file')->size);
 
         $stream = $this->store->file('test-file')->stream;
@@ -164,49 +195,50 @@ abstract class AbstractFileStoreTest extends TestCase
     public function testExistsDelete() {
         $dir = $this->store->file('test-dir');
         if (!$dir->exists) {
-            self::assertInstanceOf(File::class, $dir->mkdir());
+            self::assertInstanceOf(StoreFile::class, $dir->mkdir());
         }
 
         self::assertTrue($dir->exists);
         self::assertTrue($dir->isDir);
 
-        self::assertInstanceOf(File::class, $dir->delete());
+        self::assertInstanceOf(StoreFile::class, $dir->delete());
         self::assertFalse($dir->exists);
 
         $file = $this->store->file('test-file');
         if (!$file->exists) {
-            self::assertInstanceOf(File::class, $file->setContents('123'));
+            self::assertInstanceOf(StoreFile::class, $file->setContents('123'));
         }
 
         self::assertTrue($file->exists);
         self::assertTrue($file->isFile);
 
-        self::assertInstanceOf(File::class, $file->delete());
+        self::assertInstanceOf(StoreFile::class, $file->delete());
         self::assertFalse($file->exists);
 
-        self::assertInstanceOf(File::class, $this->store->file(md5(time()))->delete());
+        self::assertInstanceOf(StoreFile::class, $this->store->file(md5(time()))->delete());
     }
 
     public function testFileListChild() {
-        self::assertCount(0, $this->store->list('123'));
+        self::expectException(StoreException::class);
+        $this->store->list('123');
 
         $dir = $this->store->file('test-dir');
-        self::assertInstanceOf(File::class, $dir);
+        self::assertInstanceOf(StoreFile::class, $dir);
         if (!$dir->exists) {
-            self::assertInstanceOf(File::class, $dir->mkdir());
+            self::assertInstanceOf(StoreFile::class, $dir->mkdir());
         }
 
         $file = $this->store->file('test-file');
-        self::assertInstanceOf(File::class, $file);
+        self::assertInstanceOf(StoreFile::class, $file);
         if (!$file->exists) {
-            self::assertInstanceOf(File::class, $file->setContents(''));
+            self::assertInstanceOf(StoreFile::class, $file->setContents(''));
         }
 
         self::assertCount(2, $this->store->list('', [
             'regex' => '~^test\-~'
         ]));
 
-        self::assertInstanceOf(File::class, $dir->delete());
-        self::assertInstanceOf(File::class, $file->delete());
+        self::assertInstanceOf(StoreFile::class, $dir->delete());
+        self::assertInstanceOf(StoreFile::class, $file->delete());
     }
 }

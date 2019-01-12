@@ -21,13 +21,13 @@ class FileInputWidget extends InputWidget
     /** @var string|false mime-типы в input type=file, например image/* */
     public $accept;
 
-    /** @var \dicr\file\FileStoreInterface */
+    /** @var \dicr\file\AbstractFileStore */
     public $store = 'fileStore';
 
     /** @var string название поля формы аттрибута */
     protected $inputName;
 
-    /** @var \dicr\file\File[] файлы */
+    /** @var \dicr\file\AbstractFile[] файлы */
     protected $files;
 
     /**
@@ -51,7 +51,7 @@ class FileInputWidget extends InputWidget
             $this->store = \Yii::createObject($this->store);
         }
 
-        if (!($this->store instanceof FileStoreInterface)) {
+        if (!($this->store instanceof AbstractFileStore)) {
             throw new InvalidConfigException('store');
         }
 
@@ -61,6 +61,7 @@ class FileInputWidget extends InputWidget
 
         // получаем файлы
         $this->files = Html::getAttributeValue($this->model, $this->attribute);
+
         if (empty($this->files)) {
             $this->files = [];
         } elseif (! is_array($this->files)) {
@@ -98,12 +99,12 @@ class FileInputWidget extends InputWidget
      * Рендерит файл
      *
      * @param int $pos
-     * @param \dicr\file\File $file
+     * @param StoreFile $file
      * @return string
      */
-    protected function renderFileBlock(int $pos, File $file)
+    protected function renderFileBlock(int $pos, StoreFile $file)
     {
-        $isImage = preg_match('~^image\/.+~uism', mime_content_type($file->fullPath));
+        $isImage = preg_match('~^image\/.+~uism', $file->mimeType);
         $fileId = $this->id . '-fileinput-' . rand(1, 999999);
 
         return Html::tag('label',
@@ -124,7 +125,7 @@ class FileInputWidget extends InputWidget
     {
         $content = '';
         foreach ($this->files as $pos => $file) {
-            if (! ($file instanceof UploadFile)) {
+            if ($file instanceof StoreFile) {
                 $content .= $this->renderFileBlock((int) $pos, $file);
             }
         }

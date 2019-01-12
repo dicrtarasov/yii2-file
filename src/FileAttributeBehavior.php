@@ -7,7 +7,6 @@ use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
 use yii\base\Model;
 use yii\db\ActiveRecord;
-use yii\di\Instance;
 
 // @formatter:off
 /**
@@ -38,18 +37,18 @@ use yii\di\Instance;
  *  Значение - массив параметров атрибута:
  *      - int $limit - ограничение количества файлов.
  *          - если $limit == 0,
- *              то значение аттрибута - массив файлов \dicr\file\File[] без ограничения на кол-во
+ *              то значение аттрибута - массив файлов \dicr\file\AsbtractFile[] без ограничения на кол-во
  *          - если $limit - число,
- *              то значение аттрибута - массив \dicr\file\File[] с ограничением кол-ва файлов limit
+ *              то значение аттрибута - массив \dicr\file\AsbtractFile[] с ограничением кол-ва файлов limit
  *          - если $limit == 1,
- *              то значение атрибута - один файл \dicr\file\File
+ *              то значение атрибута - один файл \dicr\file\AsbtractFile
  * </xmp>
  *
  * Если значение не массив, то оно принимается в качестве limit.
  *
  * Типы значения аттрибутов:
- *    \dicr\file\File - для аттрибутов с limit = 1;
- *    \dicr\file\File[] - для аттрибутов с limit != 1;
+ *    \dicr\file\AsbtractFile - для аттрибутов с limit = 1;
+ *    \dicr\file\AsbtractFile[] - для аттрибутов с limit != 1;
  *
  * Данный behavior реализует get/set методы для заданных аттрибутов,
  * поэтому эти методы не должны быть отпередены в модели.
@@ -107,12 +106,12 @@ use yii\di\Instance;
  * а значит из нужно пропустить при выводе модели:
  *
  * <xmp>
- * <?=$model->icon instanceof UploadFile ? '' : Html::img($model->icon->url)?>
+ * <?=$model->icon instanceof StoreFile ? Html::img($model->icon->url) : ''?>
  * </xmp>
  *
  * <xmp>
  * <?php foreach ($model->pics as $pic) {?>
- *      <?php if (!($pic instanceof UploadFile)) {?>
+ *      <?php if ($pic instanceof StoreFile) {?>
  *          <?=Html::img($pic->url)?>
  *      <?php }?>
  * <?php } ?>
@@ -124,7 +123,7 @@ use yii\di\Instance;
 // @formatter:on
 class FileAttributeBehavior extends Behavior
 {
-    /** @var \dicr\file\FileStoreInterface хранилище файлов */
+    /** @var \dicr\file\AbstractFileStore хранилище файлов */
     public $store = 'fileStore';
 
     /**
@@ -135,7 +134,7 @@ class FileAttributeBehavior extends Behavior
      */
     public $attributes;
 
-    /** @var array текущие значения аттрибутов [attibuteName => \dicr\file\File[]]  */
+    /** @var array текущие значения аттрибутов [attibuteName => \dicr\file\StoreFile[]]  */
     private $values = [];
 
     /**
@@ -147,7 +146,15 @@ class FileAttributeBehavior extends Behavior
         // owner не инициализирован пока не вызван attach
 
         // получаем store
-        $this->store = Instance::ensure($this->store, FileStoreInterface::class);
+        if (is_string($this->store)) {
+            $this->store = \Yii::$app->get($this->store);
+        } elseif (is_array($this->store)) {
+            $this->store = \Yii::createObject($this->store);
+        }
+
+        if (!($this->store instanceof AbstractFileStore)) {
+            throw new InvalidConfigException('store');
+        }
 
         // проверяем наличие аттрибутов
         if (empty($this->attributes) || ! is_array($this->attributes)) {
@@ -220,7 +227,7 @@ class FileAttributeBehavior extends Behavior
      *
      * @param string $attribute
      * @throws InvalidConfigException
-     * @return \dicr\file\File
+     * @return \dicr\file\StoreFile
      */
     protected function getAttributePath(string $attribute = '')
     {
@@ -248,13 +255,18 @@ class FileAttributeBehavior extends Behavior
      *
      * @param string $attribute
      * @param bool $refresh
-     * @return null|\dicr\file\File|\dicr\file\File[]
+     * @return null|\dicr\file\AbstractFile|\dicr\file\AbstractFile[]
      */
     public function getFileAttributeValue(string $attribute, bool $refresh = false)
     {
         if (! isset($this->values[$attribute]) || $refresh) {
-            $this->values[$attribute] = $this->getAttributePath($attribute)->getList(
-                ['dirs' => false,'skipHidden' => true]);
+            $attributePath = $this->getAttributePath($attribute);
+
+
+            $this->values[$attribute] = $attributePath->exists ? $this->getAttributePath($attribute)->getList([
+                'dir' => false,
+                'hidden' => false
+            ]) : [];
         }
 
         $value = $this->values[$attribute];
@@ -266,7 +278,7 @@ class FileAttributeBehavior extends Behavior
      * Возвращает значение файлового аттрибута
      *
      * @param string $attribute
-     * @param null|\dicr\file\File|\dicr\file\File[] $files
+     * @param null|\dicr\file\AbstractFile|\dicr\file\AbstractFile[] $files
      * @return static
      */
     public function setFileAttributeValue(string $attribute, $files)
@@ -286,7 +298,7 @@ class FileAttributeBehavior extends Behavior
 
         // проверяем элементы массива
         foreach ($files as $file) {
-            if (! ($file instanceof File)) {
+            if (! ($file instanceof AbstractFile)) {
                 throw new InvalidArgumentException('неокрректный тип элемента');
             }
         }
@@ -410,14 +422,14 @@ class FileAttributeBehavior extends Behavior
                 } elseif (! isset($file->name) || $file->name == '') {
                     $this->owner->addError($attribute, 'не задано имя загруаемого файла: ' . $file->path);
                     unset($files[$i]);
-                } elseif (! @is_file($file->fullPath)) {
+                } elseif (! $file->exists) {
                     $this->owner->addError($attribute, 'загружаемый файл не существует: ' . $file->fullPath);
                     unset($files[$i]);
                 } elseif ((int) $file->size <= 0) {
                     $this->owner->addError($attribute, 'пустой размер файла: ' . $file->name);
                     unset($files[$i]);
                 }
-            } elseif (! ($file instanceof File)) {
+            } elseif (! ($file instanceof StoreFile)) {
                 $this->owner->addError($attribute, 'неизвестный тип значения');
                 unset($files[$i]);
             }
@@ -443,53 +455,6 @@ class FileAttributeBehavior extends Behavior
         }
 
         return $ret;
-    }
-
-    /**
-     * Удаляет из имени файла технический префикс
-     *
-     * @param string $name имя файла
-     * @return string оригинальное имя без префикса
-     */
-    protected function removeNamePrefix(string $name)
-    {
-        $matches = null;
-        if (preg_match('~^(\.tmp)?\d+\~(.+)$~uism', $name, $matches)) {
-            $name = $matches[2];
-        }
-
-        return $name;
-    }
-
-    /**
-     * Добавляет имени временный префикс.
-     * Предварительно удаляется существующий префиск
-     *
-     * @param string $name
-     * @return string
-     */
-    protected function createTempPrefix(string $name)
-    {
-        // удаляем текущий префикс
-        $name = $this->removeNamePrefix($name);
-
-        // добавляем временный префиск
-        return sprintf('.tmp%d~%s', rand(100000, 999999), $name);
-    }
-
-    /**
-     * Создает временное имя файла, добавляя служебный префикс
-     *
-     * @param string $name
-     * @return string
-     */
-    protected function createPosPrefix(string $name, int $pos)
-    {
-        // удаляем текущий префикс
-        $name = $this->removeNamePrefix($name);
-
-        // добавляем порядковый префиск
-        return sprintf('%d~%s', $pos, $name);
     }
 
     /**
@@ -522,7 +487,10 @@ class FileAttributeBehavior extends Behavior
         $modelPath = $this->getAttributePath($attribute);
 
         // получаем старые файлы
-        $oldFiles = $modelPath->getList(['dirs' => false,'skipHidden' => true]);
+        $oldFiles = $modelPath->exists ? $modelPath->getList([
+            'dir' => false,
+            'hidden' => false
+        ]) : [];
 
         // импортируем новые и переименовываем старые во временные имена с точкой
         foreach ($files as $pos => $file) {
@@ -535,25 +503,33 @@ class FileAttributeBehavior extends Behavior
                 } else {
                     // создаем и импортируем файл под временным именем
                     $newFile = $modelPath->child($this->createTempPrefix($file->name));
-                    $newFile->import($file->fullPath);
+                    $newFile->contents = $file->contents;
                     $files[$pos] = $newFile;
                 }
-            } elseif ($file instanceof File) { // старый файл
-                // ищем в списке старых файлов
-                $oldFound = false;
-                foreach ($oldFiles as $oldPos => $oldFile) {
-                    if ($oldFile->name == $file->name) {
-                        $oldFound = true;
-                        unset($oldFiles[$oldPos]); // найденый старый файл удаляем из списка
-                        break;
-                    }
-                }
-
-                if (! $oldFound) {
-                    unset($files[$pos]); // если файл уже удален, то забываем его
+            } elseif ($file instanceof StoreFile) { // старый файл
+                // если файл принадлежит другому store, то импортируем также как и UploadFile
+                if ($file->store !== $modelPath->store) {
+                    // создаем и импортируем файл под временным именем
+                    $newFile = $modelPath->child($this->createTempPrefix($file->name));
+                    $newFile->contents = $file->contents;
+                    $files[$pos] = $newFile;
                 } else {
-                    $file->setName($this->createTempPrefix($file->name), true); // переименовываем во временное имя
-                    $files[$pos] = $file;
+                    // ищем в списке старых файлов
+                    $oldFound = false;
+                    foreach ($oldFiles as $oldPos => $oldFile) {
+                        if ($oldFile->name == $file->name) {
+                            $oldFound = true;
+                            unset($oldFiles[$oldPos]); // найденый старый файл удаляем из списка
+                            break;
+                        }
+                    }
+
+                    if (! $oldFound) {
+                        unset($files[$pos]); // если файл уже удален, то забываем его
+                    } else {
+                        $file->name = $this->createTempPrefix($file->name); // переименовываем во временное имя
+                        $files[$pos] = $file;
+                    }
                 }
             } else {
                 throw new Exception('неизвестный тип значения фалового аттрибута ' . $attribute);
@@ -571,7 +547,7 @@ class FileAttributeBehavior extends Behavior
 
             // переименовываем файлы в правильные имена
             foreach ($files as $pos => $file) {
-                $file->setName($this->createPosPrefix($file->name, $pos), true);
+                $file->name = $this->createPosPrefix($file->name, $pos);
                 $files[$pos] = $file;
             }
         } else {
@@ -617,7 +593,7 @@ class FileAttributeBehavior extends Behavior
         $this->checkOwner();
 
         // удаляем рекурсивно
-        $this->getAttributePath($attribute)->delete(true);
+        $this->getAttributePath($attribute)->delete();
 
         // запоминаем значение
         $this->values[$attribute] = [];
@@ -646,7 +622,7 @@ class FileAttributeBehavior extends Behavior
     /**
      * Удаляет папку модели
      *
-     * @return \dicr\file\File
+     * @return \dicr\file\StoreFile
      */
     public function deleteModelFolder()
     {
@@ -729,5 +705,52 @@ class FileAttributeBehavior extends Behavior
         }
 
         return parent::canSetProperty($name, $checkVars);
+    }
+
+    /**
+     * Удаляет из имени файла технический префикс
+     *
+     * @param string $name имя файла
+     * @return string оригинальное имя без префикса
+     */
+    protected function removeNamePrefix(string $name)
+    {
+        $matches = null;
+        if (preg_match('~^(\.tmp)?\d+\~(.+)$~uism', $name, $matches)) {
+            $name = $matches[2];
+        }
+
+        return $name;
+    }
+
+    /**
+     * Добавляет имени временный префикс.
+     * Предварительно удаляется существующий префиск
+     *
+     * @param string $name
+     * @return string
+     */
+    protected function createTempPrefix(string $name)
+    {
+        // удаляем текущий префикс
+        $name = $this->removeNamePrefix($name);
+
+        // добавляем временный префиск
+        return sprintf('.tmp%d~%s', rand(100000, 999999), $name);
+    }
+
+    /**
+     * Создает временное имя файла, добавляя служебный префикс
+     *
+     * @param string $name
+     * @return string
+     */
+    protected function createPosPrefix(string $name, int $pos)
+    {
+        // удаляем текущий префикс
+        $name = $this->removeNamePrefix($name);
+
+        // добавляем порядковый префиск
+        return sprintf('%d~%s', $pos, $name);
     }
 }
