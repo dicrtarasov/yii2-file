@@ -123,7 +123,7 @@ use yii\db\ActiveRecord;
 // @formatter:on
 class FileAttributeBehavior extends Behavior
 {
-    /** @var \dicr\file\AbstractFileStore хранилище файлов */
+    /** @var \dicr\file\AbstractFileStore|string|array хранилище файлов */
     public $store = 'fileStore';
 
     /**
@@ -184,70 +184,6 @@ class FileAttributeBehavior extends Behavior
             ActiveRecord::EVENT_AFTER_INSERT => 'saveFileAttributes',
             ActiveRecord::EVENT_AFTER_UPDATE => 'saveFileAttributes',
             ActiveRecord::EVENT_AFTER_DELETE => 'deleteModelFolder'];
-    }
-
-    /**
-     * Проверяет подключенную модель
-     *
-     * @throws InvalidConfigException
-     */
-    protected function checkOwner()
-    {
-        if (! ($this->owner instanceof Model)) {
-            throw new InvalidConfigException('owner');
-        }
-    }
-
-    /**
-     * Проверяет существование файлового атрибута
-     *
-     * @param string $attribute
-     * @return boolean
-     */
-    protected function isFileAttribute(string $attribute)
-    {
-        return array_key_exists($attribute, $this->attributes);
-    }
-
-    /**
-     * Проверяет существование файлового атрибута
-     *
-     * @param string $attribute
-     * @throws Exception
-     */
-    protected function checkFileAttribute(string $attribute)
-    {
-        if (! $this->isFileAttribute($attribute)) {
-            throw new Exception('файловы аттрибут "' . $attribute . '" не существует');
-        }
-    }
-
-    /**
-     * Возвращает директори аттрибута
-     *
-     * @param string $attribute
-     * @throws InvalidConfigException
-     * @return \dicr\file\StoreFile
-     */
-    protected function getAttributePath(string $attribute = '')
-    {
-        $this->checkOwner();
-        $this->checkFileAttribute($attribute);
-
-        $relpath = [$this->owner->formName()];
-
-        if ($this->owner instanceof ActiveRecord) {
-            $keyName = basename(implode('~', $this->owner->getPrimaryKey(true)));
-            if ($keyName !== '') {
-                $relpath[] = $keyName;
-            }
-        }
-
-        if ($attribute !== '') {
-            $relpath[] = $attribute;
-        }
-
-        return $this->store->file($relpath);
     }
 
     /**
@@ -423,7 +359,7 @@ class FileAttributeBehavior extends Behavior
                     $this->owner->addError($attribute, 'не задано имя загруаемого файла: ' . $file->path);
                     unset($files[$i]);
                 } elseif (! $file->exists) {
-                    $this->owner->addError($attribute, 'загружаемый файл не существует: ' . $file->fullPath);
+                    $this->owner->addError($attribute, 'загружаемый файл не существует: ' . $file->path);
                     unset($files[$i]);
                 } elseif ((int) $file->size <= 0) {
                     $this->owner->addError($attribute, 'пустой размер файла: ' . $file->name);
@@ -501,55 +437,28 @@ class FileAttributeBehavior extends Behavior
                 if (! empty($file->error) || empty($file->path)) {
                     unset($files[$pos]); // пропускаем файлы с ошибками
                 } else {
-                    // создаем и импортируем файл под временным именем
-                    $newFile = $modelPath->child($this->createTempPrefix($file->name));
-                    $newFile->contents = $file->contents;
-                    $files[$pos] = $newFile;
+                    $files[$pos] = static::importNewFile($modelPath, $file); // создаем и импортируем файл под временным именем
                 }
             } elseif ($file instanceof StoreFile) { // старый файл
                 // если файл принадлежит другому store, то импортируем также как и UploadFile
                 if ($file->store !== $modelPath->store) {
-                    // создаем и импортируем файл под временным именем
-                    $newFile = $modelPath->child($this->createTempPrefix($file->name));
-                    $newFile->contents = $file->contents;
-                    $files[$pos] = $newFile;
+                    $files[$pos] = static::importNewFile($modelPath, $file); // создаем и импортируем файл под временным именем
+                } elseif (! static::matchOldFile($oldFiles, $file)) { // ищем в списке старых файлов
+                    unset($files[$pos]); // если файл уже удален, то забываем его
                 } else {
-                    // ищем в списке старых файлов
-                    $oldFound = false;
-                    foreach ($oldFiles as $oldPos => $oldFile) {
-                        if ($oldFile->name == $file->name) {
-                            $oldFound = true;
-                            unset($oldFiles[$oldPos]); // найденый старый файл удаляем из списка
-                            break;
-                        }
-                    }
-
-                    if (! $oldFound) {
-                        unset($files[$pos]); // если файл уже удален, то забываем его
-                    } else {
-                        $file->name = $this->createTempPrefix($file->name); // переименовываем во временное имя
-                        $files[$pos] = $file;
-                    }
+                    static::renameWithTemp($file); // переименовываем во временное имя
                 }
             } else {
                 throw new Exception('неизвестный тип значения фалового аттрибута ' . $attribute);
             }
         }
 
+        // удаляем оставшиеся старые файлы которых не было в списке для сохранения
+        static::deleteOldFiles($oldFiles);
+
         if (! empty($files)) {
-            // удаляем оставшиеся старые файлы которых не было в списке для сохранения
-            foreach ($oldFiles as $oldFile) {
-                $oldFile->delete();
-            }
-
-            // переиндексируем с новыми порядковыми ключами
-            $files = array_values($files);
-
             // переименовываем файлы в правильные имена
-            foreach ($files as $pos => $file) {
-                $file->name = $this->createPosPrefix($file->name, $pos);
-                $files[$pos] = $file;
-            }
+            $files = static::renameWithPos($files);
         } else {
             // удаляем директорию аттрибута
             $modelPath->delete();
@@ -708,12 +617,76 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
+     * Проверяет подключенную модель
+     *
+     * @throws InvalidConfigException
+     */
+    protected function checkOwner()
+    {
+        if (! ($this->owner instanceof Model)) {
+            throw new InvalidConfigException('owner');
+        }
+    }
+
+    /**
+     * Проверяет существование файлового атрибута
+     *
+     * @param string $attribute
+     * @return boolean
+     */
+    protected function isFileAttribute(string $attribute)
+    {
+        return array_key_exists($attribute, $this->attributes);
+    }
+
+    /**
+     * Проверяет существование файлового атрибута
+     *
+     * @param string $attribute
+     * @throws Exception
+     */
+    protected function checkFileAttribute(string $attribute)
+    {
+        if (! $this->isFileAttribute($attribute)) {
+            throw new Exception('файловы аттрибут "' . $attribute . '" не существует');
+        }
+    }
+
+    /**
+     * Возвращает директори аттрибута
+     *
+     * @param string $attribute
+     * @throws InvalidConfigException
+     * @return \dicr\file\StoreFile
+     */
+    protected function getAttributePath(string $attribute = '')
+    {
+        $this->checkOwner();
+        $this->checkFileAttribute($attribute);
+
+        $relpath = [$this->owner->formName()];
+
+        if ($this->owner instanceof ActiveRecord) {
+            $keyName = basename(implode('~', $this->owner->getPrimaryKey(true)));
+            if ($keyName !== '') {
+                $relpath[] = $keyName;
+            }
+        }
+
+        if ($attribute !== '') {
+            $relpath[] = $attribute;
+        }
+
+        return $this->store->file($relpath);
+    }
+
+    /**
      * Удаляет из имени файла технический префикс
      *
      * @param string $name имя файла
      * @return string оригинальное имя без префикса
      */
-    protected function removeNamePrefix(string $name)
+    protected static function removeNamePrefix(string $name)
     {
         $matches = null;
         if (preg_match('~^(\.tmp)?\d+\~(.+)$~uism', $name, $matches)) {
@@ -730,10 +703,10 @@ class FileAttributeBehavior extends Behavior
      * @param string $name
      * @return string
      */
-    protected function createTempPrefix(string $name)
+    protected static function createTempPrefix(string $name)
     {
         // удаляем текущий префикс
-        $name = $this->removeNamePrefix($name);
+        $name = static::removeNamePrefix($name);
 
         // добавляем временный префиск
         return sprintf('.tmp%d~%s', rand(100000, 999999), $name);
@@ -745,12 +718,88 @@ class FileAttributeBehavior extends Behavior
      * @param string $name
      * @return string
      */
-    protected function createPosPrefix(string $name, int $pos)
+    protected static function createPosPrefix(string $name, int $pos)
     {
         // удаляем текущий префикс
-        $name = $this->removeNamePrefix($name);
+        $name = static::removeNamePrefix($name);
 
         // добавляем порядковый префиск
         return sprintf('%d~%s', $pos, $name);
+    }
+
+    /**
+     * Импортирует новый файл.
+     * Либо UploadFile, либо StoreFile, у которого другой store.
+     *
+     * @param StoreFile $attributePath
+     * @param AbstractFile $file файл для импорта
+     * @return \dicr\file\StoreFile новый импортированный файл
+     */
+    protected static function importNewFile(StoreFile $attributePath, AbstractFile $file) {
+        $newFile = $attributePath->child(static::createTempPrefix($file->name));
+        $newFile->contents = $file->contents;
+        return $newFile;
+    }
+
+    /**
+     * Переименовывает файл во временное имя
+     *
+     * @param StoreFile $file
+     * @return StoreFile
+     */
+    protected static function renameWithTemp(StoreFile $file) {
+        $file->name = static::createTempPrefix($file->name);
+        return $file;
+    }
+
+    /**
+     * Переименовывает файлы, добавляя префик позиции
+     *
+     * @param StoreFile[] $files
+     * @return StoreFile[]
+     */
+    protected static function renameWithPos(array $files) {
+        // переиндексируем
+        $files = array_values($files);
+
+        foreach ($files as $pos => $file) {
+            $file->name = self::createPosPrefix($file->name, $pos);
+            $files[$pos] = $file;
+        }
+
+        return $files;
+    }
+
+    /**
+     * Находит файл среди старых и удаляет найденный из списка
+     *
+     * @param StoreFile[] $oldFiles старый файлы
+     * @param StoreFile $file файл для поиска
+     * @return boolean true если старый файл найден и удален из списка
+     */
+    protected static function matchOldFile(array &$oldFiles, StoreFile $file) {
+        $found = false;
+        foreach ($oldFiles as $i => $oldFile) {
+            if ($oldFile->name == $file->name) {
+                $found = true;
+                unset($oldFiles[$i]); // найденый старый файл удаляем из списка
+                break;
+            }
+        }
+        return $found;
+    }
+
+    /**
+     * Удаляет старые файлы
+     *
+     * @param StoreFile[] $files старые файлы для удаления
+     */
+    protected static function deleteOldFiles(array &$files) {
+        foreach ($files as $i => $file) {
+            $file->delete();
+            unset($files[$i]);
+        }
+
+        unset($files);
     }
 }

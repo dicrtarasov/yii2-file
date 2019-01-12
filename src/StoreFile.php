@@ -122,9 +122,9 @@ class StoreFile extends AbstractFile
      *
      * @param StoreFile $parent
      * @throws StoreException
-     * @return self (если родительский store такой же, то себя, иначе новый экземпляр из родительского store)
+     * @return static (если родительский store такой же, то себя, иначе новый экземпляр из родительского store)
      */
-    public function setParent(self $parent)
+    public function setParent(StoreFile $parent)
     {
         $this->checkRootAccess();
 
@@ -151,7 +151,7 @@ class StoreFile extends AbstractFile
         $newpath = $parent->store->childname($parent->store->dirname($parent->path), $this->store->basename($this->path));
 
         // копируем в новое хранилище
-        $parent->store->writeContent($newpath, $this->content);
+        $parent->store->writeContents($newpath, $this->content);
 
         // удаляем в текущем хранилище
         $this->delete();
@@ -518,7 +518,7 @@ class StoreFile extends AbstractFile
             }
         } catch (\Throwable $ex) {
             // для удаленых файлов исключения означают неподдерживаемую функцию
-            if (stream_is_local($this->fullPath)) {
+            if (stream_is_local($this->absolutePath)) {
                 throw new StoreException($this->path, $ex);
             }
         }

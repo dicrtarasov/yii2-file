@@ -20,7 +20,7 @@ abstract class AbstractFileStore extends Component {
     /** @var bool публичный доступ к файлам */
     public $public = true;
 
-    /** @var array конфиг создания файлов */
+    /** @var array|string конфиг создания файлов */
     public $fileConfig = [
         'class' => StoreFile::class
     ];
@@ -37,7 +37,7 @@ abstract class AbstractFileStore extends Component {
         parent::init();
 
         if (is_string($this->url)) {
-            $url = \Yii::getAlias($this->url, '/');
+            $url = \Yii::getAlias($this->url);
             if (!is_string($url)) {
                 throw new InvalidConfigException('url');
             }

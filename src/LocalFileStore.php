@@ -29,7 +29,7 @@ class LocalFileStore extends AbstractFileStore
     /** @var string mode for fopen for reading stream */
     public $readMode = 'rb';
 
-    /** @var resource stream_context options */
+    /** @var resource|array stream_context options */
     public $context = [];
 
     /**
@@ -455,7 +455,7 @@ class LocalFileStore extends AbstractFileStore
                     }
                 } finally {
                     if (is_resource($dir)) {
-                        @closedir($dir);
+                        closedir($dir);
                     }
                 }
 

@@ -127,11 +127,11 @@ class FlysystemFileStore extends AbstractFileStore
      */
     public function getType($path)
     {
+        $path = $this->normalizePath($path);
+
         if (!$this->exists($path)) {
             throw new StoreException('not exists: ' . $path);
         }
-
-        $path = $this->normalizePath($path);
 
         try {
             $ret = $this->flysystem->getMetadata($path);
@@ -310,19 +310,12 @@ class FlysystemFileStore extends AbstractFileStore
             throw new StoreException($path, $ex);
         }
 
-        if (is_array($ret)) {
-            if (isset($ret['size'])) {
-                $ret = $ret['size'];
-            } else if (isset($ret['contents'])) {
-                $ret = strlen($ret['contents']);
-            }
-        } elseif (is_string($ret)) {
-            $ret = strlen($ret);
-        }
-
         if ($ret === false) {
             throw new StoreException($path);
         }
+
+        // глючный flysystem возвращает bool вместо size, поэтому костыль
+        $ret = strlen($contents);
 
         return $ret;
     }
