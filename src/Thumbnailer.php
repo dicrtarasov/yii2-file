@@ -56,7 +56,7 @@ class Thumbnailer extends Component
 
         $this->noimage = trim($this->noimage);
         if ($this->noimage != '') {
-            $this->noimage = \Yii::getAlias($this->noimage);
+            $this->noimage = \Yii::getAlias($this->noimage, true);
             if ($this->noimage === false) {
                 throw new InvalidConfigException('noimage');
             }

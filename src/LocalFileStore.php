@@ -98,7 +98,7 @@ class LocalFileStore extends AbstractFileStore
      */
     public function setPath(string $path)
     {
-        $path = \Yii::getAlias($path);
+        $path = \Yii::getAlias($path, true);
         if ($path === false) {
             throw new InvalidArgumentException('path');
         }
