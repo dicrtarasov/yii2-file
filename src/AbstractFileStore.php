@@ -2,9 +2,10 @@
 namespace dicr\file;
 
 use yii\base\Component;
-use yii\base\InvalidConfigException;
-use yii\helpers\Url;
 use yii\base\InvalidCallException;
+use yii\base\InvalidConfigException;
+use yii\base\NotSupportedException;
+use yii\helpers\Url;
 
 /**
  * Abstract Fle Store
@@ -12,7 +13,8 @@ use yii\base\InvalidCallException;
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
  */
-abstract class AbstractFileStore extends Component {
+abstract class AbstractFileStore extends Component
+{
 
     /** @var string|array $url */
     public $url;
@@ -21,24 +23,25 @@ abstract class AbstractFileStore extends Component {
     public $public = true;
 
     /** @var array|string конфиг создания файлов */
-    public $fileConfig = [
-        'class' => StoreFile::class
-    ];
+    public $fileConfig = ['class' => StoreFile::class];
 
     /** @var string path separator */
     public $pathSeparator = DIRECTORY_SEPARATOR;
 
+    /** @var string|array|Thumbnailer создание превью файлов */
+    public $thumbnailer;
+
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      * @see \yii\base\BaseObject::init()
      */
-    public function init() {
-
+    public function init()
+    {
         parent::init();
 
         if (is_string($this->url)) {
             $url = \Yii::getAlias($this->url);
-            if (!is_string($url)) {
+            if (! is_string($url)) {
                 throw new InvalidConfigException('url');
             }
 
@@ -48,19 +51,32 @@ abstract class AbstractFileStore extends Component {
         if (empty($this->fileConfig)) {
             $this->fileConfig = [];
         } elseif (is_string($this->fileConfig)) {
-            $this->fileConfig = [
-                'class' => $this->fileConfig
-            ];
+            $this->fileConfig = ['class' => $this->fileConfig];
         } elseif (! is_array($this->fileConfig)) {
             throw new InvalidConfigException('fileConfig');
         }
 
-        if (!isset($this->fileConfig['class'])) {
+        if (! isset($this->fileConfig['class'])) {
             $this->fileConfig['class'] = StoreFile::class;
+        } elseif (! is_a($this->fileConfig['class'], StoreFile::class, true)) {
+            throw new InvalidCallException(
+                'file class: ' . $this->fileConfig['class'] . ' must extends ' . StoreFile::class);
         }
 
-        if (!is_a($this->fileConfig['class'], StoreFile::class, true)) {
-            throw new InvalidCallException('file class: ' . $this->fileConfig['class'] . ' must extends ' . StoreFile::class);
+        if (isset($this->thumbnailer)) {
+            if (is_string($this->thumbnailer)) {
+                $this->thumbnailer = \Yii::getAlias($this->thumbnailer, true);
+            } elseif (is_array($this->thumbnailer)) {
+                if (! isset($this->thumbnailer['class'])) {
+                    $this->thumbnailer['class'] = Thumbnailer::class;
+                }
+
+                $this->thumbnailer = \Yii::createObject($this->thumbnailer);
+            }
+
+            if (! ($this->thumbnailer instanceof Thumbnailer)) {
+                throw new InvalidConfigException('thumbnailer');
+            }
         }
     }
 
@@ -70,10 +86,11 @@ abstract class AbstractFileStore extends Component {
      * @param string|array $path
      * @return array
      */
-    public function splitPath($path) {
-        if (!is_array($path)) {
+    public function splitPath($path)
+    {
+        if (! is_array($path)) {
             $regex = sprintf('~[%s\\\/]+~uism', preg_quote($this->pathSeparator));
-            $path = preg_split($regex, $path, -1, PREG_SPLIT_NO_EMPTY);
+            $path = preg_split($regex, $path, - 1, PREG_SPLIT_NO_EMPTY);
         }
 
         return $path;
@@ -85,7 +102,8 @@ abstract class AbstractFileStore extends Component {
      * @param string|array $path
      * @return array
      */
-    public function filterPath($path) {
+    public function filterPath($path)
+    {
         $path = $this->splitPath($path);
 
         $filtered = [];
@@ -107,7 +125,8 @@ abstract class AbstractFileStore extends Component {
      * @param array|string $path
      * @return string
      */
-    public function buildPath($path) {
+    public function buildPath($path)
+    {
         if (is_array($path)) {
             $path = implode($this->pathSeparator, $path);
         }
@@ -121,7 +140,8 @@ abstract class AbstractFileStore extends Component {
      * @param string|array $path
      * @return string
      */
-    public function normalizePath($path) {
+    public function normalizePath($path)
+    {
         return $this->buildPath($this->filterPath($path));
     }
 
@@ -132,7 +152,8 @@ abstract class AbstractFileStore extends Component {
      * @throws StoreException если путь корневой
      * @return string
      */
-    public function dirname($path) {
+    public function dirname($path)
+    {
         $path = $this->filterPath($path);
 
         if (empty($path)) {
@@ -151,14 +172,15 @@ abstract class AbstractFileStore extends Component {
      * @throws StoreException
      * @return string
      */
-    public function basename($path) {
+    public function basename($path)
+    {
         $path = $this->splitPath($path);
 
         if (empty($path)) {
             throw new StoreException('корневой каталог');
         }
 
-        return (string)array_pop($path);
+        return (string) array_pop($path);
     }
 
     /**
@@ -168,7 +190,8 @@ abstract class AbstractFileStore extends Component {
      * @param string|array $child дочерний
      * @return string
      */
-    public function childname($parent, $child) {
+    public function childname($parent, $child)
+    {
         $parent = $this->splitPath($parent);
         $child = $this->splitPath($child);
 
@@ -193,7 +216,8 @@ abstract class AbstractFileStore extends Component {
      * @param string|array $path
      * @return string|null URL файла
      */
-    public function url($path) {
+    public function url($path)
+    {
         if (empty($this->url)) {
             return null;
         }
@@ -204,9 +228,7 @@ abstract class AbstractFileStore extends Component {
             $url = Url::to($url, true);
         }
 
-        $url = [
-            $url
-        ];
+        $url = [$url];
 
         $url = array_merge($url, $this->filterPath($path));
 
@@ -222,7 +244,7 @@ abstract class AbstractFileStore extends Component {
      */
     public function file($path)
     {
-        return \Yii::createObject($this->fileConfig, [$this, $path]);
+        return \Yii::createObject($this->fileConfig, [$this,$path]);
     }
 
     /**
@@ -230,16 +252,15 @@ abstract class AbstractFileStore extends Component {
      *
      * @param string|array $path
      * @throws StoreException
-     * @param array $filter
-     * - bool|null recursive
-     * - string|null $dir - true - только директории, false - толькофайлы
-     * - string|null $public - true - публичный доступ, false - приватный доступ
-     * - bool|null $hidden - true - скрытые файлы, false - открытые
-     * - string|null $regex - регулярная маска имени
-     * - callable|null $filter function(StoreFile $file) : bool филььтр элементов
+     * @param array $filter - bool|null recursive
+     *        - string|null $dir - true - только директории, false - толькофайлы
+     *        - string|null $public - true - публичный доступ, false - приватный доступ
+     *        - bool|null $hidden - true - скрытые файлы, false - открытые
+     *        - string|null $regex - регулярная маска имени
+     *        - callable|null $filter function(StoreFile $file) : bool филььтр элементов
      * @return StoreFile[]
      */
-    abstract public function list($path, array $filter=[]);
+    abstract public function list($path, array $filter = []);
 
     /**
      * Проверяет существование файла
@@ -398,16 +419,16 @@ abstract class AbstractFileStore extends Component {
      * Проверяет/создает директорию
      *
      * @throws StoreException
-     * @param string|array $dir
-     * return static
+     * @param string|array $dir return static
      */
-    public function checkDir($dir) {
+    public function checkDir($dir)
+    {
         $dir = $this->normalizePath($dir);
 
         if ($dir != '') {
-            if (!$this->exists($dir)) {
+            if (! $this->exists($dir)) {
                 $this->mkdir($dir);
-            } elseif (!$this->isDir($dir)) {
+            } elseif (! $this->isDir($dir)) {
                 throw new StoreException('not a directory: ' . $dir);
             }
         }
@@ -423,6 +444,30 @@ abstract class AbstractFileStore extends Component {
      * @return static
      */
     abstract public function delete($path);
+
+
+    /**
+     * Создание превью
+     *
+     * @param string|array $path
+     * @param array $options
+     * @throws NotSupportedException
+     * @throws StoreException
+     * @return \dicr\file\ThumbFile
+     * @see Thumbnailer#thumbnail
+     */
+    public function thumb($path, array $options=[]) {
+        $origFile = $this->file($path);
+        if ($origFile->path == '') {
+            throw new \InvalidArgumentException('path');
+        }
+
+        if (!($this->thumbnailer instanceof Thumbnailer)) {
+            throw new NotSupportedException('thumbnailer');
+        }
+
+        return $this->thumbnailer->thumbnail($origFile, $options);
+    }
 
     /**
      * Защита корневого каталога
@@ -445,16 +490,16 @@ abstract class AbstractFileStore extends Component {
      * Проверяет соответствие файла фильтру.
      *
      * @param StoreFile $file
-     * @param array $filter
-     * - string|null $dir - true - только директории, false - толькофайлы
-     * - string|null $public - true - публичный доступ, false - приватный доступ
-     * - bool|null $hidden - true - скрытые файлы, false - открытые
-     * - string|null $regex - регулярная маска имени
-     * - callable|null $filter function(StoreFile $file) : bool филььтр элементов
+     * @param array $filter - string|null $dir - true - только директории, false - толькофайлы
+     *        - string|null $public - true - публичный доступ, false - приватный доступ
+     *        - bool|null $hidden - true - скрытые файлы, false - открытые
+     *        - string|null $regex - регулярная маска имени
+     *        - callable|null $filter function(StoreFile $file) : bool филььтр элементов
      * @throws StoreException
      * @return boolean
      */
-    protected function fileMatchFilter(StoreFile $file, array $filter) {
+    protected function fileMatchFilter(StoreFile $file, array $filter)
+    {
 
         // фильтруем по типу
         if (isset($filter['dir']) && $file->isDir != $filter['dir']) {
@@ -466,19 +511,18 @@ abstract class AbstractFileStore extends Component {
             return false;
         }
 
-
         // фильтруем скрытые
         if (isset($filter['hidden']) && $file->hidden != $filter['hidden']) {
             return false;
         }
 
         // фильтруем по регулярному выражению
-        if (!empty($filter['regex']) && !preg_match($filter['regex'], $file->path)) {
+        if (! empty($filter['regex']) && ! preg_match($filter['regex'], $file->path)) {
             return false;
         }
 
         // фильтруем по callback
-        if (isset($filter['filter']) && is_callable($filter['filter']) && !call_user_func($filter['filter'], $file)) {
+        if (isset($filter['filter']) && is_callable($filter['filter']) && ! call_user_func($filter['filter'], $file)) {
             return false;
         }
 

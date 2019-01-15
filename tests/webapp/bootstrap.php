@@ -49,7 +49,13 @@ $app = new Application([
 		'fileStore' => [
 			'class' => LocalFileStore::class,
 			'path' => '@webroot/files',
-			'url' => '@web/files'
+			'url' => '@web/files',
+		    'thumbnailer' => [
+		        'cacheStore' => [
+        			'path' => '@webroot/thumb',
+        			'url' => '@web/thumb'
+		        ]
+		    ]
 		]
 	],
     'modules' => [

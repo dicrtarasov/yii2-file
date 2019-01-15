@@ -1,6 +1,8 @@
 <?php
 namespace dicr\file;
 
+use yii\base\NotSupportedException;
+
 /**
  * Файл хранилища файлов
  *
@@ -416,7 +418,7 @@ class StoreFile extends AbstractFile
      */
     public function setStream($stream)
     {
-        if (! is_resource($stream)) {
+        if (! @is_resource($stream)) {
             throw new \InvalidArgumentException('stream');
         }
 
@@ -502,7 +504,7 @@ class StoreFile extends AbstractFile
             throw new \InvalidArgumentException('src');
         }
 
-        if (! file_exists($src)) {
+        if (! @file_exists($src)) {
             throw new StoreException('файл не существует: ' . $src);
         }
 
@@ -526,7 +528,7 @@ class StoreFile extends AbstractFile
         // получаем содержимое
         $contents = @file_get_contents($src);
         if ($contents === false) {
-            throw new StoreException('ошибка чтения: ' . $src);
+            throw new StoreException('');
         }
 
         // записываем в текущий файл
@@ -548,5 +550,18 @@ class StoreFile extends AbstractFile
         $this->store->delete($this->path);
 
         return $this;
+    }
+
+    /**
+     * Создает превью файла
+     *
+     * @param array $options
+     * @return \dicr\file\ThumbFile
+     * @throws StoreException
+     * @throws NotSupportedException
+     * @see Thumbnailer#thumbnail
+     */
+    public function thumb(array $options=[]) {
+        return $this->store->thumb($this->path, $options);
     }
 }

@@ -1,11 +1,11 @@
-<?php 
+<?php
 use dicr\file\FileInputWidget;
 use yii\bootstrap\ActiveForm;
 use yii\bootstrap\Html;
 
 /**
  * Test View
- * 
+ *
  * @var \yii\web\View $this
  * @var \app\models\TestModel $model
  */
@@ -22,10 +22,10 @@ use yii\bootstrap\Html;
 </head>
 <body style="font-size: 1rem">
 	<?php $this->beginBody() ?>
-	
+
 	<div class="container">
 		<h1 style="margin-bottom: 2rem">Тест загрузки файлов</h1>
-	
+
 		<?php $form = ActiveForm::begin([
 			'layout' => 'horizontal',
 			'fieldConfig' => [
@@ -38,14 +38,14 @@ use yii\bootstrap\Html;
 				],
 			]
 		])?>
-		
+
 			<?=$form->field($model, 'icon')->widget(FileInputWidget::class, [
 				'limit' => 1,
 				'accept' => 'image/*',
 			])?>
-			
+
 			<?=$form->field($model, 'pics[]')->widget(FileInputWidget::class)?>
-			
+
 			<div class="form-group">
 				<div class="col-sm-10 col-sm-offset-1">
 					<?=Html::submitButton('send', [
@@ -53,10 +53,25 @@ use yii\bootstrap\Html;
 					])?>
 				</div>
 			</div>
-			
+
 		<?php $form->end() ?>
 	</div>
-	
+
+	<?php if (!empty($model->icon)) {?>
+		<div style="margin: 60px">
+			<?=Html::img($model->icon->thumb(['width' => 50, 'height' => 100])->url)?>
+			<?=Html::img($model->icon->thumb(['width' => 200, 'height' => 100])->url)?>
+		</div>
+	<?php }?>
+
+	<?php if (!empty($model->pics)) {?>
+		<div style="margin: 60px">
+			<?php foreach ($model->pics as $pic) {?>
+				<?=Html::img($pic->thumb(['width' => 50, 'height' => 50])->url)?>
+			<?php }?>
+		</div>
+	<?php }?>
+
 	<?php $this->endBody() ?>
 </body>
 </html>

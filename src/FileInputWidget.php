@@ -109,11 +109,28 @@ class FileInputWidget extends InputWidget
 
         return Html::tag('label',
             Html::hiddenInput($this->inputName . '[' . $pos . ']', $file->name) .
-            Html::fileInput($this->inputName . '[' . $pos . ']', null, ['id' => $fileId,'accept' => $this->accept]) .
+
+            Html::fileInput($this->inputName . '[' . $pos . ']', null, [
+                'id' => $fileId,
+                'accept' => $this->accept
+            ]) .
             Html::img($isImage ? $file->url : null) .
-            Html::tag('div', $file->getName(['removePrefix' => 1,'removeExt' => 1]), ['class' => 'name']) .
-            Html::button('&times;', ['class' => 'del btn btn-link text-danger','title' => 'удалить']),
-            ['class' => 'file btn','for' => $fileId]);
+
+            Html::tag('div', $file->getName([
+                'removePrefix' => 1,
+                'removeExt' => 1
+            ]), [
+                'class' => 'name'
+            ]) .
+
+            Html::button('&times;', [
+                'class' => 'del btn btn-link text-danger',
+                'title' => 'удалить'
+            ]), [
+                'class' => 'file btn',
+                'for' => $fileId
+            ]
+        );
     }
 
     /**
@@ -142,6 +159,7 @@ class FileInputWidget extends InputWidget
         $fileInputId = $this->id . '-addinput-' . rand(1, 999999);
         return Html::label(
             Html::fileInput(null, null, ['accept' => $this->accept ?: null,'id' => $fileInputId]) .
+
             Html::tag('i', '', [
                 'class' => 'fa fas fa-plus-circle text-success'
             ]), $fileInputId, [

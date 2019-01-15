@@ -203,6 +203,11 @@ class FileAttributeBehavior extends Behavior
                 'dir' => false,
                 'hidden' => false
             ]) : [];
+
+            // сортируем фо номеру позиции
+            usort($this->values[$attribute], function($a, $b) {
+                return strnatcasecmp($a->path, $b->path);
+            });
         }
 
         $value = $this->values[$attribute];

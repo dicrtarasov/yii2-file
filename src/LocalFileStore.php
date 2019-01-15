@@ -38,6 +38,9 @@ class LocalFileStore extends AbstractFileStore
      */
     public $perms = ['dir' => 0755,'file' => 0644];
 
+    /** @var static instance for root "/" */
+    private static $_rootInstance;
+
     /**
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::init()
@@ -64,6 +67,20 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
+     * Возвращает экземпляр для корневой файловой системы "/"
+     *
+     * @return static
+     */
+    public static function root()
+    {
+        if (! isset(self::$_rootInstance)) {
+            self::$_rootInstance = new static(['path' => '/','writeFlags' => LOCK_EX]);
+        }
+
+        return self::$_rootInstance;
+    }
+
+    /**
      * Возвращает путь
      *
      * @return string
@@ -86,7 +103,10 @@ class LocalFileStore extends AbstractFileStore
             throw new InvalidArgumentException('path');
         }
 
-        $path = rtrim($path, $this->pathSeparator);
+        if ($path != DIRECTORY_SEPARATOR) {
+            $path = rtrim($path, $this->pathSeparator);
+        }
+
         if ($path === '') {
             throw new InvalidArgumentException('path');
         }
@@ -102,7 +122,7 @@ class LocalFileStore extends AbstractFileStore
      */
     public function absolutePath($path)
     {
-        return implode($this->pathSeparator, array_merge([$this->path], $this->filterPath($path)));
+        return $this->buildPath(array_merge([$this->path], $this->filterPath($path)));
     }
 
     /**
@@ -142,7 +162,7 @@ class LocalFileStore extends AbstractFileStore
 
         $files = [];
         foreach ($iterator as $item) {
-            if (in_array($item->getBaseName(), ['.','..'])) {
+            if (in_array($item->getBaseName(), ['.','..',''])) {
                 continue;
             }
 
@@ -157,6 +177,10 @@ class LocalFileStore extends AbstractFileStore
                 $files[] = $file;
             }
         }
+
+        usort($files, function ($a, $b) {
+            return $a->path <=> $b->path;
+        });
 
         return $files;
     }
@@ -176,7 +200,7 @@ class LocalFileStore extends AbstractFileStore
      */
     public function isDir($path)
     {
-        if (!$this->exists($path)) {
+        if (! $this->exists($path)) {
             throw new StoreException('not exists: ' . $this->normalizePath($path));
         }
 
@@ -189,7 +213,7 @@ class LocalFileStore extends AbstractFileStore
      */
     public function isFile($path)
     {
-        if (!$this->exists($path)) {
+        if (! $this->exists($path)) {
             throw new StoreException('not exists: ' . $this->normalizePath($path));
         }
 
@@ -220,7 +244,7 @@ class LocalFileStore extends AbstractFileStore
      */
     public function setPublic($path, bool $public)
     {
-        if (!$this->exists($path)) {
+        if (! $this->exists($path)) {
             throw new StoreException('not exists: ' . $this->guardRootPath($path));
         }
 
@@ -271,7 +295,6 @@ class LocalFileStore extends AbstractFileStore
     public function mimeType($path)
     {
         $finfo = new \finfo(FILEINFO_MIME_TYPE);
-
         $type = @$finfo->file($this->absolutePath($path), null, $this->context);
         if ($type === false) {
             throw new StoreException('');
@@ -286,12 +309,12 @@ class LocalFileStore extends AbstractFileStore
      */
     public function readContents($path)
     {
-        $ret = @file_get_contents($this->absolutePath($path), false, $this->context);
-        if ($ret === false) {
+        $contents = @file_get_contents($this->absolutePath($path), false, $this->context);
+        if ($contents === false) {
             throw new StoreException('');
         }
 
-        return $ret;
+        return $contents;
     }
 
     /**
@@ -334,8 +357,8 @@ class LocalFileStore extends AbstractFileStore
      */
     public function readStream($path)
     {
-        $stream = @fopen($this->absolutePath($path), $this->readMode, false, $this->context);
-        if ($stream === false) {
+        $stream = @fopen($this->absolutePath($path), 'rb', false, $this->context);
+        if (! is_resource($stream)) {
             throw new StoreException('');
         }
 
@@ -422,6 +445,46 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
+     * Рекурсивное удаление
+     *
+     * @param string $absolutePath абсолютный путь
+     * @throws StoreException
+     * @return static
+     */
+    protected function deleteRecursive(string $absolutePath)
+    {
+        if ($absolutePath == '' || $absolutePath == '/') {
+            throw new \InvalidArgumentException('absolutePath');
+        }
+
+        if (@is_dir($absolutePath)) {
+            $dir = @opendir($absolutePath, $this->context);
+            if (! is_resource($dir)) {
+                throw new StoreException();
+            }
+
+            try {
+                while (($file = readdir($dir)) !== false) {
+                    if ($file == '.' || $file == '..' || $file == '') {
+                        continue;
+                    }
+                    $this->deleteRecursive($absolutePath . $this->pathSeparator . $file);
+                }
+            } finally {
+                closedir($dir);
+            }
+
+            if (! @rmdir($absolutePath, $this->context)) {
+                throw new StoreException();
+            }
+        } elseif (! @unlink($absolutePath, $this->context)) {
+            throw new StoreException();
+        }
+
+        return $this;
+    }
+
+    /**
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::delete()
      */
@@ -434,38 +497,7 @@ class LocalFileStore extends AbstractFileStore
             return $this;
         }
 
-        $delTree = null;
-
-        $delTree = function ($path) use (&$delTree) {
-            if (@is_dir($path)) {
-
-                $dir = @opendir($path, $this->context);
-                if ($dir === false) {
-                    throw new StoreException();
-                }
-
-                try {
-                    while (($file = readdir($dir)) !== false) {
-                        if ($file === '.' || $file === '..') {
-                            continue;
-                        }
-                        $delTree($path . '/' . $file);
-                    }
-                } finally {
-                    if (is_resource($dir)) {
-                        closedir($dir);
-                    }
-                }
-
-                if (@rmdir($path, $this->context) === false) {
-                    throw new StoreException();
-                }
-            } elseif (@unlink($path, $this->context) === false) {
-                throw new StoreException();
-            }
-        };
-
-        $delTree($fullPath);
+        $this->deleteRecursive($fullPath);
 
         clearstatcache(null, $fullPath); // for ssh2 wrapper
 

@@ -38,14 +38,6 @@ abstract class AbstractFile extends BaseObject
     }
 
     /**
-     * Нормализирует относительный путь
-     *
-     * @param string|array $path
-     * @return string
-     */
-    abstract public function normalizePath($path);
-
-    /**
      * Возвращает путь
      *
      * @return string
@@ -54,6 +46,13 @@ abstract class AbstractFile extends BaseObject
     {
         return $this->_path;
     }
+
+    /**
+     * Нормализация пути
+     * @param string|array $path
+     * @return string
+     */
+    abstract public function normalizePath($path);
 
     /**
      * Возвращает имя файла
@@ -133,6 +132,7 @@ abstract class AbstractFile extends BaseObject
      */
     public function __toString()
     {
-        return $this->_path;
+        return $this->path;
     }
+
 }

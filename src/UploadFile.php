@@ -40,14 +40,34 @@ class UploadFile extends AbstractFile
     /**
      * Конструктор
      *
-     * @param array $config
+     * @param string|array $config path or config
      */
-    public function __construct(array $config = [])
+    public function __construct($config)
     {
-        $path = $config['path'] ?? '';
-        unset($config['path']);
+        $path = '';
+
+        if (! is_array($config)) {
+            $path = (string) $config;
+            $config = [];
+        } else {
+            $path = trim($config['path'] ?? '', DIRECTORY_SEPARATOR);
+            unset($config['path']);
+        }
+
+        if ($path == '') {
+            throw new \InvalidArgumentException('path');
+        }
 
         parent::__construct($path, $config);
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \yii\base\BaseObject::init()
+     */
+    public function init()
+    {
+        parent::init();
 
         if (isset($this->size)) {
             $this->size = (int) $this->size;
@@ -59,15 +79,7 @@ class UploadFile extends AbstractFile
         if (empty($this->error)) {
 
             // путь должен быть задан
-            if (empty($this->path)) {
-                throw new InvalidConfigException('path');
-            }
-
-            if (! isset($this->name)) {
-                $this->name = $this->path;
-            }
-
-            $this->name = basename($this->name);
+            $this->name = basename($this->name ?: $this->path);
 
             if ($this->name == '') {
                 throw new InvalidConfigException('name');
@@ -76,29 +88,21 @@ class UploadFile extends AbstractFile
     }
 
     /**
-     * Нормализация пути
-     *
-     * @param string|array $path
-     * @return string
+     * {@inheritdoc}
+     * @see \dicr\file\AbstractFile::normalizePath()
      */
     public function normalizePath($path)
     {
-        if (is_array($path)) {
-            $path = DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $path);
-        } else {
-            $path = rtrim($path, DIRECTORY_SEPARATOR);
-        }
-
-        return $path;
+        return LocalFileStore::root()->normalizePath($path);
     }
 
     /**
      * {@inheritdoc}
-     * @see \dicr\file\AbstractFile::getName()
+     * @see \dicr\file\BaseFile::getName()
      */
     public function getName()
     {
-        return $this->name ?? basename($this->path);
+        return $this->name ?: LocalFileStore::root()->basename($this->path);
     }
 
     /**
@@ -107,7 +111,7 @@ class UploadFile extends AbstractFile
      */
     public function getExists()
     {
-        return @file_exists($this->path);
+        return LocalFileStore::root()->exists($this->path);
     }
 
     /**
@@ -116,7 +120,7 @@ class UploadFile extends AbstractFile
      */
     public function getIsDir()
     {
-        return @is_dir($this->path);
+        return LocalFileStore::root()->isDir($this->path);
     }
 
     /**
@@ -125,7 +129,7 @@ class UploadFile extends AbstractFile
      */
     public function getIsFile()
     {
-        return @is_file($this->path);
+        return LocalFileStore::root()->isFile($this->path);
     }
 
     /**
@@ -135,29 +139,10 @@ class UploadFile extends AbstractFile
     public function getSize()
     {
         if (! isset($this->size)) {
-            $this->size = @filesize($this->path);
-        }
-
-        if ($this->size === false) {
-            throw new StoreException($this->path);
+            $this->size = LocalFileStore::root()->size($this->path);
         }
 
         return $this->size;
-    }
-
-    /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFile::getCtime()
-     */
-    public function getCtime()
-    {
-        $ret = @filectime($this->path);
-
-        if ($ret === false) {
-            throw new StoreException($this->path);
-        }
-
-        return $ret;
     }
 
     /**
@@ -166,13 +151,7 @@ class UploadFile extends AbstractFile
      */
     public function getMtime()
     {
-        $ret = @filemtime($this->path);
-
-        if ($ret === false) {
-            throw new StoreException($this->path);
-        }
-
-        return $ret;
+        return LocalFileStore::root()->mtime($this->path);
     }
 
     /**
@@ -181,6 +160,10 @@ class UploadFile extends AbstractFile
      */
     public function getMimeType()
     {
+        if (empty($this->mimeType)) {
+            $this->mimeType = LocalFileStore::root()->mimeType($this->path);
+        }
+
         return $this->mimeType;
     }
 
@@ -188,30 +171,18 @@ class UploadFile extends AbstractFile
      * {@inheritdoc}
      * @see \dicr\file\AbstractFile::getContents()
      */
-    public function getContents()
+    public function getContents($context = null)
     {
-        $contents = @file_get_contents($this->path);
-
-        if ($contents === false) {
-            throw new StoreException($this->path);
-        }
-
-        return $contents;
+        return LocalFileStore::root()->readContents($this->path);
     }
 
     /**
      * {@inheritdoc}
      * @see \dicr\file\AbstractFile::getStream()
      */
-    public function getStream()
+    public function getStream($context = null)
     {
-        $stream = @fopen($this->path, 'rb');
-
-        if (! is_resource($stream)) {
-            throw new StoreException($this->path);
-        }
-
-        return $stream;
+        return LocalFileStore::root()->readStream($this->path);
     }
 
     /**
@@ -223,33 +194,20 @@ class UploadFile extends AbstractFile
      */
     public function move($path)
     {
-        $path = $this->normalizePath($path);
-
-        $ret = move_uploaded_file($this->path, $path);
-
-        if ($ret === false) {
-            throw new StoreException($this->path);
-        }
+        LocalFileStore::root()->move($this->path, $path);
 
         return $this;
     }
 
     /**
-     * Копирует в заданный путь
+     * Копирование файла
      *
      * @param string|array $path
-     * @throws StoreException
      * @return static
      */
     public function copy($path)
     {
-        $path = $this->normalizePath($path);
-
-        $ret = @copy($this->path, $path);
-
-        if ($ret === false) {
-            throw new StoreException($this->path);
-        }
+        LocalFileStore::root()->copy($this->path, $path);
 
         return $this;
     }
@@ -261,8 +219,7 @@ class UploadFile extends AbstractFile
      */
     public function delete()
     {
-        // ошибки не важны, потому как загруженные файлы удаляются автоматически
-        unlink($this->path);
+        LocalFileStore::root()->delete($this->path);
 
         return $this;
     }

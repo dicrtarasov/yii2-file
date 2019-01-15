@@ -98,6 +98,10 @@ class FlysystemFileStore extends AbstractFileStore
             }
         }
 
+        usort($files, function($a, $b) {
+            return $a->path <=> $b->path;
+        });
+
         return $files;
     }
 
