@@ -65,7 +65,7 @@ abstract class AbstractFileStore extends Component
 
         if (isset($this->thumbnailer)) {
             if (is_string($this->thumbnailer)) {
-                $this->thumbnailer = \Yii::getAlias($this->thumbnailer, true);
+                $this->thumbnailer = \Yii::$app->get($this->thumbnailer, true);
             } elseif (is_array($this->thumbnailer)) {
                 if (! isset($this->thumbnailer['class'])) {
                     $this->thumbnailer['class'] = Thumbnailer::class;
@@ -404,7 +404,9 @@ abstract class AbstractFileStore extends Component
      * @throws StoreException
      * @return static
      */
-    abstract public function copy($path, $newpath);
+    public function copy($path, $newpath) {
+        $this->writeContents($newpath, $this->readContents($path));
+    }
 
     /**
      * Создает директорию
@@ -437,14 +439,49 @@ abstract class AbstractFileStore extends Component
     }
 
     /**
-     * Удаляет файл/директорию
+     * Удаляет файл
      *
      * @param string|array $path
      * @throws StoreException
      * @return static
      */
-    abstract public function delete($path);
+    abstract protected function unlink($path);
 
+    /**
+     * Удаляет директорию
+     *
+     * @param string|array $path
+     * @throws StoreException
+     * @return static
+     */
+    abstract protected function rmdir($path);
+
+    /**
+     * Удаляет рекурсивно директорию/файл
+     *
+     * @param string|array $path
+     * @throws StoreException
+     * @return static
+     */
+    public function delete($path)
+    {
+        $this->guardRootPath($path);
+
+        if ($this->exists($path)) {
+            if ($this->isDir($path)) {
+                foreach ($this->list($path) as $file) {
+                    $this->delete($file->path);
+                }
+                $this->rmdir($path);
+            } else {
+                $this->unlink($path);
+            }
+        }
+
+        clearstatcache(null, $this->absolutePath($path));
+
+        return $this;
+    }
 
     /**
      * Создание превью
@@ -456,13 +493,14 @@ abstract class AbstractFileStore extends Component
      * @return \dicr\file\ThumbFile
      * @see Thumbnailer#thumbnail
      */
-    public function thumb($path, array $options=[]) {
+    public function thumb($path, array $options = [])
+    {
         $origFile = $this->file($path);
         if ($origFile->path == '') {
             throw new \InvalidArgumentException('path');
         }
 
-        if (!($this->thumbnailer instanceof Thumbnailer)) {
+        if (! ($this->thumbnailer instanceof Thumbnailer)) {
             throw new NotSupportedException('thumbnailer');
         }
 

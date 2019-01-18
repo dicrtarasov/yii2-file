@@ -111,6 +111,7 @@ abstract class AbstractFileStoreTest extends TestCase
         }
 
         self::assertInstanceOf(StoreFile::class, $file->setPublic(false));
+
         self::assertFalse($file->public);
 
         self::assertInstanceOf(StoreFile::class, $file->setPublic(true));
@@ -198,7 +199,6 @@ abstract class AbstractFileStoreTest extends TestCase
             self::assertInstanceOf(StoreFile::class, $dir->mkdir());
         }
 
-        self::assertTrue($dir->exists);
         self::assertTrue($dir->isDir);
 
         self::assertInstanceOf(StoreFile::class, $dir->delete());

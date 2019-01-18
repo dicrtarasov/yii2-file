@@ -8,10 +8,13 @@ use yii\base\InvalidConfigException;
  * Local file store.
  * Also support ftp://, ssh2:// throught wrappers:
  *
- * @see http://php.net/manual/en/wrappers.php /opt/files
- *      zip://test.zip#path/file.txt, context => ['password' => your_pass]
- *      ftp://user:pass@server.net/path/file.txt
- * @see http://php.net/manual/en/context.ftp.php ssh2.sftp://user:pass@example.com:22/path/file.txt
+ * /opt/files
+ * zip://test.zip#path/file.txt, context => ['password' => your_pass]
+ * ftp://user:pass@server.net/path/file.txt, context => ['ftp' => ['overwrite' => true]]
+ * ssh2.sftp://user:pass@example.com:22/path/file.txt
+ *
+ * @see http://php.net/manual/en/wrappers.php
+ * @see http://php.net/manual/en/context.ftp.php
  * @see http://php.net/manual/en/wrappers.ssh2.php
  *
  * @property string $path путь корня файлового хранилища
@@ -244,10 +247,6 @@ class LocalFileStore extends AbstractFileStore
      */
     public function setPublic($path, bool $public)
     {
-        if (! $this->exists($path)) {
-            throw new StoreException('not exists: ' . $this->guardRootPath($path));
-        }
-
         $absolute = $this->absolutePath($path);
         $perms = $this->permsByPublic($this->isDir($path), $public);
 
@@ -445,61 +444,37 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * Рекурсивное удаление
+     * Удаляет файл
      *
-     * @param string $absolutePath абсолютный путь
+     * @param string|array $path
      * @throws StoreException
      * @return static
      */
-    protected function deleteRecursive(string $absolutePath)
-    {
-        if ($absolutePath == '' || $absolutePath == '/') {
-            throw new \InvalidArgumentException('absolutePath');
-        }
+    protected function unlink($path) {
+        $this->guardRootPath($path);
+        $absPath = $this->absolutePath($path);
 
-        if (@is_dir($absolutePath)) {
-            $dir = @opendir($absolutePath, $this->context);
-            if (! is_resource($dir)) {
-                throw new StoreException();
-            }
-
-            try {
-                while (($file = readdir($dir)) !== false) {
-                    if ($file == '.' || $file == '..' || $file == '') {
-                        continue;
-                    }
-                    $this->deleteRecursive($absolutePath . $this->pathSeparator . $file);
-                }
-            } finally {
-                closedir($dir);
-            }
-
-            if (! @rmdir($absolutePath, $this->context)) {
-                throw new StoreException();
-            }
-        } elseif (! @unlink($absolutePath, $this->context)) {
-            throw new StoreException();
+        if (@unlink($absPath, $this->context) === false) {
+            throw new StoreException('');
         }
 
         return $this;
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::delete()
+     * Удаляет директорию
+     *
+     * @param string|array $path
+     * @throws StoreException
+     * @return static
      */
-    public function delete($path)
-    {
-        $path = $this->guardRootPath($path);
+    protected function rmdir($path) {
+        $this->guardRootPath($path);
+        $absPath = $this->absolutePath($path);
 
-        $fullPath = $this->absolutePath($path);
-        if (! @file_exists($fullPath)) {
-            return $this;
+        if (@rmdir($absPath, $this->context) === false) {
+            throw new StoreException('');
         }
-
-        $this->deleteRecursive($fullPath);
-
-        clearstatcache(null, $fullPath); // for ssh2 wrapper
 
         return $this;
     }
@@ -511,7 +486,7 @@ class LocalFileStore extends AbstractFileStore
      */
     public function __toString()
     {
-        return $this->path;
+        return $this->absolutePath('');
     }
 
     /**

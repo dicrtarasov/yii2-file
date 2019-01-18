@@ -4,6 +4,7 @@ use yii\base\Exception;
 use yii\db\Schema;
 use yii\web\Application;
 use dicr\file\LocalFileStore;
+use dicr\file\Thumbnailer;
 
 error_reporting(-1);
 ini_set('display_errors', 1);
@@ -46,17 +47,21 @@ $app = new Application([
 		'assetManager' => [
 			'appendTimestamp' => true
 		],
-		'fileStore' => [
+	    'fileStore' => [
 			'class' => LocalFileStore::class,
 			'path' => '@webroot/files',
 			'url' => '@web/files',
-		    'thumbnailer' => [
-		        'cacheStore' => [
-        			'path' => '@webroot/thumb',
-        			'url' => '@web/thumb'
-		        ]
-		    ]
-		]
+		    'thumbnailer' => 'thumbnailer',
+		],
+	    'cacheStore' => [
+	        'class' => LocalFileStore::class,
+			'path' => '@webroot/thumb',
+			'url' => '@web/thumb'
+        ],
+	    'thumbnailer' => [
+	        'class' => Thumbnailer::class,
+	        'cacheStore' => 'cacheStore'
+	    ],
 	],
     'modules' => [
         'debug' => \yii\debug\Module::class

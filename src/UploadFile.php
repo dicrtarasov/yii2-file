@@ -97,8 +97,8 @@ class UploadFile extends AbstractFile
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\BaseFile::getName()
+     * {@inheritDoc}
+     * @see \dicr\file\AbstractFile::getName()
      */
     public function getName()
     {
