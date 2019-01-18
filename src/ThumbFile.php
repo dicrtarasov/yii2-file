@@ -13,7 +13,6 @@ namespace dicr\file;
  */
 class ThumbFile extends StoreFile
 {
-
     /** @var int */
     private $_width;
 
