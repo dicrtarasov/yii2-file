@@ -27,19 +27,19 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 
     protected function setUp()
     {
-        $this->mockApplication();
         parent::setUp();
+        $this->mockApplication();
     }
 
     protected function tearDown()
     {
-        parent::tearDown();
         $this->destroyApplication();
+        parent::tearDown();
     }
 
     protected function mockApplication()
     {
-        new self::$appClass($this->config);
+        return new self::$appClass($this->config);
     }
 
     /**
