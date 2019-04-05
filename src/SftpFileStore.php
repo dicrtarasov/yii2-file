@@ -11,7 +11,6 @@ use yii\base\InvalidConfigException;
  */
 class SftpFileStore extends LocalFileStore
 {
-
     /** @var string сервер */
     public $host;
 
@@ -243,7 +242,8 @@ class SftpFileStore extends LocalFileStore
     /**
      * Деструктор
      */
-    public function __destruct() {
+    public function __destruct()
+    {
         if (!empty($this->session)) {
             @ssh2_disconnect($this->session);
         }

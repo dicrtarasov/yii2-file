@@ -244,7 +244,7 @@ abstract class AbstractFileStore extends Component
      */
     public function file($path)
     {
-        return \Yii::createObject($this->fileConfig, [$this,$path]);
+        return \Yii::createObject($this->fileConfig, [$this, $path]);
     }
 
     /**

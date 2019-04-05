@@ -99,8 +99,7 @@ class ThumbFile extends StoreFile
      * @param string $format формат файлов (jpg, png, ...)
      * @return StoreFile путь файла в кэше
      */
-    public static function forFile(AbstractFile $origFile, AbstractFileStore $cacheStore, int $width = 0, int $height = 0,
-        bool $watermark = false, string $format = 'jpg')
+    public static function forFile(AbstractFile $origFile, AbstractFileStore $cacheStore, int $width = 0, int $height = 0, bool $watermark = false, string $format = 'jpg')
     {
         if (empty($origFile)) {
             throw new \InvalidArgumentException('origFile');

@@ -5,8 +5,9 @@ use InvalidArgumentException;
 use yii\base\InvalidConfigException;
 
 /**
- * Local file store.
- * Also support ftp://, ssh2:// throught wrappers:
+ * Локальная файловая система.
+ *
+ * Также поддерживает php wrappers, например ftp://, ssh2://
  *
  * /opt/files
  * zip://test.zip#path/file.txt, context => ['password' => your_pass]
@@ -26,20 +27,23 @@ class LocalFileStore extends AbstractFileStore
     /** @var string корневой путь */
     protected $_path;
 
-    /** @var int флаги для записи file_put_contents (LOCK_EX) */
+    /** @var int флаги для записи file_put_contents (например LOCK_EX) */
     public $writeFlags = 0;
 
     /** @var string mode for fopen for reading stream */
     public $readMode = 'rb';
 
-    /** @var resource|array stream_context options */
+    /** @var array|resource stream_context options */
     public $context = [];
 
     /**
      * @var array публичные права доступа на создаваемые файла и директории.
      *      Приватные получаются путем маски & 0x700
      */
-    public $perms = ['dir' => 0755,'file' => 0644];
+    public $perms = [
+        'dir' => 0755,
+        'file' => 0644
+    ];
 
     /** @var static instance for root "/" */
     private static $_rootInstance;
@@ -60,6 +64,10 @@ class LocalFileStore extends AbstractFileStore
             throw new InvalidConfigException('perms');
         }
 
+        if (empty($this->context)) {
+            $this->context = [];
+        }
+
         if (is_array($this->context)) {
             $this->context = stream_context_create($this->context);
         }
@@ -77,7 +85,10 @@ class LocalFileStore extends AbstractFileStore
     public static function root()
     {
         if (! isset(self::$_rootInstance)) {
-            self::$_rootInstance = new static(['path' => '/','writeFlags' => LOCK_EX]);
+            self::$_rootInstance = new static([
+                'path' => '/',
+                'writeFlags' => LOCK_EX
+            ]);
         }
 
         return self::$_rootInstance;
@@ -450,7 +461,8 @@ class LocalFileStore extends AbstractFileStore
      * @throws StoreException
      * @return static
      */
-    protected function unlink($path) {
+    protected function unlink($path)
+    {
         $this->guardRootPath($path);
         $absPath = $this->absolutePath($path);
 
@@ -468,7 +480,8 @@ class LocalFileStore extends AbstractFileStore
      * @throws StoreException
      * @return static
      */
-    protected function rmdir($path) {
+    protected function rmdir($path)
+    {
         $this->guardRootPath($path);
         $absPath = $this->absolutePath($path);
 
