@@ -740,7 +740,8 @@ class FileAttributeBehavior extends Behavior
      * @param AbstractFile $file файл для импорта
      * @return \dicr\file\StoreFile новый импортированный файл
      */
-    protected static function importNewFile(StoreFile $attributePath, AbstractFile $file) {
+    protected static function importNewFile(StoreFile $attributePath, AbstractFile $file)
+    {
         $newFile = $attributePath->child(static::createTempPrefix($file->name));
         $newFile->contents = $file->contents;
         return $newFile;
@@ -752,7 +753,8 @@ class FileAttributeBehavior extends Behavior
      * @param StoreFile $file
      * @return StoreFile
      */
-    protected static function renameWithTemp(StoreFile $file) {
+    protected static function renameWithTemp(StoreFile $file)
+    {
         $file->name = static::createTempPrefix($file->name);
         return $file;
     }
@@ -763,7 +765,8 @@ class FileAttributeBehavior extends Behavior
      * @param StoreFile[] $files
      * @return StoreFile[]
      */
-    protected static function renameWithPos(array $files) {
+    protected static function renameWithPos(array $files)
+    {
         // переиндексируем
         $files = array_values($files);
 
@@ -782,7 +785,8 @@ class FileAttributeBehavior extends Behavior
      * @param StoreFile $file файл для поиска
      * @return boolean true если старый файл найден и удален из списка
      */
-    protected static function matchOldFile(array &$oldFiles, StoreFile $file) {
+    protected static function matchOldFile(array &$oldFiles, StoreFile $file)
+    {
         $found = false;
         foreach ($oldFiles as $i => $oldFile) {
             if ($oldFile->name == $file->name) {
@@ -799,7 +803,8 @@ class FileAttributeBehavior extends Behavior
      *
      * @param StoreFile[] $files старые файлы для удаления
      */
-    protected static function deleteOldFiles(array &$files) {
+    protected static function deleteOldFiles(array &$files)
+    {
         foreach ($files as $i => $file) {
             $file->delete();
             unset($files[$i]);

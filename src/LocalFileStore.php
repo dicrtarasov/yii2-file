@@ -448,7 +448,9 @@ class LocalFileStore extends AbstractFileStore
         $perms = $this->permsByPublic(true, $this->public);
 
         if (@mkdir($this->absolutePath($path), $perms, true, $this->context) === false) {
-            throw new StoreException('');
+            $err = error_get_last();
+            error_clear_last();
+            throw new StoreException('Ошибка создания директории: ' . $this->absolutePath($path) . ': ' . $err['message']);
         }
 
         return $this;
