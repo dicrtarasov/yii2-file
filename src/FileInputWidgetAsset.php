@@ -28,16 +28,4 @@ class FileInputWidgetAsset extends AssetBundle
         JqueryAsset::class,
         JuiAsset::class
     ];
-
-/**
- *
- * {@inheritdoc}
- * @see \yii\web\AssetBundle::init()
- */
-    /*
-     * public function init() {
-     * $path = preg_split('~\\\+~uism', static::class, -1, PREG_SPLIT_NO_EMPTY);
-     * $this->sourcePath = '@'.dirname(implode('/', $path)).'/assets';
-     * }
-     */
 }

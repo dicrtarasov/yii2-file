@@ -5,6 +5,10 @@
     align-items: stretch;
 }
 
+.file-input-widget.form-control {
+    height: auto;
+}
+
 .file-input-widget label {
     display: flex;
     flex: 100px 0 0;
