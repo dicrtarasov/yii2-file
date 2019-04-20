@@ -666,11 +666,18 @@ class FileAttributeBehavior extends Behavior
      */
     protected function getAttributePath(string $attribute = '')
     {
+        // проверяем алвдельца поведения
         $this->checkOwner();
-        $this->checkFileAttribute($attribute);
 
+        // проверяем что файловый аттрибут существует
+        if ($attribute !== '') {
+            $this->checkFileAttribute($attribute);
+        }
+
+        // добавляем в путь имя формы
         $relpath = [$this->owner->formName()];
 
+        // для элементов базы данных добавляем id
         if ($this->owner instanceof ActiveRecord) {
             $keyName = basename(implode('~', $this->owner->getPrimaryKey(true)));
             if ($keyName !== '') {
@@ -678,6 +685,7 @@ class FileAttributeBehavior extends Behavior
             }
         }
 
+        // добавляем в путь имя аттрибута
         if ($attribute !== '') {
             $relpath[] = $attribute;
         }
