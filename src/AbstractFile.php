@@ -57,9 +57,13 @@ abstract class AbstractFile extends BaseObject
     /**
      * Возвращает имя файла
      *
+     * @param array $options
+     * - removePrefix - удаляет служебный префикс позиции файла, если имеется
+     * - removeExt - удаляет расширение если имеется
+     *
      * @return string basename
      */
-    abstract public function getName();
+    abstract public function getName(array $options = []);
 
     /**
      * Возвращает флаг существования файла
@@ -135,4 +139,53 @@ abstract class AbstractFile extends BaseObject
         return $this->path;
     }
 
+    /**
+     * Удаляет из имени файла технический префикс позиции.
+     *
+     * @param string $name имя файла
+     * @return string оригинальное имя без префикса
+     */
+    public static function removeNamePrefix(string $name)
+    {
+        $matches = null;
+        if (preg_match('~^(\.tmp)?\d+\~(.+)$~uism', $name, $matches)) {
+            $name = $matches[2];
+        }
+
+        return $name;
+    }
+
+    /**
+     * Добавляет имени файла временный префикс позиции.
+     *
+     * Предварительно удаляется существующий префикс.
+     *
+     * @param string $name
+     * @return string
+     */
+    public static function setTempPrefix(string $name)
+    {
+        // удаляем текущий префикс
+        $name = static::removeNamePrefix($name);
+
+        // добавляем временный префиск
+        return sprintf('.tmp%d~%s', rand(100000, 999999), $name);
+    }
+
+    /**
+     * Добавляет к имени файла служебнй префикс позиции.
+     *
+     * Существующий префикс удаляется.
+     *
+     * @param string $name
+     * @return string
+     */
+    public static function setPosPrefix(string $name, int $pos)
+    {
+        // удаляем текущий префикс
+        $name = static::removeNamePrefix($name);
+
+        // добавляем порядковый префиск
+        return sprintf('%d~%s', $pos, $name);
+    }
 }

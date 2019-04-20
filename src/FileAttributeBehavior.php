@@ -686,53 +686,6 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
-     * Удаляет из имени файла технический префикс
-     *
-     * @param string $name имя файла
-     * @return string оригинальное имя без префикса
-     */
-    protected static function removeNamePrefix(string $name)
-    {
-        $matches = null;
-        if (preg_match('~^(\.tmp)?\d+\~(.+)$~uism', $name, $matches)) {
-            $name = $matches[2];
-        }
-
-        return $name;
-    }
-
-    /**
-     * Добавляет имени временный префикс.
-     * Предварительно удаляется существующий префиск
-     *
-     * @param string $name
-     * @return string
-     */
-    protected static function createTempPrefix(string $name)
-    {
-        // удаляем текущий префикс
-        $name = static::removeNamePrefix($name);
-
-        // добавляем временный префиск
-        return sprintf('.tmp%d~%s', rand(100000, 999999), $name);
-    }
-
-    /**
-     * Создает временное имя файла, добавляя служебный префикс
-     *
-     * @param string $name
-     * @return string
-     */
-    protected static function createPosPrefix(string $name, int $pos)
-    {
-        // удаляем текущий префикс
-        $name = static::removeNamePrefix($name);
-
-        // добавляем порядковый префиск
-        return sprintf('%d~%s', $pos, $name);
-    }
-
-    /**
      * Импортирует новый файл.
      * Либо UploadFile, либо StoreFile, у которого другой store.
      *
@@ -742,7 +695,7 @@ class FileAttributeBehavior extends Behavior
      */
     protected static function importNewFile(StoreFile $attributePath, AbstractFile $file)
     {
-        $newFile = $attributePath->child(static::createTempPrefix($file->name));
+        $newFile = $attributePath->child(AbstractFile::setTempPrefix($file->name));
         $newFile->contents = $file->contents;
         return $newFile;
     }
@@ -755,7 +708,7 @@ class FileAttributeBehavior extends Behavior
      */
     protected static function renameWithTemp(StoreFile $file)
     {
-        $file->name = static::createTempPrefix($file->name);
+        $file->name = AbstractFile::setTempPrefix($file->name);
         return $file;
     }
 
@@ -771,7 +724,7 @@ class FileAttributeBehavior extends Behavior
         $files = array_values($files);
 
         foreach ($files as $pos => $file) {
-            $file->name = self::createPosPrefix($file->name, $pos);
+            $file->name = AbstractFile::setPosPrefix($file->name, $pos);
             $files[$pos] = $file;
         }
 

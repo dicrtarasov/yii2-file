@@ -1,7 +1,7 @@
 <?php
 namespace dicr\file;
 
-use yii\base\NotSupportedException;
+
 
 /**
  * Файл хранилища файлов
@@ -178,7 +178,17 @@ class StoreFile extends AbstractFile
     {
         $this->checkRootAccess();
 
-        return $this->store->basename($this->path);
+        $name = $this->store->basename($this->path);
+
+        if (!empty($options['removePrefix'])) {
+            $name = self::removeNamePrefix($name);
+        }
+
+        if (!empty($options['removeExt'])) {
+            $name = pathinfo($name, PATHINFO_FILENAME);
+        }
+
+        return $name;
     }
 
     /**
@@ -557,11 +567,12 @@ class StoreFile extends AbstractFile
      *
      * @param array $options
      * @return \dicr\file\ThumbFile
-     * @throws StoreException
-     * @throws NotSupportedException
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\NotSupportedException
      * @see Thumbnailer#thumbnail
      */
-    public function thumb(array $options=[]) {
+    public function thumb(array $options=[])
+    {
         return $this->store->thumb($this->path, $options);
     }
 }
