@@ -1,12 +1,16 @@
 .file-input-widget {
-    display: inline-flex;
+    display: flex;
     flex-flow: row wrap;
     justify-content: flex-start;
     align-items: stretch;
 }
 
 .file-input-widget.form-control {
+    display: flex;
     height: auto;
+    border: none;
+    padding: 0;
+    box-shadow: none;
 }
 
 .file-input-widget label {
