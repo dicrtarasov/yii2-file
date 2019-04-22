@@ -1,8 +1,6 @@
 <?php
 namespace dicr\file;
 
-
-
 /**
  * Файл хранилища файлов
  *
@@ -23,7 +21,6 @@ namespace dicr\file;
  */
 class StoreFile extends AbstractFile
 {
-
     /** @var \dicr\file\AbstractFileStore */
     private $_store;
 
@@ -181,7 +178,7 @@ class StoreFile extends AbstractFile
         $name = $this->store->basename($this->path);
 
         if (!empty($options['removePrefix'])) {
-            $name = self::removeNamePrefix($name);
+            $name = static::removeNamePrefix($name);
         }
 
         if (!empty($options['removeExt'])) {
@@ -574,5 +571,55 @@ class StoreFile extends AbstractFile
     public function thumb(array $options=[])
     {
         return $this->store->thumb($this->path, $options);
+    }
+
+    /**
+     * Удаляет из имени файла технический префикс позиции.
+     *
+     * @param string $name имя файла
+     * @return string оригинальное имя без префикса
+     */
+    public static function removeNamePrefix(string $name)
+    {
+        $matches = null;
+        if (preg_match('~^(\.tmp)?\d+\~(.+)$~uism', $name, $matches)) {
+            $name = $matches[2];
+        }
+
+        return $name;
+    }
+
+    /**
+     * Добавляет имени файла временный префикс позиции.
+     *
+     * Предварительно удаляется существующий префикс.
+     *
+     * @param string $name
+     * @return string
+     */
+    public static function setTempPrefix(string $name)
+    {
+        // удаляем текущий префикс
+        $name = static::removeNamePrefix($name);
+
+        // добавляем временный префиск
+        return sprintf('.tmp%d~%s', rand(100000, 999999), $name);
+    }
+
+    /**
+     * Добавляет к имени файла служебнй префикс позиции.
+     *
+     * Существующий префикс удаляется.
+     *
+     * @param string $name
+     * @return string
+     */
+    public static function setPosPrefix(string $name, int $pos)
+    {
+        // удаляем текущий префикс
+        $name = static::removeNamePrefix($name);
+
+        // добавляем порядковый префиск
+        return sprintf('%d~%s', $pos, $name);
     }
 }

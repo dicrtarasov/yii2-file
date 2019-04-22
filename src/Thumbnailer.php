@@ -193,7 +193,8 @@ class Thumbnailer extends Component
 
         // если заданы размеры, то делаем масштабирование
         if ($width > 0 || $height > 0) {
-            if (! $image->thumbnailImage($width ?: 0, $height ?: 0, $width > 0 && $height > 0, $width > 0 && $height > 0)) {
+
+            if (! $image->thumbnailImage($width, $height, $width && $height, $width && $height)) {
                 throw new Exception('error creating thumb');
             }
         }

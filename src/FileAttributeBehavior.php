@@ -703,7 +703,7 @@ class FileAttributeBehavior extends Behavior
      */
     protected static function importNewFile(StoreFile $attributePath, AbstractFile $file)
     {
-        $newFile = $attributePath->child(AbstractFile::setTempPrefix($file->name));
+        $newFile = $attributePath->child(StoreFile::setTempPrefix($file->name));
         $newFile->contents = $file->contents;
         return $newFile;
     }
@@ -716,7 +716,7 @@ class FileAttributeBehavior extends Behavior
      */
     protected static function renameWithTemp(StoreFile $file)
     {
-        $file->name = AbstractFile::setTempPrefix($file->name);
+        $file->name = StoreFile::setTempPrefix($file->name);
         return $file;
     }
 
@@ -732,7 +732,7 @@ class FileAttributeBehavior extends Behavior
         $files = array_values($files);
 
         foreach ($files as $pos => $file) {
-            $file->name = AbstractFile::setPosPrefix($file->name, $pos);
+            $file->name = StoreFile::setPosPrefix($file->name, $pos);
             $files[$pos] = $file;
         }
 
