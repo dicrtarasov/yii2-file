@@ -768,7 +768,7 @@ class FileAttributeBehavior extends Behavior
         $files = array_values($files);
 
         foreach ($files as $pos => $file) {
-            $file->name = AbstractFile::setPosPrefix($file->name, $pos);
+            $file->name = StoreFile::setPosPrefix($file->name, $pos);
             $files[$pos] = $file;
         }
 
