@@ -35,13 +35,16 @@ use yii\db\ActiveRecord;
  * attributes - массив обрабатываемых аттрибутов.
  *  Ключ - название аттрибута,
  *  Значение - массив параметров атрибута:
- *      - int $limit - ограничение количества файлов.
+*       - int|null $min - минимальное требуемое кол-во файлов
+ *      - int|null $limit - ограничение количества файлов.
  *          - если $limit == 0,
  *              то значение аттрибута - массив файлов \dicr\file\AsbtractFile[] без ограничения на кол-во
  *          - если $limit - число,
  *              то значение аттрибута - массив \dicr\file\AsbtractFile[] с ограничением кол-ва файлов limit
  *          - если $limit == 1,
  *              то значение атрибута - один файл \dicr\file\AsbtractFile
+*       - int|null $maxsize - максимальный размер
+*       - string|null $type mime-ип загруженных файлов
  * </xmp>
  *
  * Если значение не массив, то оно принимается в качестве limit.
@@ -346,13 +349,27 @@ class FileAttributeBehavior extends Behavior
         $this->checkFileAttribute($attribute);
 
         // получаем текущие значения
-        $files = $this->values[$attribute] ?? null;
-
-        // если новые значения не установлены, то валидацию проходить не нужно
+        $files = $this->getFileAttributeValue($attribute, false);
         if (empty($files)) {
-            return true;
+            $files = [];
+        } elseif (!is_array($files)) {
+            $files = [$files];
         }
 
+        // получаем парамеры атрибута
+        $params = $this->attributes[$attribute];
+
+        // минимальное количество
+        if (isset($params['min']) && count($files) < $params['min']) {
+            $this->owner->addError($attribute, 'Необходимо не менее '. intval($params['min']) . ' количество файлов');
+        }
+
+        // максимальное количество
+        if (isset($params['limit']) && count($files) > $params['limit']) {
+            $this->owner->addError($attribute, 'Максимальное кол-во файлов: ' . intval($params['limit']));
+        }
+
+        // проверяем каждый файл
         foreach ($files as $i => $file) {
             if (empty($file)) {
                 $this->owner->addError($attribute, 'пустое значение файла');
@@ -369,14 +386,33 @@ class FileAttributeBehavior extends Behavior
                 } elseif ((int) $file->size <= 0) {
                     $this->owner->addError($attribute, 'пустой размер файла: ' . $file->name);
                     unset($files[$i]);
+                } elseif (isset($params['maxsize']) && $file->size > $params['maxsize']) {
+                    $this->owner->addError($attribute, 'Размер не более ' . \Yii::$app->formatter->asSize($params['maxsize']));
+                    unset($files[$i]);
+                } elseif (isset($params['type']) && !self::matchMimeType($file->mimeType, $params['type'])) {
+                    $this->owner->addError($attribute, 'Неверный тип файла: ' . $file->mimeType);
+                    unset($files[$i]);
                 }
-            } elseif (! ($file instanceof StoreFile)) {
+            } elseif (!($file instanceof AbstractFile)) {
                 $this->owner->addError($attribute, 'неизвестный тип значения');
                 unset($files[$i]);
             }
         }
 
         return empty($this->owner->getErrors($attribute));
+    }
+
+    /**
+     * Сравнивает Mime-тип с поддержкой шаблонов
+     *
+     * @param string $mime сравниваемый Mime-тип
+     * @param string $required шаблонный
+     * @return bool результат
+     */
+    protected static function matchMimeType(string $mime, string $required)
+    {
+        $regex = '~^' . str_replace(['/', '*'], ['\\/', '.+'], $required) . '$~uism';
+        return (bool)preg_match($mime, $regex);
     }
 
     /**
@@ -703,7 +739,7 @@ class FileAttributeBehavior extends Behavior
      */
     protected static function importNewFile(StoreFile $attributePath, AbstractFile $file)
     {
-        $newFile = $attributePath->child(StoreFile::setTempPrefix($file->name));
+        $newFile = $attributePath->child(AbstractFile::setTempPrefix($file->name));
         $newFile->contents = $file->contents;
         return $newFile;
     }
@@ -716,7 +752,7 @@ class FileAttributeBehavior extends Behavior
      */
     protected static function renameWithTemp(StoreFile $file)
     {
-        $file->name = StoreFile::setTempPrefix($file->name);
+        $file->name = AbstractFile::setTempPrefix($file->name);
         return $file;
     }
 
@@ -732,7 +768,7 @@ class FileAttributeBehavior extends Behavior
         $files = array_values($files);
 
         foreach ($files as $pos => $file) {
-            $file->name = StoreFile::setPosPrefix($file->name, $pos);
+            $file->name = AbstractFile::setPosPrefix($file->name, $pos);
             $files[$pos] = $file;
         }
 
