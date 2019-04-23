@@ -2,8 +2,6 @@
 <projectDescription>
 	<name>yii2-file</name>
 	<comment></comment>
-	<projects>
-	</projects>
 	<buildSpec>
 		<buildCommand>
 			<name>org.eclipse.wst.validation.validationbuilder</name>
