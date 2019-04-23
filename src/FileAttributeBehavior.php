@@ -337,6 +337,19 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
+     * Сравнивает Mime-тип с поддержкой шаблонов
+     *
+     * @param string $mime сравниваемый Mime-тип
+     * @param string $required шаблонный
+     * @return bool результат
+     */
+    protected static function matchMimeType(string $mime, string $required)
+    {
+        $regex = '~^' . str_replace(['/', '*'], ['\\/', '.+'], $required) . '$~uism';
+        return (bool)preg_match($mime, $regex);
+    }
+
+    /**
      * Проводит валидацию файлового аттрибута и загруженных файлов.
      * Добавляет ошибки модели по addError
      *
@@ -360,12 +373,12 @@ class FileAttributeBehavior extends Behavior
         $params = $this->attributes[$attribute];
 
         // минимальное количество
-        if (isset($params['min']) && count($files) < $params['min']) {
+        if (!empty($params['min']) && count($files) < $params['min']) {
             $this->owner->addError($attribute, 'Необходимо не менее '. intval($params['min']) . ' количество файлов');
         }
 
         // максимальное количество
-        if (isset($params['limit']) && count($files) > $params['limit']) {
+        if (!empty($params['limit']) && count($files) > $params['limit']) {
             $this->owner->addError($attribute, 'Максимальное кол-во файлов: ' . intval($params['limit']));
         }
 
@@ -400,19 +413,6 @@ class FileAttributeBehavior extends Behavior
         }
 
         return empty($this->owner->getErrors($attribute));
-    }
-
-    /**
-     * Сравнивает Mime-тип с поддержкой шаблонов
-     *
-     * @param string $mime сравниваемый Mime-тип
-     * @param string $required шаблонный
-     * @return bool результат
-     */
-    protected static function matchMimeType(string $mime, string $required)
-    {
-        $regex = '~^' . str_replace(['/', '*'], ['\\/', '.+'], $required) . '$~uism';
-        return (bool)preg_match($mime, $regex);
     }
 
     /**
