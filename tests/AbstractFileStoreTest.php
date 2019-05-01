@@ -20,7 +20,8 @@ abstract class AbstractFileStoreTest extends TestCase
      * {@inheritDoc}
      * @see \dicr\tests\TestCase::setUp()
      */
-    public function setUp() {
+    public function setUp()
+    {
         parent::setUp();
         $this->store = \Yii::$app->fileStore;
     }
@@ -34,7 +35,8 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertInstanceOf(StoreFile::class, $this->store->file(''));
     }
 
-    public function testNormalizePath() {
+    public function testNormalizePath()
+    {
         $tests = [
             ''  => '',
             '/' => '',
@@ -63,7 +65,8 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertEquals('d1/d2/f2', $file->path);
     }
 
-    public function testPathRelations() {
+    public function testPathRelations()
+    {
         self::assertNull($this->store->file('')->parent);
 
         $file = $this->store->file('/1/2/3/');
@@ -83,7 +86,8 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertSame('1/2/3/4', $file->child('4'));
     }
 
-    public function testType() {
+    public function testType()
+    {
         $file = $this->store->file('test-dir');
         if (!$file->exists) {
             self::assertInstanceOf(StoreFile::class, $file->mkdir());
@@ -104,7 +108,8 @@ abstract class AbstractFileStoreTest extends TestCase
         $this->store->file(md5(time()))->isDir;
     }
 
-    public function testPublic() {
+    public function testPublic()
+    {
         $file = $this->store->file('test-file');
         if (!$file->exists) {
             self::assertInstanceOf(StoreFile::class, $file->setContents(''));
@@ -124,7 +129,8 @@ abstract class AbstractFileStoreTest extends TestCase
         $this->store->file(md5(time()))->public = true;
     }
 
-    public function testHidden() {
+    public function testHidden()
+    {
         self::expectException(StoreException::class);
         $this->store->file('')->hidden;
 
@@ -134,7 +140,8 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertTrue($this->store->file('s/.s')->hidden);
     }
 
-    public function testSize() {
+    public function testSize()
+    {
         $file = $this->store->file('test-file');
 
         self::assertInstanceOf(StoreFile::class, $file->setContents('1234567890'));
@@ -146,21 +153,24 @@ abstract class AbstractFileStoreTest extends TestCase
         $this->store->file(md5(time()))->size;
     }
 
-    public function testMtime() {
+    public function testMtime()
+    {
         self::assertGreaterThanOrEqual(time(), $this->store->file('test-file')->setContents('')->mtime);
 
         self::expectException(StoreException::class);
         $this->store->file(md5(time()))->mtime;
     }
 
-    public function testMimeType() {
+    public function testMimeType()
+    {
         self::assertContains($this->store->file('test-file')->mimeType, ['text/plain', 'inode/x-empty']);
 
         self::expectException(StoreException::class);
         $this->store->file(md5(time()))->mimeType;
     }
 
-    public function testContents() {
+    public function testContents()
+    {
         self::assertInstanceOf(StoreFile::class, $this->store->file('test-file')->setContents('12345'));
         self::assertSame(5, $this->store->file('test-file')->size);
 
@@ -173,8 +183,8 @@ abstract class AbstractFileStoreTest extends TestCase
         $this->store->file(md5(time()))->contents = 123;
     }
 
-    public function testStream() {
-
+    public function testStream()
+    {
         $stream = fopen('php://temp', 'wt');
         fputs($stream, 'test');
         rewind($stream);
@@ -193,7 +203,8 @@ abstract class AbstractFileStoreTest extends TestCase
         $this->store->file(md5(time()))->contents = 123;
     }
 
-    public function testExistsDelete() {
+    public function testExistsDelete()
+    {
         $dir = $this->store->file('test-dir');
         if (!$dir->exists) {
             self::assertInstanceOf(StoreFile::class, $dir->mkdir());
@@ -218,7 +229,8 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertInstanceOf(StoreFile::class, $this->store->file(md5(time()))->delete());
     }
 
-    public function testFileListChild() {
+    public function testFileListChild()
+    {
         self::expectException(StoreException::class);
         $this->store->list('123');
 

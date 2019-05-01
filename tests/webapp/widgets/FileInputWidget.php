@@ -1,15 +1,16 @@
 <?php
-namespace dicr\file;
+namespace app\widgets;
 
+use dicr\file\FileInputTrait;
 use yii\bootstrap\InputWidget;
 
 /**
- * Виджет редактора картинок
+ * Виджет ввода картинок.
  *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 2018
+ * @version 2019
  */
 class FileInputWidget extends InputWidget
 {
-    use FileInputWidgetTrait;
+    use FileInputTrait;
 }

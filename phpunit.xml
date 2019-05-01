@@ -15,7 +15,6 @@
         
             <!-- directory>./tests/*Test.php</directory -->
             <file>tests/LocalFileStoreTest.php</file>
-            <file>tests/LocalFlysystemStoreTest.php</file>
             <!-- 
             <file>tests/SftpFileStoreTest.php</file>
             <file>tests/FtpFileStoreTest.php</file>

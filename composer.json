@@ -15,8 +15,7 @@
 		"ext-fileinfo" : "*",
 		"ext-imagick" : "*",
 		"yiisoft/yii2" : "~2.0",
-		"yiisoft/yii2-jui" : "~2.0",
-		"yiisoft/yii2-bootstrap" : "~2.0"
+		"yiisoft/yii2-jui" : "~2.0"
 	},
 	"suggest" : {
 		"ext-ssh2" : "for LocalFileStore with ssh2.sftp:// wrapper",
@@ -46,6 +45,7 @@
 		"phpunit/phpunit" : "~6",
 		"yiisoft/yii2-debug" : "~2.0",
 		"league/flysystem" : "~1.0",
-		"league/flysystem-sftp" : "~1.0"
+		"league/flysystem-sftp" : "~1.0",
+		"yiisoft/yii2-bootstrap" : "~2.0"
 	}
 }

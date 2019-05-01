@@ -1,5 +1,6 @@
 <?php
-use dicr\file\FileInputWidget;
+use app\widgets\FileInputWidget;
+use dicr\file\StoreFile;
 use yii\bootstrap\ActiveForm;
 use yii\bootstrap\Html;
 
@@ -20,11 +21,14 @@ use yii\bootstrap\Html;
 	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css"/>
 	<?php $this->head() ?>
 </head>
+
 <body style="font-size: 1rem">
 	<?php $this->beginBody() ?>
 
 	<div class="container">
 		<h1 style="margin-bottom: 2rem">Тест загрузки файлов</h1>
+
+		<h2>Редактирование файлов</h2>
 
 		<?php $form = ActiveForm::begin([
 			'layout' => 'horizontal',
@@ -36,7 +40,10 @@ use yii\bootstrap\Html;
 					'error' => '',
 					'hint' => '',
 				],
-			]
+			],
+		    'options' => [
+		        'style' => 'margin-bottom: 60px'
+		    ]
 		])?>
 
 			<?=$form->field($model, 'icon')->widget(FileInputWidget::class, [
@@ -44,33 +51,47 @@ use yii\bootstrap\Html;
 				'accept' => 'image/*',
 			])?>
 
-			<?=$form->field($model, 'pics[]')->widget(FileInputWidget::class)?>
+			<?=$form->field($model, 'pics')->widget(FileInputWidget::class)?>
+
+			<?=$form->field($model, 'docs')->widget(FileInputWidget::class, [
+			    'layout' => 'vertical'
+			])?>
 
 			<div class="form-group">
 				<div class="col-sm-10 col-sm-offset-1">
-					<?=Html::submitButton('send', [
+					<?=Html::submitButton('Сохранить', [
 						'class' => 'btn btn-primary'
 					])?>
 				</div>
 			</div>
 
 		<?php $form->end() ?>
+
+
+    	<h2>Просмотр превью картинок модели</h2>
+
+    	<?php if (!empty($model->icon) && is_a($model->icon, StoreFile::class)) {?>
+    		<div style="margin-bottom: 30px">
+    			<?=Html::img($model->icon->thumb([
+    			    'width' => 50,
+    			    'height' => 50
+    			])->url)?>
+    		</div>
+    	<?php }?>
+
+    	<?php if (!empty($model->pics)) {?>
+    		<div style="margin-bottom: 60px">
+    			<?php foreach ($model->pics as $pic) {?>
+    				<?php if (is_a($pic, StoreFile::class)) {?>
+        				<?=Html::img($pic->thumb([
+        				    'width' => 50,
+        				    'height' => 50
+        				])->url)?>
+    				<?php }?>
+    			<?php }?>
+    		</div>
+    	<?php }?>
 	</div>
-
-	<?php if (!empty($model->icon)) {?>
-		<div style="margin: 60px">
-			<?=Html::img($model->icon->thumb(['width' => 50, 'height' => 100])->url)?>
-			<?=Html::img($model->icon->thumb(['width' => 200, 'height' => 100])->url)?>
-		</div>
-	<?php }?>
-
-	<?php if (!empty($model->pics)) {?>
-		<div style="margin: 60px">
-			<?php foreach ($model->pics as $pic) {?>
-				<?=Html::img($pic->thumb(['width' => 50, 'height' => 50])->url)?>
-			<?php }?>
-		</div>
-	<?php }?>
 
 	<?php $this->endBody() ?>
 </body>

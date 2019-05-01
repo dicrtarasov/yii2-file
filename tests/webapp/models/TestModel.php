@@ -13,14 +13,15 @@ use yii\db\ActiveRecord;
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
  */
-class TestModel extends ActiveRecord {
-
+class TestModel extends ActiveRecord
+{
 	/**
 	 * Название таблицы
 	 *
 	 * @return string
 	 */
-	public static function tableName() {
+	public static function tableName()
+	{
 		return '{{test}}';
 	}
 
@@ -28,10 +29,12 @@ class TestModel extends ActiveRecord {
 	 * {@inheritDoc}
 	 * @see \yii\base\Model::attributeLabels()
 	 */
-	public function attributeLabels() {
+	public function attributeLabels()
+	{
 		return [
 			'icon' => 'Иконка',
-			'pics' => 'Картинки'
+			'pics' => 'Картинки',
+		    'docs' => 'Документы'
 		];
 	}
 
@@ -39,13 +42,15 @@ class TestModel extends ActiveRecord {
 	 * {@inheritDoc}
 	 * @see \yii\base\Component::behaviors()
 	 */
-	public function behaviors() {
+	public function behaviors()
+	{
 		return [
 			'fileAttribute' => [
 				'class' => FileAttributeBehavior::class,
 				'attributes' => [
 					'icon' => 1,
-					'pics' => 0
+					'pics' => 0,
+				    'docs' => 0
 				]
 			]
 		];

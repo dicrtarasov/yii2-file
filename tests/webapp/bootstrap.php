@@ -30,8 +30,7 @@ $app = new Application([
 	'basePath' => __DIR__,
 	'vendorPath' => VENDOR,
 	'aliases' => [
-		'@dicr/file' => dirname(__DIR__) . '/src',
-		'@dicr/tests' => __DIR__,
+		'@dicr/file' => dirname(dirname(__DIR__)) . '/src',
 		'@bower' => '@vendor/bower-asset',
 		'@npm'   => '@vendor/npm-asset'
 	],
@@ -45,7 +44,8 @@ $app = new Application([
 			'dsn' => 'sqlite::memory:',
 		],
 		'assetManager' => [
-			'appendTimestamp' => true
+			'appendTimestamp' => true,
+		    'forceCopy' => true
 		],
 	    'fileStore' => [
 			'class' => LocalFileStore::class,
