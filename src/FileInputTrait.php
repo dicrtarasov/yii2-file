@@ -20,20 +20,23 @@ use yii\helpers\ArrayHelper;
  */
 trait FileInputTrait
 {
-    /** @var int|null максимальное кол-во файлов */
-    public $limit;
-
-    /** @var string|false mime-типы в input type=file, например image/* */
-    public $accept;
-
     /** @var string вид 'horizontal' или 'vertical' */
     public $layout = 'horizontal';
 
-    /** @var string название поля формы аттрибута */
-    protected $inputName;
+    /** @var int|null максимальное кол-во файлов */
+    public $limit;
 
-    /** @var \dicr\file\AbstractFile[] файлы */
-    protected $files;
+    /** @var string|null mime-типы в input type=file, например image/* */
+    public $accept;
+
+    /** @var bool|null удалять расширение файла при отображении (default true for horizontal) */
+    public $removeExt;
+
+    /** @var string|null название поля формы аттрибута */
+    public $inputName;
+
+    /** @var \dicr\file\AbstractFile[]|null файлы */
+    public $value;
 
     /**
      * {@inheritdoc}
@@ -54,23 +57,32 @@ trait FileInputTrait
         // удаляем индекс массива в конце
         $this->attribute = preg_replace('~\[\]$~uism', '', $this->attribute);
 
-        // получаем файлы
-        $this->files = Html::getAttributeValue($this->model, $this->attribute);
-        if (empty($this->files)) {
-            $this->files = [];
-        } elseif (! is_array($this->files)) {
-            $this->files = [$this->files]; // нельзя применять (array) потому как File::toArray
-        } elseif ($this->limit > 0) {
-            ksort($this->files);
-            $this->files = array_slice($this->files, 0, $this->limit, true);
+        if (!in_array($this->layout, ['horizontal', 'vertical'])) {
+            throw new InvalidConfigException('layout');
         }
 
-        // получаем название поля ввода для виджета, удаляя конечные '[]' для последующего добавления позиции файла
-        $this->inputName = Html::getInputName($this->model, $this->attribute);
+        if (!isset($this->removeExt)) {
+            $this->removeExt = $this->layout == 'horizontal';
+        }
 
-        // добавляем нужные классы
-        Html::addCssClass($this->options, 'file-input-widget');
-        Html::addCssClass($this->options, 'layout-' . $this->layout);
+        // получаем название поля ввода файлов
+        if (!isset($this->inputName)) {
+            $this->inputName = Html::getInputName($this->model, $this->attribute);
+        }
+
+        // получаем файлы
+        if (!isset($this->value)) {
+            $this->value = Html::getAttributeValue($this->model, $this->attribute);
+        }
+
+        if (empty($this->value)) {
+            $this->value = [];
+        } elseif (! is_array($this->value)) {
+            $this->value = [$this->value]; // нельзя применять (array) потому как File::toArray
+        } elseif ($this->limit > 0) {
+            ksort($this->value);
+            $this->value = array_slice($this->value, 0, $this->limit, true);
+        }
 
         // добавляем enctype форме
         $this->field->form->options['enctype'] = 'multipart/form-data';
@@ -78,18 +90,48 @@ trait FileInputTrait
         // отключаем валидацию на стороне клиента
         $this->field->enableClientValidation = false;
 
+        // добавляем нужные классы
+        Html::addCssClass($this->options, 'file-input-widget');
+        Html::addCssClass($this->options, 'layout-' . $this->layout);
+
         // регистрируем ассет
         $this->view->registerAssetBundle(FileInputAsset::class);
 
         // добавляем опции клиенту
         $this->clientOptions = ArrayHelper::merge([
-            'accept' => $this->accept,
+            'layout' => $this->layout,
             'limit' => $this->limit,
+            'accept' => $this->accept,
+            'removeExt' => $this->removeExt,
             'inputName' => $this->inputName
         ], $this->clientOptions);
 
         // регистрируем плагин
         $this->registerPlugin('fileInputWidget');
+    }
+
+    /**
+     * Рендерит картинку
+     *
+     * @return string
+     */
+    protected function renderImage(StoreFile $file)
+    {
+        $img = null;
+
+        if ($this->layout == 'horizontal') {
+            $img = Html::img(preg_match('~^image\/.+~uism', $file->mimeType) ? $file->url : null, [
+                'alt' => '',
+                'class' => 'image'
+            ]);
+        } else {
+            $img = Html::tag('i', '', [ 'class' => 'image fa fas fa-download']);
+        }
+
+        return Html::a($img, $file->url, [
+            'class' => 'download',
+            'download' => $file->name
+        ]);
     }
 
     /**
@@ -101,49 +143,36 @@ trait FileInputTrait
      */
     protected function renderFileBlock(int $pos, StoreFile $file)
     {
-        // id поля файла
-        $fileId = $this->id . '-fileinput-' . rand(1, 999999);
-
-        return Html::label(
+        return Html::tag('div',
             // $_POST - параметр с именем старого файла
             Html::hiddenInput($this->inputName . '[' . $pos . ']', $file->name) .
 
-            // $_FILE параметр для изменения файла
-            Html::fileInput($this->inputName . '[' . $pos . ']', null, [
-                'id' => $fileId,
-                'accept' => $this->accept
-            ]) .
-
             // картинка
-            Html::img(preg_match('~^image\/.+~uism', $file->mimeType) ? $file->url : null, [
-                'alt' => "",
-                'class' => 'img'
-            ]) .
-
-            /*
-            Html::tag('object', '', [
-                'data' => preg_match('~^image\/.+~uism', $file->mimeType) ? $file->url : null,
-                'class' => 'img'
-            ]) .*/
+            $this->renderImage($file) .
 
             // имя файла
-            Html::tag('div', $file->getName([
-                'removePrefix' => 1,
-                'removeExt' => 1
-            ]), [
-                'class' => 'name'
-            ]) .
+            Html::a(
+                $file->getName([
+                    'removePrefix' => 1,
+                    'removeExt' => $this->removeExt
+                ]),
+
+                $file->url,
+
+                [
+                    'class' => 'name',
+                    'download' => $file->name
+                ]
+            ) .
 
             // кнопка удаления файла
             Html::button('&times;', [
                 'class' => 'del btn btn-link text-danger',
-                'title' => 'удалить'
+                'title' => 'Удалить'
             ]),
 
-            $fileId,
-
             [
-                'class' => 'file btn'
+                'class' => 'file'
             ]
         );
     }
@@ -157,7 +186,7 @@ trait FileInputTrait
     {
         $content = '';
 
-        foreach ($this->files as $pos => $file) {
+        foreach ($this->value as $pos => $file) {
             if ($file instanceof StoreFile) {
                 $content .= $this->renderFileBlock((int)$pos, $file);
             }
@@ -192,10 +221,10 @@ trait FileInputTrait
             $fileId,
 
             [
-                'class' => 'add btn',
-                'title' => 'Выбрать файл',
+                'class' => 'add',
+                'title' => 'Добавить файл',
                 'style' => [
-                    'display' => $this->limit > 0 && count($this->files) >= $this->limit ? 'none' : 'flex'
+                    'display' => $this->limit > 0 && count($this->value) >= $this->limit ? 'none' : 'flex'
                 ]
             ]
         );

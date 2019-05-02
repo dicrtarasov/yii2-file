@@ -8,8 +8,10 @@
 
     $.fn.fileInputWidget = function (options) {
         options = $.extend({}, {
+            layout: 'horizontal',
+            limit : 0,
             accept : null,
-            limit : null,
+            removeExt: false,
             inputName : null
         }, options);
 
@@ -31,83 +33,91 @@
              * Переиндексация имен полей формы
              */
             function reindex() {
+                // элементы файлов
                 const $files = $('.file', $widget);
 
+                // обхдим все элементы
                 $files.each(function (pos, $item) {
+                    // устанавливаем имя ввода файла с индексом
                     $('input', $item).attr('name', options.inputName + '[' + pos + ']');
                 });
 
-                $btnAdd.toggle(!options.limit || options.limit < 1 || $files.length < options.limit);
+                // отображаем/скрываем кнопку при достижении лимита
+                $btnAdd.css('display', !options.limit || options.limit < 1 || $files.length < options.limit ? 'flex' : 'none');
             }
 
-            $widget.on('change', '.file [type="file"]', function () {
-                const input = this;
+            // добавление файла
+            $btnAdd.on('change', '[type="file"]', function () {
 
-                if (input.files.length < 1) {
+                if (this.files.length < 1) {
                     return;
                 }
 
-                const $file = $(input).closest('.file');
-                const url = input.files[0].type.match(/^image/) ? URL.createObjectURL(input.files[0]) : null;
-                $file.data('url', url);
+                // клонируем элемент ввода с выбранным файлом
+                const $fileInput = $(this).clone();
 
-                const $img = $('img', $file);
-                if (url) {
-                    $img.attr('src', url);
-                } else {
-                    $img.removeAttr('src');
-                }
+                // удаляем id у копии
+                $fileInput.removeAttr('id');
 
-                $('.name', $file).text(input.files[0].name);
+                // сбрасываем файл у элемента кнопки
+                $(this).val('');
+
+                // получаем файл
+                const file = $fileInput[0].files[0];
+
+                // получаем URL картинки
+                const url = file.type.match(/^image/) ? URL.createObjectURL(file) : null;
+
+                // готовим картинку
+                const $img = $('<img/>', {'class': 'image', src: url});
+
+                // создаем новый элемент файла
+                $('<div class="file"></div>').append(
+                    // файл
+                    $fileInput,
+
+                    // каринка
+                    $('<a></a>', { 'class': 'download', href: url, download: file.name }).append(
+                        options.layout == 'horizontal' ?
+                            $('<img/>', {'class': 'image', src: url}) :
+                            $('<i class="image fa fas fa-download"></i>')
+                    ),
+
+                    // имя файла
+                    $('<a></a>', { 'class': 'name', href: url, download: file.name, text: file.name }),
+
+                    // кнопка удаления
+                    $('<button class="del btn btn-link text-danger" title="Удалить">&times;</button>')
+                ).insertBefore($btnAdd);
+
+                // переиндексируем имена
+                reindex();
             });
 
+            // удаление файла
             $widget.on('click', '.file .del', function () {
                 const $file = $(this).closest('.file');
-                const url = $file.data('url');
 
+                // освобождаем ресурс URL
+                const url = $('img', $file).attr('src');
                 if (url) {
                     URL.revokeObjectURL(url);
                 }
 
+                // удаляем элемент
                 $file.remove();
+
+                // переиндексируем имена полей ввода
                 reindex();
             });
 
-            $widget.on('sortupdate', function () {
-                reindex();
-            });
-
+            // сортировка файлов
             $widget.sortable({
-                items : '.file'
+                items : '.file',
+                sort: reindex
             });
 
-            $btnAdd.on('change', '[type="file"]', function () {
-                const input = this;
-                if (input.files.length < 1) {
-                    return;
-                }
-
-                const fileId = 'file-input-widget-addinput' + Date.now();
-
-                const $fileInput = $(input).clone().attr('id', fileId);
-
-                $('<label></label>', {
-                    'class' : 'file btn',
-                    'for' : fileId,
-                }).append(
-                    $fileInput,
-                    $('<img class="img"/>'),
-                    $('<div class="name"></div>'),
-                    $('<button class="del btn btn-link text-danger" title="удалить">&times;</button>')
-                ).insertBefore($btnAdd);
-
-                reindex();
-
-                $fileInput.trigger('change');
-
-                $(input).val('');
-            });
-
+            // задаем начальные имена
             reindex();
         });
     }

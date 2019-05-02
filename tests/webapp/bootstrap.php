@@ -9,7 +9,7 @@ use dicr\file\Thumbnailer;
 error_reporting(-1);
 ini_set('display_errors', 1);
 
-define('YII_ENABLE_ERROR_HANDLER', false);
+//define('YII_ENABLE_ERROR_HANDLER', false);
 define('YII_DEBUG', true);
 
 if (!isset($_SERVER['SCRIPT_NAME'])) {
