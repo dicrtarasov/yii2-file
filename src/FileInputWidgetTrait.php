@@ -130,7 +130,7 @@ trait FileInputWidgetTrait
 
         return Html::a($img, $file->url, [
             'class' => 'download',
-            'download' => $file->name
+            'download' => $file->getName(['removePrefix' => 1])
         ]);
     }
 
@@ -161,7 +161,7 @@ trait FileInputWidgetTrait
 
                 [
                     'class' => 'name',
-                    'download' => $file->name
+                    'download' => $file->getName(['removePrefix' => 1])
                 ]
             ) .
 
