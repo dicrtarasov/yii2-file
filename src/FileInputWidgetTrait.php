@@ -2,7 +2,7 @@
 namespace dicr\file;
 
 use yii\base\InvalidConfigException;
-use yii\bootstrap\Html;
+use yii\helpers\Html;
 use yii\helpers\ArrayHelper;
 
 /**
