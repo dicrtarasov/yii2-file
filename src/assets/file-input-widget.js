@@ -66,20 +66,20 @@
                 const file = $fileInput[0].files[0];
 
                 // получаем URL картинки
-                const url = file.type.match(/^image/) ? URL.createObjectURL(file) : null;
+                const url = URL.createObjectURL(file);
 
                 // готовим картинку
                 const $img = $('<img/>', {'class': 'image', src: url});
 
                 // создаем новый элемент файла
-                $('<div class="file"></div>').append(
+                $('<div></div>', {'class': 'file', data: {url: url}}).append(
                     // файл
                     $fileInput,
 
                     // каринка
                     $('<a></a>', { 'class': 'download', href: url, download: file.name }).append(
                         options.layout == 'horizontal' ?
-                            $('<img/>', {'class': 'image', src: url}) :
+                            $('<img/>', {'class': 'image', src: file.type.match(/^image/) ? url : null}) :
                             $('<i class="image fa fas fa-download"></i>')
                     ),
 
@@ -99,9 +99,10 @@
                 const $file = $(this).closest('.file');
 
                 // освобождаем ресурс URL
-                const url = $('img', $file).attr('src');
+                const url = $file.data('url');
                 if (url) {
                     URL.revokeObjectURL(url);
+                    console.debug('revoke url: ' . url);
                 }
 
                 // удаляем элемент
