@@ -11,7 +11,7 @@ use yii\web\JqueryAsset;
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2018
  */
-class FileInputAsset extends AssetBundle
+class FileInputWidgetAsset extends AssetBundle
 {
     /** @var string */
     public $sourcePath = __DIR__.'/assets';

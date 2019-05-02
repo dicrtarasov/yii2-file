@@ -12,13 +12,13 @@ use yii\helpers\ArrayHelper;
  *
  * class FileInputWidget extends \yii\bootstrap(4?)\InputWidget
  * {
- *   use FileInputTrait;
+ *   use FileInputWidgetTrait;
  * }
  *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2018
  */
-trait FileInputTrait
+trait FileInputWidgetTrait
 {
     /** @var string вид 'horizontal' или 'vertical' */
     public $layout = 'horizontal';
@@ -95,7 +95,7 @@ trait FileInputTrait
         Html::addCssClass($this->options, 'layout-' . $this->layout);
 
         // регистрируем ассет
-        $this->view->registerAssetBundle(FileInputAsset::class);
+        $this->view->registerAssetBundle(FileInputWidgetAsset::class);
 
         // добавляем опции клиенту
         $this->clientOptions = ArrayHelper::merge([

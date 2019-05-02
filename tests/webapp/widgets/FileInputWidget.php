@@ -1,7 +1,7 @@
 <?php
 namespace app\widgets;
 
-use dicr\file\FileInputTrait;
+use dicr\file\FileInputWidgetTrait;
 use yii\bootstrap\InputWidget;
 
 /**
@@ -12,5 +12,5 @@ use yii\bootstrap\InputWidget;
  */
 class FileInputWidget extends InputWidget
 {
-    use FileInputTrait;
+    use FileInputWidgetTrait;
 }
