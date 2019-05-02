@@ -51,11 +51,11 @@
     margin: 0.5rem 0.5rem 0 0.5rem;
 }
 
-.file-input-widget label.file:hover {
-    filter: brightness(1.2);
+.file-input-widget.layout-horizontal .file:hover {
+    filter: brightness(1.1);
 }
 
-.file-input-widget.layout-vertical label.file:hover {
+.file-input-widget.layout-vertical .file:hover {
     filter: contrast(1.1);
 }
 
