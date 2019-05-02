@@ -114,7 +114,7 @@
             // сортировка файлов
             $widget.sortable({
                 items : '.file',
-                sort: reindex
+                update: reindex
             });
 
             // задаем начальные имена
