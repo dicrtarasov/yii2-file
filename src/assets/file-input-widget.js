@@ -102,7 +102,6 @@
                 const url = $file.data('url');
                 if (url) {
                     URL.revokeObjectURL(url);
-                    console.debug('revoke url: ', url);
                 }
 
                 // удаляем элемент
