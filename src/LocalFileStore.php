@@ -56,7 +56,7 @@ class LocalFileStore extends AbstractFileStore
     {
         parent::init();
 
-        if (empty($this->path)) {
+        if (!isset($this->_path)) {
             throw new InvalidConfigException('path');
         }
 
