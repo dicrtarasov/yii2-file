@@ -181,7 +181,7 @@ class LocalFileStore extends AbstractFileStore
 
         $files = [];
         foreach ($iterator as $item) {
-            if (in_array($item->getBaseName(), ['.','..',''])) {
+            if (in_array($item->getBaseName(), ['.', '..', ''])) {
                 continue;
             }
 

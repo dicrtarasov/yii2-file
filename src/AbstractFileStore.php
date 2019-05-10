@@ -251,8 +251,9 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|array $path
      * @throws StoreException
-     * @param array $filter - bool|null recursive
-     *        - string|null $dir - true - только директории, false - толькофайлы
+     * @param array $filter
+     *        - bool|null recursive
+     *        - string|null $dir - true - только директории, false - только файлы
      *        - string|null $public - true - публичный доступ, false - приватный доступ
      *        - bool|null $hidden - true - скрытые файлы, false - открытые
      *        - string|null $regex - регулярная маска имени
@@ -527,31 +528,18 @@ abstract class AbstractFileStore extends Component
      * Проверяет соответствие файла фильтру.
      *
      * @param StoreFile $file
-     * @param array $filter - string|null $dir - true - только директории, false - толькофайлы
-     *        - string|null $public - true - публичный доступ, false - приватный доступ
-     *        - bool|null $hidden - true - скрытые файлы, false - открытые
-     *        - string|null $regex - регулярная маска имени
-     *        - callable|null $filter function(StoreFile $file) : bool филььтр элементов
+     * @param array $filter
+     *     - string|null $dir - true - только директории, false - толькофайлы
+     *     - string|null $public - true - публичный доступ, false - приватный доступ
+     *     - bool|null $hidden - true - скрытые файлы, false - открытые
+     *     - string|null $regex - регулярная маска имени
+     *     - callable|null $filter function(StoreFile $file) : bool филььтр элементов
      * @throws StoreException
      * @return boolean
      */
     protected function fileMatchFilter(StoreFile $file, array $filter)
     {
-
-        // фильтруем по типу
-        if (isset($filter['dir']) && $file->isDir != $filter['dir']) {
-            return false;
-        }
-
-        // фильтруем по доступности
-        if (isset($filter['public']) && $file->public != $filter['public']) {
-            return false;
-        }
-
-        // фильтруем скрытые
-        if (isset($filter['hidden']) && $file->hidden != $filter['hidden']) {
-            return false;
-        }
+        // вначале быстрые фильтры
 
         // фильтруем по регулярному выражению
         if (! empty($filter['regex']) && ! preg_match($filter['regex'], $file->path)) {
@@ -560,6 +548,23 @@ abstract class AbstractFileStore extends Component
 
         // фильтруем по callback
         if (isset($filter['filter']) && is_callable($filter['filter']) && ! call_user_func($filter['filter'], $file)) {
+            return false;
+        }
+
+        // медленные фильтры
+
+        // фильтруем по типу
+        if (isset($filter['dir']) && boolval($file->isDir) != boolval($filter['dir'])) {
+            return false;
+        }
+
+        // фильтруем по доступности
+        if (isset($filter['public']) && boolval($file->public) != boolval($filter['public'])) {
+            return false;
+        }
+
+        // фильтруем скрытые
+        if (isset($filter['hidden']) && boolval($file->hidden) != boolval($filter['hidden'])) {
             return false;
         }
 
