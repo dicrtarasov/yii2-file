@@ -11,6 +11,11 @@ use yii\helpers\ArrayHelper;
  * В зависимости от присутствия названия формы и множественности аттрибута,
  * php формирует разную структуру $_FILES.
  *
+ * @property string $name имя файла
+ * @property string $mimeType MIME-тип файла
+ * @property int $error ошибка загрузки
+ * @property int $size размер файла
+ *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2018
  */
@@ -19,14 +24,14 @@ class UploadFile extends AbstractFile
     /** @var string наименование файла */
     private $_name;
 
+    /** @var int ошибка загрузки */
+    private $_error;
+
     /** @var int размер файла */
     private $_size;
 
     /** @var string mime-type */
     private $_mimeType;
-
-    /** @var int ошибка загрузки */
-    private $_error;
 
     // @formatter:off
     /** @var array [
@@ -42,18 +47,21 @@ class UploadFile extends AbstractFile
      *
      * @param string|array $config path or config
      */
-    public function __construct($config)
+    public function __construct($pathconfig)
     {
         $path = '';
+        $config = [];
 
-        if (! is_array($config)) {
-            $path = (string) $config;
+        if (is_string($pathconfig)) {
+            $path = $pathconfig;
             $config = [];
-        } else {
-            $path = trim($config['path'] ?? '', DIRECTORY_SEPARATOR);
+        } elseif (is_array($pathconfig)) {
+            $path = $pathconfig['path'] ?? '';
+            $config = $pathconfig;
             unset($config['path']);
         }
 
+        $path = trim($path, DIRECTORY_SEPARATOR);
         if ($path == '') {
             throw new \InvalidArgumentException('path');
         }
@@ -69,21 +77,21 @@ class UploadFile extends AbstractFile
     {
         parent::init();
 
-        if (isset($this->error)) {
-            $this->error = (int) $this->error;
+        if (isset($this->_error)) {
+            $this->_error = (int) $this->_error;
         }
 
         // в случае ошибок name и path может быть пустым
-        if (empty($this->error)) {
-
-            $this->name = basename($this->name ?: $this->path);
-            if ($this->name == '') {
+        if (empty($this->_error)) {
+            // если имя не задано, то берем его из пути
+            $this->_name = basename($this->_name ?: $this->_path);
+            if ($this->_name == '') {
                 throw new InvalidConfigException('name');
             }
         }
 
-        if (isset($this->size)) {
-            $this->size = (int) $this->size;
+        if (isset($this->_size)) {
+            $this->_size = (int) $this->_size;
         }
     }
 
@@ -97,12 +105,35 @@ class UploadFile extends AbstractFile
     }
 
     /**
+     * Возвращает ошибку
+     *
+     * @return int
+     */
+    public function getError()
+    {
+        return $this->_error;
+    }
+
+    /**
+     * Устанавливает ошибку
+     *
+     * @param int $error
+     * @return $this
+     */
+    public function setError(int $error)
+    {
+        $this->_error = $error;
+
+        return $this;
+    }
+
+    /**
      * {@inheritDoc}
      * @see \dicr\file\AbstractFile::getName()
      */
     public function getName(array $options = [])
     {
-        return $this->name;
+        return $this->_name;
     }
 
     /**
@@ -113,7 +144,10 @@ class UploadFile extends AbstractFile
      */
     public function setName(string $name)
     {
-        $this->name = $name;
+        $this->_name = basename($name);
+        if (empty($this->_name)) {
+            throw new \InvalidArgumentException('name');
+        }
 
         return $this;
     }
@@ -124,7 +158,7 @@ class UploadFile extends AbstractFile
      */
     public function getExists()
     {
-        return LocalFileStore::root()->exists($this->path);
+        return LocalFileStore::root()->exists($this->_path);
     }
 
     /**
@@ -133,7 +167,7 @@ class UploadFile extends AbstractFile
      */
     public function getIsDir()
     {
-        return LocalFileStore::root()->isDir($this->path);
+        return LocalFileStore::root()->isDir($this->_path);
     }
 
     /**
@@ -142,7 +176,7 @@ class UploadFile extends AbstractFile
      */
     public function getIsFile()
     {
-        return LocalFileStore::root()->isFile($this->path);
+        return LocalFileStore::root()->isFile($this->_path);
     }
 
     /**
@@ -151,8 +185,8 @@ class UploadFile extends AbstractFile
      */
     public function getSize()
     {
-        if (! isset($this->size)) {
-            $this->size = LocalFileStore::root()->size($this->path);
+        if (! isset($this->_size)) {
+            $this->_size = LocalFileStore::root()->size($this->_path);
         }
 
         return $this->size;
@@ -164,7 +198,7 @@ class UploadFile extends AbstractFile
      */
     public function getMtime()
     {
-        return LocalFileStore::root()->mtime($this->path);
+        return LocalFileStore::root()->mtime($this->_path);
     }
 
     /**
@@ -173,11 +207,11 @@ class UploadFile extends AbstractFile
      */
     public function getMimeType()
     {
-        if (empty($this->mimeType)) {
-            $this->mimeType = LocalFileStore::root()->mimeType($this->path);
+        if (empty($this->_mimeType)) {
+            $this->_mimeType = LocalFileStore::root()->mimeType($this->_path);
         }
 
-        return $this->mimeType;
+        return $this->_mimeType;
     }
 
     /**
@@ -186,7 +220,7 @@ class UploadFile extends AbstractFile
      */
     public function getContents($context = null)
     {
-        return LocalFileStore::root()->readContents($this->path);
+        return LocalFileStore::root()->readContents($this->_path);
     }
 
     /**
@@ -195,7 +229,7 @@ class UploadFile extends AbstractFile
      */
     public function getStream($context = null)
     {
-        return LocalFileStore::root()->readStream($this->path);
+        return LocalFileStore::root()->readStream($this->_path);
     }
 
     /**
@@ -207,7 +241,7 @@ class UploadFile extends AbstractFile
      */
     public function move($path)
     {
-        LocalFileStore::root()->move($this->path, $path);
+        LocalFileStore::root()->move($this->_path, $path);
 
         return $this;
     }
@@ -220,7 +254,7 @@ class UploadFile extends AbstractFile
      */
     public function copy($path)
     {
-        LocalFileStore::root()->copy($this->path, $path);
+        LocalFileStore::root()->copy($this->_path, $path);
 
         return $this;
     }
@@ -232,7 +266,7 @@ class UploadFile extends AbstractFile
      */
     public function delete()
     {
-        LocalFileStore::root()->delete($this->path);
+        LocalFileStore::root()->delete($this->_path);
 
         return $this;
     }
@@ -263,9 +297,13 @@ class UploadFile extends AbstractFile
                 throw new Exception('empty upload file path path');
             }
 
-            $instances[$pos] = new static(
-                ['path' => $path,'name' => $name,'mimeType' => $types[$pos] ?? null,'size' => $sizes[$pos] ?? null,
-                    'error' => $errors[$pos] ?? null]);
+            $instances[$pos] = new static([
+                'path' => $path,
+                'name' => $name,
+                'mimeType' => $types[$pos] ?? null,
+                'size' => $sizes[$pos] ?? null,
+                'error' => $errors[$pos] ?? null
+            ]);
         }
 
         return $instances;
@@ -324,8 +362,13 @@ class UploadFile extends AbstractFile
     // @formatter:on
     protected static function parseAttribData(array $data)
     {
-        return static::attributeInstances((array) ($data['name'] ?? []), (array) ($data['type'] ?? []),
-            (array) ($data['size'] ?? []), (array) ($data['error'] ?? []), (array) ($data['tmp_name'] ?? []));
+        return static::attributeInstances(
+            (array) ($data['name'] ?? []),
+            (array) ($data['type'] ?? []),
+            (array) ($data['size'] ?? []),
+            (array) ($data['error'] ?? []),
+            (array) ($data['tmp_name'] ?? [])
+        );
     }
 
     // @formatter:off
@@ -404,9 +447,13 @@ class UploadFile extends AbstractFile
         $instances = [];
 
         foreach (array_keys($data['name']) as $attribute) {
-            $instances[$attribute] = static::attributeInstances((array) $data['name'][$attribute],
-                (array) ($data['type'][$attribute] ?? []), (array) ($data['size'][$attribute] ?? []),
-                (array) ($data['error'][$attribute] ?? []), (array) ($data['tmp_name'][$attribute] ?? []));
+            $instances[$attribute] = static::attributeInstances(
+                (array) $data['name'][$attribute],
+                (array) ($data['type'][$attribute] ?? []),
+                (array) ($data['size'][$attribute] ?? []),
+                (array) ($data['error'][$attribute] ?? []),
+                (array) ($data['tmp_name'][$attribute] ?? [])
+            );
         }
 
         return $instances;
@@ -473,8 +520,7 @@ class UploadFile extends AbstractFile
         }
 
         // средний вариант определяем по типу ключей в name.
-        $keys = array_keys($data['name']);
-        return ! preg_match('~^\d+$~', $keys[0]);
+        return ! preg_match('~^\d+$~', array_key_first($data['name']));
     }
 
     // @formatter:off

@@ -32,6 +32,7 @@ abstract class AbstractFile extends BaseObject
      */
     public function __construct($path, array $config = [])
     {
+        // не предоставляем функцию setPath
         $this->_path = $this->normalizePath($path);
 
         parent::__construct($config);
