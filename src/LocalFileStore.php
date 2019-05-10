@@ -108,24 +108,29 @@ class LocalFileStore extends AbstractFileStore
      * Установить корневой путь
      *
      * @param string $path
-     * @return static
+     * @return $this
      */
     public function setPath(string $path)
     {
+        // решаем алиасы
         $path = \Yii::getAlias($path, true);
         if ($path === false) {
             throw new InvalidArgumentException('path');
         }
 
-        if ($path != DIRECTORY_SEPARATOR) {
-            $path = rtrim($path, $this->pathSeparator);
+        // получаем реальный путь
+        $this->_path = realpath($path);
+        if ($this->_path === false) {
+            throw new StoreException('путь не существует: ' . $path);
         }
 
-        if ($path === '') {
-            throw new InvalidArgumentException('path');
+        // проверяем что путь директория
+        if (!@is_dir($this->_path)) {
+            throw new StoreException('не является директорией: ' . $this->_path);
         }
 
-        $this->_path = $path;
+        // обрезаем слэши (корневой путь станет пустым "")
+        $this->_path = rtrim($this->_path, $this->pathSeparator);
 
         return $this;
     }

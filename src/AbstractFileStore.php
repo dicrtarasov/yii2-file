@@ -15,7 +15,6 @@ use yii\helpers\Url;
  */
 abstract class AbstractFileStore extends Component
 {
-
     /** @var string|array $url */
     public $url;
 
@@ -83,8 +82,8 @@ abstract class AbstractFileStore extends Component
     /**
      * Разбивает путь на элементы
      *
-     * @param string|array $path
-     * @return array
+     * @param string|string[] $path
+     * @return string[]
      */
     public function splitPath($path)
     {
@@ -99,8 +98,8 @@ abstract class AbstractFileStore extends Component
     /**
      * Фильтрует путь
      *
-     * @param string|array $path
-     * @return array
+     * @param string|string[] $path
+     * @return string[]
      */
     public function filterPath($path)
     {
