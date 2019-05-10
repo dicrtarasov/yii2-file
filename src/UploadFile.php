@@ -17,16 +17,16 @@ use yii\helpers\ArrayHelper;
 class UploadFile extends AbstractFile
 {
     /** @var string наименование файла */
-    public $name;
+    private $_name;
 
     /** @var int размер файла */
-    public $size;
+    private $_size;
 
     /** @var string mime-type */
-    public $mimeType;
+    private $_mimeType;
 
     /** @var int ошибка загрузки */
-    public $error;
+    private $_error;
 
     // @formatter:off
     /** @var array [
@@ -69,21 +69,21 @@ class UploadFile extends AbstractFile
     {
         parent::init();
 
-        if (isset($this->size)) {
-            $this->size = (int) $this->size;
+        if (isset($this->error)) {
+            $this->error = (int) $this->error;
         }
-
-        $this->error = (int) $this->error;
 
         // в случае ошибок name и path может быть пустым
         if (empty($this->error)) {
 
-            // путь должен быть задан
             $this->name = basename($this->name ?: $this->path);
-
             if ($this->name == '') {
                 throw new InvalidConfigException('name');
             }
+        }
+
+        if (isset($this->size)) {
+            $this->size = (int) $this->size;
         }
     }
 
@@ -100,9 +100,22 @@ class UploadFile extends AbstractFile
      * {@inheritDoc}
      * @see \dicr\file\AbstractFile::getName()
      */
-    public function getName(array $options = [])
+    public function getName()
     {
-        return $this->name ?: LocalFileStore::root()->basename($this->path);
+        return $this->name;
+    }
+
+    /**
+     * Установить имя файла
+     *
+     * @param string $name
+     * @return $this
+     */
+    public function setName(string $name)
+    {
+        $this->name = $name;
+
+        return $this;
     }
 
     /**

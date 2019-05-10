@@ -23,4 +23,10 @@ class LocalFileStoreTest extends AbstractFileStoreTest
 
         parent::setUp();
     }
+
+    public function testAbsolutePath()
+    {
+        self::assertEquals(__DIR__ . '/files/test', $this->store->file('test')->absolutePath);
+        self::assertEquals('/test/file', LocalFileStore::root()->file('test/file')->absolutePath);
+    }
 }

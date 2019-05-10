@@ -88,11 +88,6 @@ class StoreFile extends AbstractFile
     {
         $this->checkRootAccess();
 
-        $path = $this->normalizePath($path);
-        if ($path == '') {
-            throw new \InvalidArgumentException('path');
-        }
-
         if ($path != $this->_path) {
             $this->store->move($this->_path, $path);
             $this->_path = $path;
