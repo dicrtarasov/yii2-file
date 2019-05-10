@@ -189,7 +189,7 @@ class UploadFile extends AbstractFile
             $this->_size = LocalFileStore::root()->size($this->_path);
         }
 
-        return $this->size;
+        return $this->_size;
     }
 
     /**
