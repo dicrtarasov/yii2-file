@@ -100,7 +100,7 @@ class UploadFile extends AbstractFile
      * {@inheritDoc}
      * @see \dicr\file\AbstractFile::getName()
      */
-    public function getName()
+    public function getName(array $options = [])
     {
         return $this->name;
     }
