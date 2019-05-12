@@ -176,6 +176,8 @@ trait FileInputWidgetTrait
             'title' => 'Удалить'
         ]);
 
+        echo Html::endTag('div');
+
         return ob_get_clean();
     }
 
