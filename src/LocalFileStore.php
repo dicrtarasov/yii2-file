@@ -125,7 +125,7 @@ class LocalFileStore extends AbstractFileStore
         }
 
         // проверяем что путь директория
-        if (!@is_dir($this->_path)) {
+        if ($this->_path !== '/' && !@is_dir($this->_path)) {
             throw new StoreException('не является директорией: ' . $this->_path);
         }
 
