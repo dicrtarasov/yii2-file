@@ -193,6 +193,21 @@ class UploadFile extends AbstractFile
     }
 
     /**
+     * Усанавливает размер.
+     *
+     * @param int $size
+     * @throws \InvalidArgumentException
+     */
+    public function setSize(int $size)
+    {
+        if ($size < 0) {
+            throw new \InvalidArgumentException('size');
+        }
+
+        $this->_size = $size;
+    }
+
+    /**
      * {@inheritdoc}
      * @see \dicr\file\AbstractFile::getMtime()
      */
@@ -212,6 +227,16 @@ class UploadFile extends AbstractFile
         }
 
         return $this->_mimeType;
+    }
+
+    /**
+     * Устанавливает MIME-тип.
+     *
+     * @param string $type
+     */
+    public function setMimeType(string $type)
+    {
+        $this->_mimeType = $type;
     }
 
     /**
