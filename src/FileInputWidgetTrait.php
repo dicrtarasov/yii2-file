@@ -20,8 +20,8 @@ use yii\helpers\ArrayHelper;
  */
 trait FileInputWidgetTrait
 {
-    /** @var string вид 'horizontal' или 'vertical' */
-    public $layout = 'horizontal';
+    /** @var string вид 'images' или 'files' */
+    public $layout = 'images';
 
     /** @var int|null максимальное кол-во файлов */
     public $limit;
@@ -57,12 +57,12 @@ trait FileInputWidgetTrait
         // удаляем индекс массива в конце
         $this->attribute = preg_replace('~\[\]$~uism', '', $this->attribute);
 
-        if (!in_array($this->layout, ['horizontal', 'vertical'])) {
+        if (!in_array($this->layout, ['images', 'files'])) {
             throw new InvalidConfigException('layout');
         }
 
         if (!isset($this->removeExt)) {
-            $this->removeExt = $this->layout == 'horizontal';
+            $this->removeExt = $this->layout == 'files';
         }
 
         // получаем название поля ввода файлов
@@ -119,7 +119,7 @@ trait FileInputWidgetTrait
     {
         $img = null;
 
-        if ($this->layout == 'horizontal') {
+        if ($this->layout == 'images') {
             $img = Html::img(preg_match('~^image\/.+~uism', $file->mimeType) ? $file->url : null, [
                 'alt' => '',
                 'class' => 'image'
@@ -143,15 +143,19 @@ trait FileInputWidgetTrait
      */
     protected function renderFileBlock(int $pos, StoreFile $file)
     {
-        return Html::tag('div',
-            // $_POST - параметр с именем старого файла
-            Html::hiddenInput($this->inputName . '[' . $pos . ']', $file->name) .
+        ob_start();
 
-            // картинка
-            $this->renderImage($file) .
+        echo Html::beginTag('div', ['class' => 'file']);
 
-            // имя файла
-            Html::a(
+        // $_POST - параметр с именем старого файла
+        echo Html::hiddenInput($this->inputName . '[' . $pos . ']', $file->name);
+
+        // картинка
+        echo $this->renderImage($file);
+
+        // имя файла
+        if ($this->layout != 'images') {
+            echo Html::a(
                 $file->getName([
                     'removePrefix' => 1,
                     'removeExt' => $this->removeExt
@@ -163,18 +167,16 @@ trait FileInputWidgetTrait
                     'class' => 'name',
                     'download' => $file->getName(['removePrefix' => 1])
                 ]
-            ) .
+            );
+        }
 
-            // кнопка удаления файла
-            Html::button('&times;', [
-                'class' => 'del btn btn-link text-danger',
-                'title' => 'Удалить'
-            ]),
+        // кнопка удаления файла
+        echo Html::button('&times;', [
+            'class' => 'del btn btn-link text-danger',
+            'title' => 'Удалить'
+        ]);
 
-            [
-                'class' => 'file'
-            ]
-        );
+        return ob_get_clean();
     }
 
     /**

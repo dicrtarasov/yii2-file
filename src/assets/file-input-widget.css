@@ -15,11 +15,11 @@
     box-shadow: none;
 }
 
-.file-input-widget.layout-horizontal {
+.file-input-widget.layout-images {
     flex-flow: row wrap;
 }
 
-.file-input-widget.layout-vertical {
+.file-input-widget.layout-files {
     flex-flow: column nowrap;
 }
 
@@ -32,7 +32,7 @@
     cursor: move !important;
 }
 
-.file-input-widget.layout-horizontal .file {
+.file-input-widget.layout-images .file {
     position: relative;
     justify-content: center;
     align-items:stretch;
@@ -43,7 +43,7 @@
 }
 
 
-.file-input-widget.layout-vertical .file {
+.file-input-widget.layout-files .file {
     justify-content: flex-start;
     align-items: center;
     background: hsl(0, 0%, 98%);
@@ -51,11 +51,11 @@
     margin: 0.5rem 0.5rem 0 0.5rem;
 }
 
-.file-input-widget.layout-horizontal .file:hover {
+.file-input-widget.layout-images .file:hover {
     filter: brightness(1.1);
 }
 
-.file-input-widget.layout-vertical .file:hover {
+.file-input-widget.layout-files .file:hover {
     filter: contrast(1.1);
 }
 
@@ -69,11 +69,11 @@
     display: block;
 }
 
-.file-input-widget.layout-horizontal .download {
+.file-input-widget.layout-images .download {
     cursor: move;
 }
 
-.file-input-widget.layout-horizontal .download:after {
+.file-input-widget.layout-images .download:after {
     content: "";
     position: absolute;
     top: 0;
@@ -82,7 +82,7 @@
     right: 0;
 }
 
-.file-input-widget.layout-vertical .download {
+.file-input-widget.layout-files .download {
     flex: 0 0 0;
     margin: 0.25rem 0.5rem;
     color: inherit;
@@ -95,13 +95,13 @@
     object-fit: contain;
 }
 
-.file-input-widget.layout-horizontal .image {
+.file-input-widget.layout-images .image {
     width: 6rem;
     height: 6rem;
     margin: 0 auto;
 }
 
-.file-input-widget.layout-vertical .image {
+.file-input-widget.layout-files .image {
     flex: 0 0 0;
     font-size: 1.1rem;
     line-height: 1;
@@ -120,7 +120,7 @@
     overflow-wrap: break-word;
 }
 
-.file-input-widget.layout-horizontal .name {
+.file-input-widget.layout-images .name {
     position: absolute;
     left: 0;
     right: 0;
@@ -134,7 +134,7 @@
     padding: 0.125rem 0.3125rem;
 }
 
-.file-input-widget.layout-vertical .name {
+.file-input-widget.layout-files .name {
     flex: 1 1 auto;
     margin: 0.3rem 0.5rem;
     pointer-events: none;
@@ -155,18 +155,18 @@
     filter: drop-shadow(-1px -1px 0px #fff);
 }
 
-.file-input-widget.layout-horizontal .del {
+.file-input-widget.layout-images .del {
     display: none;
     position: absolute;
     top: 0;
     right: 0.2rem;
 }
 
-.file-input-widget.layout-horizontal .file:hover .del {
+.file-input-widget.layout-images .file:hover .del {
     display: block;
 }
 
-.file-input-widget.layout-vertical .del {
+.file-input-widget.layout-files .del {
     flex: 0 0 auto;
     padding: 0 0.25em;
 }
@@ -180,20 +180,20 @@
     cursor: pointer;
 }
 
-.file-input-widget.layout-horizontal .add {
+.file-input-widget.layout-images .add {
     justify-content: center;
     align-self: center;
 }
 
-.file-input-widget.layout-horizontal .add .fa {
+.file-input-widget.layout-images .add .fa {
     font-size: 2.5rem;
 }
 
-.file-input-widget.layout-vertical .add .fa {
+.file-input-widget.layout-files .add .fa {
     font-size: 1.5rem;
 }
 
-.file-input-widget.layout-vertical .add:after {
+.file-input-widget.layout-files .add:after {
     content: "Добавить";
     margin-left: 1rem;
 }

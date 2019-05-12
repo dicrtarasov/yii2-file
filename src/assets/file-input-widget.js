@@ -8,7 +8,7 @@
 
     $.fn.fileInputWidget = function (options) {
         options = $.extend({}, {
-            layout: 'horizontal',
+            layout: 'images',
             limit : 0,
             accept : null,
             removeExt: false,
@@ -78,13 +78,13 @@
 
                     // каринка
                     $('<a></a>', { 'class': 'download', href: url, download: file.name }).append(
-                        options.layout == 'horizontal' ?
+                        options.layout == 'images' ?
                             $('<img/>', {'class': 'image', src: file.type.match(/^image/) ? url : null}) :
                             $('<i class="image fa fas fa-download"></i>')
                     ),
 
                     // имя файла
-                    $('<a></a>', { 'class': 'name', href: url, download: file.name, text: file.name }),
+                    options.layout != 'images' ? $('<a></a>', { 'class': 'name', href: url, download: file.name, text: file.name }) : '',
 
                     // кнопка удаления
                     $('<button class="del btn btn-link text-danger" title="Удалить">&times;</button>')
