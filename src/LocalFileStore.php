@@ -119,7 +119,7 @@ class LocalFileStore extends AbstractFileStore
         }
 
         // получаем реальный путь
-        $this->_path = realpath($path);
+        $this->_path = $path === '/' ? $path : realpath($path);
         if ($this->_path === false) {
             throw new StoreException('путь не существует: ' . $path);
         }
