@@ -196,7 +196,7 @@ class FileAttributeBehavior extends Behavior
      * @param bool $refresh
      * @return null|\dicr\file\AbstractFile|\dicr\file\AbstractFile[]
      */
-    public function getFileAttributeValue(string $attribute, bool $refresh = false)
+    public function getFileAttribute(string $attribute, bool $refresh = false)
     {
         if (! isset($this->values[$attribute]) || $refresh) {
             $attributePath = $this->getAttributePath($attribute);
@@ -215,6 +215,7 @@ class FileAttributeBehavior extends Behavior
 
         $value = $this->values[$attribute];
 
+        // если аттрибут имеет скалярный тип, то возвращаем первое значение
         return $this->attributes[$attribute]['limit'] == 1 ? array_shift($value) : $value;
     }
 
@@ -225,7 +226,7 @@ class FileAttributeBehavior extends Behavior
      * @param null|\dicr\file\AbstractFile|\dicr\file\AbstractFile[] $files
      * @return static
      */
-    public function setFileAttributeValue(string $attribute, $files)
+    public function setFileAttribute(string $attribute, $files)
     {
         $this->checkFileAttribute($attribute);
 
@@ -322,17 +323,16 @@ class FileAttributeBehavior extends Behavior
      * Загружает файловые аттрибуты из $_POST и $FILES
      *
      * @param string $formName имя формы модели
-     * @return boolean true если данные были загружены
+     * @return boolean true если данные некоторых атрибутов были загружены
      */
     public function loadFileAttributes(string $formName = null)
     {
-        $ret = true;
+        $ret = false;
+
         foreach (array_keys($this->attributes) as $attribute) {
-            $res = $this->loadFileAttribute($attribute, $formName);
-            if (! $res) {
-                $ret = false;
-            }
+            $ret = $ret || $this->loadFileAttribute($attribute, $formName);
         }
+
         return $ret;
     }
 
@@ -354,19 +354,19 @@ class FileAttributeBehavior extends Behavior
      * Добавляет ошибки модели по addError
      *
      * @param string $attribute
-     * @return bool результаты
+     * @return bool|null результаты проверки или null, если атрибут не инициализирован
      */
     public function validateFileAttribute(string $attribute)
     {
         $this->checkOwner();
         $this->checkFileAttribute($attribute);
 
-        // получаем текущие значения
-        $files = $this->getFileAttributeValue($attribute, false);
-        if (empty($files)) {
-            $files = [];
-        } elseif (!is_array($files)) {
-            $files = [$files];
+        // получаем текущее значение
+        $files = $this->values[$attribute] ?? null;
+
+        // если атрибут не был инициализирован, то пропускаем проверку
+        if (!isset($files)) {
+            return null;
         }
 
         // получаем парамеры атрибута
@@ -419,15 +419,18 @@ class FileAttributeBehavior extends Behavior
      * Проводит валидацию файловых аттрибутов.
      * Добавляет ошибки модели по addError.
      *
-     * @return boolean результат валидации
+     * @return boolean true, если все проверки успешны
      */
     public function validateFileAttributes()
     {
         $ret = true;
+
         foreach (array_keys($this->attributes) as $attribute) {
             $res = $this->validateFileAttribute($attribute);
-            if (! $res) {
-                $ret = false;
+
+            // пропускаем null когда аттрибут не проходил проверку потому что не инициализирован
+            if ($res !== null) {
+                $ret = $ret && $res;
             }
         }
 
@@ -440,7 +443,7 @@ class FileAttributeBehavior extends Behavior
      *
      * @param string $attribute
      * @throws \dicr\file\StoreException
-     * @return bool true если сохранение выполнено
+     * @return bool|null результат сохранения или null, если аттрибут не инициализирован
      */
     public function saveFileAttribute(string $attribute)
     {
@@ -452,12 +455,7 @@ class FileAttributeBehavior extends Behavior
 
         // если новые значения не установлены, то сохранять не нужно
         if (! isset($files)) {
-            return true;
-        } elseif (empty($files)) {
-            $files = [];
-        } elseif (! is_array($files)) {
-            // нельзя (array), так как Mode преобразует в toArray();
-            $files = [$files];
+            return null;
         }
 
         // готовим путь модели
@@ -515,15 +513,18 @@ class FileAttributeBehavior extends Behavior
      * Сохраняет файловые аттрибуты.
      * Выполняет импорт загруженных файлов и удаление старых
      *
-     * @return boolean
+     * @return bool резульаты сохранения
      */
     public function saveFileAttributes()
     {
         $ret = true;
+
         foreach (array_keys($this->attributes) as $attribute) {
             $res = $this->saveFileAttribute($attribute);
-            if (! $res) {
-                $ret = false;
+
+            // пропускаем если атрибут не инициализирован
+            if ($res !== null) {
+                $ret = $ret && $res;
             }
         }
 
@@ -535,7 +536,7 @@ class FileAttributeBehavior extends Behavior
      *
      * @param string $attribute
      * @throws \InvalidArgumentException
-     * @return bool
+     * @return true
      */
     public function deleteFileAttribute(string $attribute)
     {
@@ -545,7 +546,7 @@ class FileAttributeBehavior extends Behavior
         // удаляем рекурсивно
         $this->getAttributePath($attribute)->delete();
 
-        // запоминаем значение
+        // запоминаем новое значение
         $this->values[$attribute] = [];
 
         return true;
@@ -554,25 +555,21 @@ class FileAttributeBehavior extends Behavior
     /**
      * Удаляет все файлы всех аттритутов
      *
-     * @return boolean
+     * @return true
      */
     public function deleteFileAttributes()
     {
-        $ret = true;
         foreach (array_keys($this->attributes) as $attribute) {
-            $res = $this->deleteFileAttribute($attribute);
-            if (! $res) {
-                $ret = false;
-            }
+            $this->deleteFileAttribute($attribute);
         }
 
-        return $ret;
+        return true;
     }
 
     /**
      * Удаляет папку модели
      *
-     * @return \dicr\file\StoreFile
+     * @return \dicr\file\StoreFile путь удаленной директории модели
      */
     public function deleteModelFolder()
     {
@@ -599,7 +596,7 @@ class FileAttributeBehavior extends Behavior
     public function __get($name)
     {
         if ($this->isFileAttribute($name)) {
-            return $this->getFileAttributeValue($name);
+            return $this->getFileAttribute($name);
         }
 
         return parent::__get($name);
@@ -612,7 +609,7 @@ class FileAttributeBehavior extends Behavior
     public function __set($name, $value)
     {
         if ($this->isFileAttribute($name)) {
-            $this->setFileAttributeValue($name, $value);
+            $this->setFileAttribute($name, $value);
         } else {
             parent::__set($name, $value);
         }
