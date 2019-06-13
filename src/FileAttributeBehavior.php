@@ -330,7 +330,7 @@ class FileAttributeBehavior extends Behavior
         $ret = false;
 
         foreach (array_keys($this->attributes) as $attribute) {
-            $ret = $ret || $this->loadFileAttribute($attribute, $formName);
+            $ret = $this->loadFileAttribute($attribute, $formName) || $ret;
         }
 
         return $ret;
