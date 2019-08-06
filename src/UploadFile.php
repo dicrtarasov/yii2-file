@@ -133,7 +133,13 @@ class UploadFile extends AbstractFile
      */
     public function getName(array $options = [])
     {
-        return $this->_name;
+        $name = basename($this->_name);
+
+        if (!empty($options['removeExt'])) {
+            $name = pathinfo($name, PATHINFO_FILENAME);
+        }
+
+        return $name;
     }
 
     /**
