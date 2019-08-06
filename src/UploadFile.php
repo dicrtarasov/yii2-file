@@ -133,7 +133,11 @@ class UploadFile extends AbstractFile
      */
     public function getName(array $options = [])
     {
-        $name = basename($this->_name);
+        if (!isset($this->_name)) {
+            $this->_name = basename($this->_path);
+        }
+
+        $name = $this->_name;
 
         if (!empty($options['removeExt'])) {
             $name = pathinfo($name, PATHINFO_FILENAME);
@@ -150,10 +154,12 @@ class UploadFile extends AbstractFile
      */
     public function setName(string $name)
     {
-        $this->_name = basename($name);
-        if (empty($this->_name)) {
+        $name = basename($name);
+        if (empty($name)) {
             throw new \InvalidArgumentException('name');
         }
+
+        $this->_name = $name;
 
         return $this;
     }
