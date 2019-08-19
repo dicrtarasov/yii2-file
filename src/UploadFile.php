@@ -140,7 +140,10 @@ class UploadFile extends AbstractFile
         $name = $this->_name;
 
         if (!empty($options['removeExt'])) {
+            $locale = setlocale(LC_ALL, '0');
+            setlocale(LC_ALL, 'ru_RU.UTF-8');
             $name = pathinfo($name, PATHINFO_FILENAME);
+            setlocale(LC_ALL, $locale);
         }
 
         return $name;

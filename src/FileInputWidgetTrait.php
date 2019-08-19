@@ -94,9 +94,6 @@ trait FileInputWidgetTrait
         Html::addCssClass($this->options, 'file-input-widget');
         Html::addCssClass($this->options, 'layout-' . $this->layout);
 
-        // регистрируем ассет
-        $this->view->registerAssetBundle(FileInputWidgetAsset::class);
-
         // добавляем опции клиенту
         $this->clientOptions = ArrayHelper::merge([
             'layout' => $this->layout,
@@ -105,9 +102,6 @@ trait FileInputWidgetTrait
             'removeExt' => $this->removeExt,
             'inputName' => $this->inputName
         ], $this->clientOptions);
-
-        // регистрируем плагин
-        $this->registerPlugin('fileInputWidget');
     }
 
     /**
@@ -240,6 +234,12 @@ trait FileInputWidgetTrait
      */
     public function run()
     {
+        // регистрируем ассет
+        $this->view->registerAssetBundle(FileInputWidgetAsset::class);
+
+        // регистрируем плагин
+        $this->registerPlugin('fileInputWidget');
+
         return Html::tag('div',
             // для того чтобы имя аттрибута было в $_POST[formName][attribute] как делает Yii
             // если дальше отсутствуют input с таким же именем которые перезапишут это поле
