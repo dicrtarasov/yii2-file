@@ -336,7 +336,7 @@ class Thumbnailer extends Component
      * @throws StoreException
      * @return \dicr\file\ThumbFile
      */
-    public function thumbnail(AbstractFile $origFile, array $options = [])
+    public function process(AbstractFile $origFile, array $options = [])
     {
         if (empty($origFile)) {
             throw new \InvalidArgumentException('origFile');

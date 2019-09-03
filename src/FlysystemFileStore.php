@@ -59,17 +59,18 @@ class FlysystemFileStore extends AbstractFileStore
     /**
      * {@inheritdoc}
      * @see \dicr\file\AbstractFileStore::absolutePath()
+     * @throws \yii\base\NotSupportedException
      */
     public function absolutePath($path)
     {
         $path = $this->normalizePath($path);
 
         $adapter = $this->adapter;
-        if (isset($adapter) && is_callable([$adapter,'applyPathPrefix'])) {
+        if (isset($adapter) && is_callable([$adapter, 'applyPathPrefix'])) {
             return $adapter->applyPathPrefix($path);
         }
 
-        throw new StoreException($path, new NotSupportedException());
+        throw new NotSupportedException('адаптер не поддерживает метод applyPathPrefix');
     }
 
     /**
@@ -78,11 +79,11 @@ class FlysystemFileStore extends AbstractFileStore
      */
     public function list($path, array $options = [])
     {
-        if (! $this->exists($path)) {
-            throw new StoreException('not exists: ' . $path);
-        }
-
         $path = $this->normalizePath($path);
+
+        if (! $this->exists($path)) {
+            return [];
+        }
 
         try {
             $items = $this->flysystem->listContents($path, $options['recursive'] ?? false);
@@ -95,11 +96,13 @@ class FlysystemFileStore extends AbstractFileStore
             // создаем файл
             $file = $this->file($item['path']);
 
+            // фильтруем
             if ($this->fileMatchFilter($file, $options)) {
                 $files[] = $file;
             }
         }
 
+        // сортируем
         usort($files, function ($a, $b) {
             return $a->path <=> $b->path;
         });
@@ -135,10 +138,6 @@ class FlysystemFileStore extends AbstractFileStore
     {
         $path = $this->normalizePath($path);
 
-        if (! $this->exists($path)) {
-            throw new StoreException('not exists: ' . $path);
-        }
-
         try {
             $ret = $this->flysystem->getMetadata($path);
         } catch (\Throwable $ex) {
@@ -150,7 +149,7 @@ class FlysystemFileStore extends AbstractFileStore
         }
 
         if (empty($ret)) {
-            throw new StoreException($path);
+            throw new StoreException('Ошибка получения типа файла: ' . $path);
         }
 
         return $ret;
@@ -201,7 +200,7 @@ class FlysystemFileStore extends AbstractFileStore
      */
     public function setPublic($path, bool $public)
     {
-        $path = $this->guardRootPath($path);
+        $path = $this->normalizePath($path);
         $visibility = self::access2visibility($public);
 
         try {
@@ -213,6 +212,8 @@ class FlysystemFileStore extends AbstractFileStore
         if ($ret === false) {
             throw new StoreException($path);
         }
+
+        $this->clearStatCache($path);
 
         return $this;
     }
@@ -226,9 +227,6 @@ class FlysystemFileStore extends AbstractFileStore
         $path = $this->normalizePath($path);
 
         try {
-            // FIXME clear stat cache for local filesystem
-            clearstatcache(null, $this->absolutePath($path));
-
             $ret = $this->flysystem->getSize($path);
         } catch (\Throwable $ex) {
             throw new StoreException($path, $ex);
@@ -325,6 +323,8 @@ class FlysystemFileStore extends AbstractFileStore
         // глючный flysystem возвращает bool вместо size, поэтому костыль
         $ret = strlen($contents);
 
+        $this->clearStatCache($path);
+
         return $ret;
     }
 
@@ -367,33 +367,9 @@ class FlysystemFileStore extends AbstractFileStore
             throw new StoreException($path);
         }
 
+        $this->clearStatCache($path);
+
         return 1;
-    }
-
-    /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::move()
-     */
-    public function move($path, $newpath)
-    {
-        $path = $this->guardRootPath($path);
-        $newpath = $this->guardRootPath($newpath);
-
-        if ($path === $newpath) {
-            throw new \LogicException('equal path: ' . $path);
-        }
-
-        try {
-            $ret = $this->flysystem->rename($path, $newpath);
-        } catch (\Throwable $ex) {
-            throw new StoreException($path, $ex);
-        }
-
-        if ($ret === false) {
-            throw new StoreException($path);
-        }
-
-        return $this;
     }
 
     /**
@@ -402,11 +378,11 @@ class FlysystemFileStore extends AbstractFileStore
      */
     public function copy($path, $newpath)
     {
-        $path = $this->guardRootPath($path);
-        $newpath = $this->guardRootPath($newpath);
+        $path = $this->normalizePath($path);
+        $newpath = $this->normalizePath($newpath);
 
         if ($path === $newpath) {
-            throw new \LogicException('equal path: ' . $path);
+            throw new StoreException('Копирование файла в себя: ' . $this->absolutePath($path));
         }
 
         try {
@@ -419,6 +395,36 @@ class FlysystemFileStore extends AbstractFileStore
             throw new StoreException($path);
         }
 
+        $this->clearStatCache($newpath);
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\AbstractFileStore::rename()
+     */
+    public function rename($path, $newpath)
+    {
+        $path = $this->normalizePath($path);
+        $newpath = $this->normalizePath($newpath);
+
+        if ($path === $newpath) {
+            return $this;
+        }
+
+        try {
+            $ret = $this->flysystem->rename($path, $newpath);
+        } catch (\Throwable $ex) {
+            throw new StoreException($path, $ex);
+        }
+
+        if ($ret === false) {
+            throw new StoreException($path);
+        }
+
+        $this->clearStatCache($path);
+
         return $this;
     }
 
@@ -428,7 +434,7 @@ class FlysystemFileStore extends AbstractFileStore
      */
     public function mkdir($path)
     {
-        $path = $this->guardRootPath($path);
+        $path = $this->normalizePath($path);
 
         try {
             $ret = $this->flysystem->createDir($path);
@@ -449,6 +455,8 @@ class FlysystemFileStore extends AbstractFileStore
      */
     protected function unlink($path)
     {
+        $path = $this->normalizePath($this->filterRootPath($path));
+
         try {
             $ret = $this->flysystem->delete($path);
         } catch (\Throwable $ex) {
@@ -459,6 +467,8 @@ class FlysystemFileStore extends AbstractFileStore
             throw new StoreException($path);
         }
 
+        $this->clearStatCache($path);
+
         return $this;
     }
 
@@ -468,6 +478,8 @@ class FlysystemFileStore extends AbstractFileStore
      */
     protected function rmdir($path)
     {
+        $path = $this->normalizePath($this->filterRootPath($path));
+
         try {
             $ret = $this->flysystem->deleteDir($path);
         } catch (\Throwable $ex) {
@@ -477,6 +489,8 @@ class FlysystemFileStore extends AbstractFileStore
         if ($ret === false) {
             throw new StoreException($path);
         }
+
+        $this->clearStatCache($path);
 
         return $this;
     }

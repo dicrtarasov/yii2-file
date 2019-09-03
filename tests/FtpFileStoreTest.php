@@ -14,18 +14,16 @@ class FtpFileStoreTest extends AbstractFileStoreTest
     /**
      * {@inheritdoc}
      */
-    public function setUp()
+    public static function setUpBeforeClass()
     {
-        $remote = require(__DIR__.'/conf.remote.php');
+        parent::setUpBeforeClass();
 
-        $this->config['components']['fileStore'] = [
+        \Yii::$app->set(self::STORE_ID, [
             'class' => FtpFileStore::class,
-            'host' => $remote['host'],
-            'username' => $remote['login'],
-            'password' => $remote['passwd'],
-            'path' => $remote['path'] ?? '/'
-        ];
-
-        parent::setUp();
+            'host' => REMOTE_FILE_HOST,
+            'username' => REMOTE_FILE_LOGIN,
+            'password' => REMOTE_FILE_PASS,
+            'path' => REMOTE_FILE_PATH
+        ]);
     }
 }

@@ -10,19 +10,22 @@ use dicr\file\FlysystemFileStore;
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
  */
-class FlysystemStoreTest extends AbstractFileStoreTest
+class FlysystemFileStoreTest extends AbstractFileStoreTest
 {
-    public function setUp()
+    /**
+     * {@inheritdoc}
+     */
+    public static function setUpBeforeClass()
     {
-        $this->config['components']['fileStore'] = [
+        parent::setUpBeforeClass();
+
+        \Yii::$app->set(self::STORE_ID, [
             'class' => FlysystemFileStore::class,
             'flysystem' => function(FlysystemFileStore $fileStore) {
                 $adapter = new Local(__DIR__.'/files', LOCK_EX, Local::SKIP_LINKS);
 
                 return new \League\Flysystem\Filesystem($adapter);
             }
-        ];
-
-        parent::setUp();
+        ]);
     }
 }

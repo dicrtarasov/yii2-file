@@ -11,20 +11,19 @@ use yii\base\Exception;
  */
 class StoreException extends Exception
 {
-
     /**
      * Конструктор
      *
      * @param string|null $msg
-     *            если не задано, то берется из error_get_last
+     *     если не задано, то берется из error_get_last
      * @param \Throwable $prev
      */
     public function __construct(string $msg = '', \Throwable $prev = null)
     {
         if ($msg == '') {
-            $error = error_get_last();
-            error_clear_last();
-            $msg = $error['message'];
+            $error = @error_get_last();
+            @error_clear_last();
+            $msg = $error['message'] ?? 'Неопределенная ошибка';
         }
 
         parent::__construct($msg, 0, $prev);

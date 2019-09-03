@@ -279,9 +279,9 @@ class UploadFile extends AbstractFile
      * @throws StoreException
      * @return static
      */
-    public function move($path)
+    public function rename($path)
     {
-        LocalFileStore::root()->move($this->_path, $path);
+        LocalFileStore::root()->rename($this->_path, $path);
 
         return $this;
     }

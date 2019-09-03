@@ -27,7 +27,7 @@ abstract class AbstractFile extends BaseObject
     /**
      * Конструктор
      *
-     * @param string|array $path путь файла
+     * @param string|string[] $path путь файла
      * @param array $config
      */
     public function __construct($path, array $config = [])
@@ -49,14 +49,15 @@ abstract class AbstractFile extends BaseObject
     }
 
     /**
-     * Нормализация пути
-     * @param string|array $path
+     * Нормализация пути.
+     *
+     * @param string|string[] $path
      * @return string
      */
-    abstract public function normalizePath($path);
+    abstract protected function normalizePath($path);
 
     /**
-     * Возвращает имя файла
+     * Возвращает имя файла.
      *
      * @param array $options
      * - removePrefix - удаляет служебный префикс позиции файла, если имеется
@@ -67,7 +68,7 @@ abstract class AbstractFile extends BaseObject
     abstract public function getName(array $options = []);
 
     /**
-     * Возвращает флаг существования файла
+     * Возвращает флаг существования файла.
      *
      * @throws StoreException
      * @return bool
@@ -75,7 +76,7 @@ abstract class AbstractFile extends BaseObject
     abstract public function getExists();
 
     /**
-     * Возвращает признак директории
+     * Возвращает признак директории.
      *
      * @throws StoreException
      * @return boolean
@@ -83,7 +84,7 @@ abstract class AbstractFile extends BaseObject
     abstract public function getIsDir();
 
     /**
-     * Возвращает признак файла
+     * Возвращает признак файла.
      *
      * @throws StoreException
      * @return boolean
@@ -91,7 +92,7 @@ abstract class AbstractFile extends BaseObject
     abstract public function getIsFile();
 
     /**
-     * Возвращает размер
+     * Возвращает размер.
      *
      * @throws \dicr\file\StoreException
      * @return int размер в байтах
@@ -99,7 +100,7 @@ abstract class AbstractFile extends BaseObject
     abstract public function getSize();
 
     /**
-     * Возвращает время изменения файла
+     * Возвращает время изменения файла.
      *
      * @throws StoreException
      * @return int timestamp
@@ -107,7 +108,7 @@ abstract class AbstractFile extends BaseObject
     abstract public function getMtime();
 
     /**
-     * Возвращает Mime-ип файла
+     * Возвращает Mime-ип файла.
      *
      * @throws StoreException
      * @return string
@@ -115,7 +116,7 @@ abstract class AbstractFile extends BaseObject
     abstract public function getMimeType();
 
     /**
-     * Возвращает содержимое файла
+     * Возвращает содержимое файла.
      *
      * @throws \dicr\file\StoreException
      * @return string
@@ -123,7 +124,7 @@ abstract class AbstractFile extends BaseObject
     abstract public function getContents();
 
     /**
-     * Возвращает контент в виде потока
+     * Возвращает контент в виде потока.
      *
      * @throws StoreException
      * @return resource
@@ -131,7 +132,7 @@ abstract class AbstractFile extends BaseObject
     abstract public function getStream();
 
     /**
-     * Конвертирует в строку
+     * Конвертирует в строку.
      *
      * @return string path
      */

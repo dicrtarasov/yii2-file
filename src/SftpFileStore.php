@@ -85,6 +85,18 @@ class SftpFileStore extends LocalFileStore
     }
 
     /**
+     * {@inheritDoc}
+     *
+     * Переопределяем родительский метод для отмены проверок пути.
+     *
+     * @see \dicr\file\LocalFileStore::setPath()
+     */
+    public function setPath(string $path)
+    {
+        $this->_path = '/' . $this->normalizePath($path);
+    }
+
+    /**
      * Возвращает относительный путь
      *
      * @param string|array $path
@@ -110,9 +122,11 @@ class SftpFileStore extends LocalFileStore
      */
     public function list($path, array $filter = [])
     {
-        $dir = @opendir($this->absolutePath($path), $this->context);
-        if (empty($dir)) {
-            throw new StoreException('');
+        $absPath = $this->absolutePath($path);
+
+        $dir = @opendir($absPath, $this->context);
+        if ($dir === false) {
+            $this->throwLastError('Чтение каталога', $absPath);
         }
 
         $files = [];
@@ -150,40 +164,48 @@ class SftpFileStore extends LocalFileStore
      */
     public function setPublic($path, bool $public)
     {
+        $path = $this->filterRootPath($path);
+        $absPath = $this->absolutePath($path);
+
         if (! $this->exists($path)) {
-            throw new StoreException('not exists: ' . $this->guardRootPath($path));
+            throw new StoreException('not exists: ' . $absPath);
         }
 
         $perms = $this->permsByPublic($this->isDir($path), $public);
         $relativePath = $this->relativePath($path);
 
         if (! @ssh2_sftp_chmod($this->sftp, $relativePath, $perms)) {
-            throw new StoreException('шибка установки прав: ' . $relativePath, StoreException(''));
+            $this->throwLastError('Установка прав на файл', $absPath);
         }
 
-        clearstatcache(null, $this->absolutePath($path));
+        $this->clearStatCache($path);
 
         return $this;
     }
 
     /**
      * {@inheritdoc}
-     * @see \dicr\file\LocalFileStore::move()
+     * @see \dicr\file\LocalFileStore::rename()
      */
-    public function move($path, $newpath)
+    public function rename($path, $newpath)
     {
-        $path = $this->guardRootPath($path);
-        $newpath = $this->guardRootPath($newpath);
+        $path = $this->filterRootPath($path);
+        $newpath = $this->filterRootPath($newpath);
 
-        if ($path === $newpath) {
-            throw new \LogicException('path == newpath');
+        $relPath = $this->relativePath($path);
+        $relNew = $this->relativePath($newpath);
+
+        if ($relPath === $relNew) {
+            return $this;
         }
 
         $this->checkDir($this->dirname($newpath));
 
-        if (! @ssh2_sftp_rename($this->sftp, $this->relativePath($path), $this->relativePath($newpath))) {
-            throw new StoreException('');
+        if (! @ssh2_sftp_rename($this->sftp, $relPath, $relNew)) {
+            $this->throwLastError('переименование файла', $this->absolutePath($newpath));
         }
+
+        $this->clearStatCache($path);
 
         return $this;
     }
@@ -194,7 +216,7 @@ class SftpFileStore extends LocalFileStore
      */
     public function mkdir($path)
     {
-        $path = $this->guardRootPath($path);
+        $path = $this->filterRootPath($path);
 
         if ($this->exists($path)) {
             throw new StoreException('уже существует: ' . $path);
@@ -203,7 +225,7 @@ class SftpFileStore extends LocalFileStore
         $perms = $this->permsByPublic(true, $this->public);
 
         if (! @ssh2_sftp_mkdir($this->sftp, $this->relativePath($path), $perms, true)) {
-            throw new StoreException('');
+            $this->throwLastError('Создание директории', $this->absolutePath($path));
         }
 
         return $this;
@@ -215,11 +237,13 @@ class SftpFileStore extends LocalFileStore
      */
     protected function unlink($path)
     {
-        $this->guardRootPath($path);
+        $this->filterRootPath($path);
 
         if (! @ssh2_sftp_unlink($this->sftp, $this->relativePath($path))) {
-            throw new StoreException('');
+            $this->throwLastError('Удаление файла', $this->absolutePath($path));
         }
+
+        $this->clearStatCache($path);
 
         return $this;
     }
@@ -230,11 +254,13 @@ class SftpFileStore extends LocalFileStore
      */
     protected function rmdir($path)
     {
-        $this->guardRootPath($path);
+        $this->filterRootPath($path);
 
         if (! @ssh2_sftp_rmdir($this->sftp, $this->relativePath($path))) {
-            throw new StoreException('');
+            $this->throwLastError('Удаление директории', $this->absolutePath($path));
         }
+
+        $this->clearStatCache($path);
 
         return $this;
     }

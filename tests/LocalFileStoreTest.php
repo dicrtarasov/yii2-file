@@ -14,19 +14,21 @@ class LocalFileStoreTest extends AbstractFileStoreTest
     /**
      * {@inheritdoc}
      */
-    public function setUp()
+    public static function setUpBeforeClass()
     {
-        $this->config['components']['fileStore'] = [
-            'class' => LocalFileStore::class,
-            'path' => __DIR__.'/files'
-        ];
+        parent::setUpBeforeClass();
 
-        parent::setUp();
+        \Yii::$app->set(self::STORE_ID, [
+            'class' => LocalFileStore::class,
+            'path' => __DIR__ . '/files'
+        ]);
     }
 
     public function testAbsolutePath()
     {
-        self::assertEquals(__DIR__ . '/files/test', $this->store->file('test')->absolutePath);
+        $store = static::store();
+
+        self::assertEquals(__DIR__ . '/files/test', $store->file('test')->absolutePath);
         self::assertEquals('/test/file', LocalFileStore::root()->file('test/file')->absolutePath);
     }
 }

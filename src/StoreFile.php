@@ -1,12 +1,15 @@
 <?php
 namespace dicr\file;
 
+use yii\base\NotSupportedException;
+
 /**
- * Файл хранилища файлов
+ * Файл хранилища файлов.
+ * Все операции выполняются через перенаправления к AbstractStore.
  *
  * @property-read \dicr\file\AbstractFileStore $store хранилище
  * @property string $path относительный путь (rw)
- * @property StoreFile|null $parent родительский каталог (dirname)
+ * @property \dicr\file\StoreFile|null $parent родительский каталог (dirname)
  * @property string $name имя файла (basename)
  * @property-read string $absolutePath абсолютный путь
  * @property-read string|null $url абсолютный URL
@@ -24,8 +27,11 @@ class StoreFile extends AbstractFile
     /** @var \dicr\file\AbstractFileStore */
     private $_store;
 
-    /** @var string фбсолютный путь */
+    /** @var string кэш абсолютного пути */
     private $_absolutePath;
+
+    /** @var string кэш абсолютного URL */
+    private $_absoluteUrl;
 
     /**
      * Конструктор
@@ -72,25 +78,24 @@ class StoreFile extends AbstractFile
      * {@inheritDoc}
      * @see \dicr\file\AbstractFile::normalizePath()
      */
-    public function normalizePath($path)
+    protected function normalizePath($path)
     {
-        return $this->store->normalizePath($path);
+        return $this->_store->normalizePath($path);
     }
 
     /**
-     * Устанавливает путь
+     * Устанавливает путь.
      *
-     * @param string|array $path new path
+     * @param string|string[] $path new path
      * @throws \dicr\file\StoreException
-     * @return static
+     * @return $this
      */
     public function setPath($path)
     {
-        $this->checkRootAccess();
-
-        if ($path != $this->_path) {
-            $this->store->move($this->_path, $path);
-            $this->_path = $path;
+        $strPath = $this->_store->buildPath($path);
+        if ($this->_path !== $strPath) {
+            $this->_store->rename($this->_path, $path);
+            $this->_path = $strPath;
             $this->_absolutePath = null;
         }
 
@@ -98,13 +103,13 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * Возвращает родительскую директорию
+     * Возвращает родительскую директорию.
      *
      * @return static|null
      */
     public function getParent()
     {
-        if ($this->path == '') {
+        if ($this->_path == '') {
             return null;
         }
 
@@ -114,52 +119,56 @@ class StoreFile extends AbstractFile
     /**
      * Перемещает в другую лиректорию или хранилище.
      *
-     * @param StoreFile $parent
-     * @throws StoreException
-     * @return static (если родительский store такой же, то себя, иначе новый экземпляр из родительского store)
+     * @param \dicr\file\StoreFile $parent
+     * @throws \dicr\file\StoreException
+     * @return $this файл в новом хранилище
      */
     public function setParent(StoreFile $parent)
     {
-        $this->checkRootAccess();
-
         if (empty($parent)) {
             throw new \InvalidArgumentException('parent');
         }
 
+        $this->checkRootAccess();
+
         // если в том же хранилище, то просто переименовываем в другую директорию и возвращаем себя
-        if ($parent->store === $this->store) {
+        if ($parent->_store === $this->_store) {
 
             // устанавливаем новый путь
-            $this->path = $this->store->childname($parent->path, $this->name);
+            $this->setPath($this->store->childname($parent->path, $this->name));
 
             // возвращаем себя
             return $this;
         }
 
-        // если store другой, то перемещение директорий не поддерживаем
+        // @TODO если store другой, то перемещение директорий не поддерживаем из-за вложенных файлов
         if (! $this->isFile) {
-            throw new StoreException('перемещение директори в другое хранилище');
+            throw new NotSupportedException('Перемещение каталога с файлами в другое хранилище пока не поддерживается');
         }
 
-        // путь в новом хранилище
-        $newpath = $parent->store->childname($parent->store->dirname($parent->path), $this->store->basename($this->path));
+        // файл в новом хранилище
+        $newFile = $parent->store->file(
+            $parent->store->childname(
+                $parent->store->dirname($parent->path),
+                $this->store->basename($this->path)
+            )
+        );
 
         // копируем в новое хранилище
-        $parent->store->writeContents($newpath, $this->contents);
+        $newFile->stream = $this->stream;
 
         // удаляем в текущем хранилище
         $this->delete();
 
-        // если у нового хранилища такой же тип файлов, то просто меняем хранилище и возвращаем себя
-        if (get_class($this) == get_class($parent)) {
-            $this->_store = $parent->store;
-            $this->_path = $newpath;
-            $this->_absolutePath = null;
-            return $this;
-        }
+        // копируем параметры удаленного файла себе
+        $this->_store = $newFile->_store;
+        $this->_path = $newFile->_path;
 
-        // создаем и возвращаем новый файл из родительского хранилища
-        return $parent->store->file($newpath);
+        // сбрасываем кэшируемые значения
+        $this->_absolutePath = null;
+
+        // возвращаем себя как новый файл
+        return $this;
     }
 
     /**
@@ -168,8 +177,6 @@ class StoreFile extends AbstractFile
      */
     public function getName(array $options = [])
     {
-        $this->checkRootAccess();
-
         $name = $this->store->basename($this->path);
 
         if (!empty($options['removePrefix'])) {
@@ -190,12 +197,10 @@ class StoreFile extends AbstractFile
      * Переименовывает файл, в том же каталоге
      *
      * @param string $name новое имя
-     * @return static
+     * @return $this
      */
     public function setName(string $name)
     {
-        $this->checkRootAccess();
-
         // получаем новое имя файла
         $name = $this->store->basename($name);
         if ($name == '') {
@@ -203,21 +208,19 @@ class StoreFile extends AbstractFile
         }
 
         // переименовываем
-        $this->path = $this->store->childname($this->store->dirname($this->path), $name);
+        $this->setPath($this->store->childname($this->store->dirname($this->path), $name));
 
         return $this;
     }
 
     /**
-     * Возвращает абсолютный путь
+     * Возвращает абсолютный путь.
      *
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      * @return string
      */
     public function getAbsolutePath()
     {
-        $this->checkRootAccess();
-
         if (! isset($this->_absolutePath)) {
             $this->_absolutePath = $this->store->absolutePath($this->path);
         }
@@ -226,31 +229,27 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * Возвращает url
+     * Возвращает url.
      *
      * @return string|null
      */
     public function getUrl()
     {
-        $this->checkRootAccess();
+        if (!isset($this->_absoluteUrl)) {
+            $this->_absoluteUrl = $this->store->url($this->path);
+        }
 
-        return $this->store->url($this->path);
+        return $this->_absoluteUrl;
     }
 
     /**
-     * Возвращает дочерний файл с путем относительно данной директории
+     * Возвращает дочерний файл с путем относительно данной директории.
      *
-     * @param string|array $path
+     * @param string|string[] $path
      * @return static
      */
     public function child($path)
     {
-        $path = $this->normalizePath($path);
-
-        if ($path == '') {
-            throw new \InvalidArgumentException('path');
-        }
-
         return $this->store->file($this->store->childname($this->path, $path));
     }
 
@@ -265,7 +264,7 @@ class StoreFile extends AbstractFile
      * - bool|null $hidden - true - скрытые файлы, false - открытые
      * - string|null $regex - регулярная маска имени
      * - callable|null $filter function(StoreFile $file) : bool филььтр элементов
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      * @return static[]
      */
     // @formatter:on
@@ -280,8 +279,6 @@ class StoreFile extends AbstractFile
      */
     public function getExists()
     {
-        $this->checkRootAccess();
-
         return $this->store->exists($this->path);
     }
 
@@ -306,26 +303,22 @@ class StoreFile extends AbstractFile
     /**
      * Возвращает флаг скрытого файла
      *
-     * @throw new StoreException если не существует
-     * @return boolean
+     * @throw \dicr\file\StoreException если не существует
+     * @return bool
      */
     public function getHidden()
     {
-        $this->checkRootAccess();
-
         return $this->store->isHidden($this->path);
     }
 
     /**
      * Возвращает флаг публичного доступа
      *
-     * @throws StoreException не существует
-     * @return boolean
+     * @throws \dicr\file\StoreException не существует
+     * @return bool
      */
     public function getPublic()
     {
-        $this->checkRootAccess();
-
         return $this->store->isPublic($this->path);
     }
 
@@ -333,13 +326,11 @@ class StoreFile extends AbstractFile
      * Устанавливает флаг публичного доступа
      *
      * @param bool $public
-     * @throws StoreException не существует
-     * @return static
+     * @throws \dicr\file\StoreException не существует
+     * @return $this
      */
     public function setPublic(bool $public)
     {
-        $this->checkRootAccess();
-
         $this->store->setPublic($this->path, $public);
 
         return $this;
@@ -351,8 +342,6 @@ class StoreFile extends AbstractFile
      */
     public function getSize()
     {
-        $this->checkRootAccess();
-
         return $this->store->size($this->path);
     }
 
@@ -362,8 +351,6 @@ class StoreFile extends AbstractFile
      */
     public function getMtime()
     {
-        $this->checkRootAccess();
-
         return $this->store->mtime($this->_path);
     }
 
@@ -373,8 +360,6 @@ class StoreFile extends AbstractFile
      */
     public function getMimeType()
     {
-        $this->checkRootAccess();
-
         return $this->store->mimeType($this->path);
     }
 
@@ -384,8 +369,6 @@ class StoreFile extends AbstractFile
      */
     public function getContents()
     {
-        $this->checkRootAccess();
-
         return $this->store->readContents($this->path);
     }
 
@@ -393,12 +376,10 @@ class StoreFile extends AbstractFile
      * Записывает содержимое файла из строки
      *
      * @param string $contents
-     * @return static
+     * @return $this
      */
     public function setContents(string $contents)
     {
-        $this->checkRootAccess();
-
         $this->store->writeContents($this->path, $contents);
 
         return $this;
@@ -410,8 +391,6 @@ class StoreFile extends AbstractFile
      */
     public function getStream()
     {
-        $this->checkRootAccess();
-
         return $this->store->readStream($this->path);
     }
 
@@ -419,7 +398,8 @@ class StoreFile extends AbstractFile
      * Сохраняет содержимое файла из потока
      *
      * @param resource $stream
-     * @return static
+     * @throws \dicr\file\StoreException
+     * @return $this
      */
     public function setStream($stream)
     {
@@ -427,60 +407,46 @@ class StoreFile extends AbstractFile
             throw new \InvalidArgumentException('stream');
         }
 
-        $this->checkRootAccess();
-
         $this->store->writeStream($this->path, $stream);
 
         return $this;
     }
 
     /**
-     * Копирует файл
+     * Копирует файл.
      *
-     * @param string|array $newpath новый путь
-     * @throws StoreException
-     * @return self новый файл
+     * @param string|string[] $newpath новый путь
+     * @throws \dicr\file\StoreException
+     * @return static новый файл
      */
     public function copy($path)
     {
-        $this->checkRootAccess();
-
-        $path = $this->normalizePath($path);
-
-        if ($path == '') {
-            throw new \InvalidArgumentException('path');
-        }
-
         $this->store->copy($this->path, $path);
 
         return $this->store->file($path);
     }
 
     /**
-     * Создает директорию
+     * Создает директорию.
      *
-     * @throws StoreException
-     * @return self
+     * @throws \dicr\file\StoreException
+     * @return $this
      */
     public function mkdir()
     {
-        $this->checkRootAccess();
-
         $this->store->mkdir($this->path);
 
         return $this;
     }
 
     /**
-     * Проверяет создает родительскую директорию
+     * Проверяет создает родительскую директорию.
      *
-     * @throws StoreException
-     * @return self
+     * @throws \dicr\file\StoreException
+     * @return $this
      */
     public function checkDir()
     {
-        $this->checkRootAccess();
-
         $this->store->checkDir($this->store->dirname($this->path));
 
         return $this;
@@ -489,69 +455,26 @@ class StoreFile extends AbstractFile
     /**
      * Импорт файла в хранилище
      *
-     * @param string $src абсолютны путь импортируемого файла
+     * @param string|string[]|\dicr\file\AbstractFile $src импорируемый файл
      * @param array $options опции
-     *        - bool $ifModified - импортировать файл только если время новее или размер отличается (по-умолчанию true)
+     *  - bool $ifModified - импортировать файл только если время новее или размер отличается (по-умолчанию true)
      * @throws \dicr\file\StoreException
-     * @return static
-     * @todo move to AbstractStore
+     * @return $this
+     * @see AbstractFileStore::import()
      */
-    public function import(string $src, array $options = [])
+    public function import($src, array $options = [])
     {
-        $this->checkRootAccess();
-
-        if (! $this->isFile) {
-            throw new StoreException('импорт в директорию: ' . $this->path);
-        }
-
-        // проверяем аргументы
-        if (empty($src)) {
-            throw new \InvalidArgumentException('src');
-        }
-
-        if (! @file_exists($src)) {
-            throw new StoreException('файл не существует: ' . $src);
-        }
-
-        if (! @is_file($src)) {
-            throw new StoreException('не является файлом: ' . $src);
-        }
-
-        // пропускаем старые файлы
-        try {
-            if (! empty($options['ifModified'] ?? 1) && $this->exists && @filesize($src) === $this->size &&
-                @filemtime($src) <= $this->mtime) {
-                return $this;
-            }
-        } catch (\Throwable $ex) {
-            // для удаленых файлов исключения означают неподдерживаемую функцию
-            if (stream_is_local($this->absolutePath)) {
-                throw new StoreException($this->path, $ex);
-            }
-        }
-
-        // получаем содержимое
-        $contents = @file_get_contents($src);
-        if ($contents === false) {
-            throw new StoreException('');
-        }
-
-        // записываем в текущий файл
-        $this->contents = $contents;
-
-        return $this;
+        $this->_store->import($src, $this->_path, $options);
     }
 
     /**
      * Удаляет файл
      *
      * @throws \dicr\file\StoreException
-     * @return static
+     * @return $this
      */
     public function delete()
     {
-        $this->checkRootAccess();
-
         $this->store->delete($this->path);
 
         return $this;
@@ -564,11 +487,15 @@ class StoreFile extends AbstractFile
      * @return \dicr\file\ThumbFile
      * @throws \dicr\file\StoreException
      * @throws \yii\base\NotSupportedException
-     * @see Thumbnailer#thumbnail
+     * @see \dicr\file\Thumbnailer::process()
      */
     public function thumb(array $options=[])
     {
-        return $this->store->thumb($this->path, $options);
+        if (empty($this->store->thumbnailer)) {
+            throw new NotSupportedException('thumbnailer не настроен');
+        }
+
+        return $this->store->thumbnailer->process($this, $options);
     }
 
     /**

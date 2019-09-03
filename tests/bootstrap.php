@@ -13,4 +13,5 @@ require_once(VENDOR . '/yiisoft/yii2/Yii.php');
 \Yii::setAlias('@dicr/tests', __DIR__);
 \Yii::setAlias('@dicr/file', dirname(__DIR__) . '/src');
 
+require(__DIR__ . '/config.remote.php');
 

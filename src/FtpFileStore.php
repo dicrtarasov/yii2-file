@@ -4,7 +4,9 @@ namespace dicr\file;
 use yii\base\InvalidConfigException;
 
 /**
- * Файловая система FTP
+ * Файловая система FTP.
+ *
+ * Жуткая, медленная и не все операции поддерживает.
  *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
@@ -72,6 +74,18 @@ class FtpFileStore extends LocalFileStore
     }
 
     /**
+     * {@inheritDoc}
+     *
+     * Переопределяем родительский метод для отмены проверок пути.
+     *
+     * @see \dicr\file\LocalFileStore::setPath()
+     */
+    public function setPath(string $path)
+    {
+        $this->_path = '/' . $this->normalizePath($path);
+    }
+
+    /**
      * Возвращает относительный путь
      *
      * @param string|array $path
@@ -97,14 +111,16 @@ class FtpFileStore extends LocalFileStore
      */
     public function list($path, array $filter = [])
     {
+        $path = $this->filterPath($path);
+
         // для FTP нужно проверять существование директории, иначе всегда возвращает пустой список
         if (!$this->exists($path) || !$this->isDir($path)) {
             throw new StoreException('not a directory: ' . $this->normalizePath($path));
         }
 
         $dir = @opendir($this->absolutePath($path), $this->context);
-        if (empty($dir)) {
-            throw new StoreException('');
+        if ($dir === false) {
+            $this->throwLastError('Чтение каталога', $this->absolutePath($path));
         }
 
         $files = [];
@@ -142,14 +158,14 @@ class FtpFileStore extends LocalFileStore
      */
     public function setPublic($path, bool $public)
     {
+        $path = $this->filterRootPath($path);
         $perms = $this->permsByPublic($this->isDir($path), $public);
-        $relativePath = $this->relativePath($path);
 
-        if (! @ftp_chmod($this->connection, $perms, $relativePath)) {
-            throw new StoreException('шибка установки прав: ' . $relativePath, StoreException(''));
+        if (! @ftp_chmod($this->connection, $perms, $this->relativePath($path))) {
+            $this->throwLastError('Установка прав доступа', $this->absolutePath($path));
         }
 
-        clearstatcache(null, $this->absolutePath($path));
+        $this->clearStatCache($path);
 
         return $this;
     }
@@ -162,7 +178,7 @@ class FtpFileStore extends LocalFileStore
     {
         $size = @ftp_size($this->connection, $this->relativePath($path));
         if ($size < 0) {
-            throw new StoreException('');
+            $this->throwLastError('ПОлучение размера файла', $this->absolutePath($path));
         }
 
         return $size;
@@ -176,7 +192,7 @@ class FtpFileStore extends LocalFileStore
     {
         $time = @ftp_mdtm($this->connection, $this->relativePath($path));
         if ($time < 0) {
-            throw new StoreException('');
+            $this->throwLastError('Получения времени модификации файла', $this->absolutePath($path));
         }
 
         return $time;
@@ -184,22 +200,27 @@ class FtpFileStore extends LocalFileStore
 
     /**
      * {@inheritdoc}
-     * @see \dicr\file\LocalFileStore::move()
+     * @see \dicr\file\LocalFileStore::rename()
      */
-    public function move($path, $newpath)
+    public function rename($path, $newpath)
     {
-        $path = $this->guardRootPath($path);
-        $newpath = $this->guardRootPath($newpath);
+        $path = $this->filterRootPath($path);
+        $newpath = $this->filterRootPath($newpath);
 
-        if ($path === $newpath) {
-            throw new \LogicException('path == newpath');
+        $relPath = $this->relativePath($path);
+        $relNew = $this->relativePath($newpath);
+
+        if ($relPath === $relNew) {
+            return $this;
         }
 
         $this->checkDir($this->dirname($newpath));
 
-        if (! @ftp_rename($this->connection, $this->relativePath($path), $this->relativePath($newpath))) {
-            throw new StoreException('');
+        if (! @ftp_rename($this->connection, $relPath, $relNew)) {
+            $this->throwLastError('Переименование файла', $this->absolutePath($newpath));
         }
+
+        $this->clearStatCache($path);
 
         return $this;
     }
@@ -210,14 +231,14 @@ class FtpFileStore extends LocalFileStore
      */
     public function mkdir($path)
     {
-        $path = $this->guardRootPath($path);
+        $path = $this->filterRootPath($path);
 
         if ($this->exists($path)) {
             throw new StoreException('уже существует: ' . $path);
         }
 
         if (! @ftp_mkdir($this->connection, $this->relativePath($path))) {
-            throw new StoreException('');
+            $this->throwLastError('Создание директории', $this->absolutePath($path));
         }
 
         $this->setPublic($path, $this->public);
@@ -231,11 +252,13 @@ class FtpFileStore extends LocalFileStore
      */
     protected function unlink($path)
     {
-        $this->guardRootPath($path);
+        $this->filterRootPath($path);
 
         if (! @ftp_delete($this->connection, $this->relativePath($path))) {
-            throw new StoreException('');
+            $this->throwLastError('Удаление файла', $this->absolutePath($path));
         }
+
+        $this->clearStatCache($path);
 
         return $this;
     }
@@ -246,11 +269,13 @@ class FtpFileStore extends LocalFileStore
      */
     protected function rmdir($path)
     {
-        $this->guardRootPath($path);
+        $this->filterRootPath($path);
 
         if (! @ftp_rmdir($this->connection, $this->relativePath($path))) {
-            throw new StoreException('');
+            $this->throwLastError('Удаление директории', $this->absolutePath($path));
         }
+
+        $this->clearStatCache($path);
 
         return $this;
     }
