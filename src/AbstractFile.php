@@ -4,7 +4,7 @@ namespace dicr\file;
 use yii\base\BaseObject;
 
 /**
- * Абстрактный файл
+ * Абстракция файл/директория.
  *
  * @property-read string $path путь файла
  * @property-read string $name имя файла без пути
@@ -132,12 +132,30 @@ abstract class AbstractFile extends BaseObject
     abstract public function getStream();
 
     /**
+     * Возвращает имя файла без расширения.
+     *
+     * @param string $name
+     * @return string
+     */
+    protected static function removeExtension(string $name)
+    {
+        if (!empty($name)) {
+            $locale = setlocale(LC_ALL, '0');
+            setlocale(LC_ALL, 'ru_RU.UTF-8');
+            $name = pathinfo($name, PATHINFO_FILENAME);
+            setlocale(LC_ALL, $locale);
+        }
+
+        return $name;
+    }
+
+    /**
      * Конвертирует в строку.
      *
      * @return string path
      */
     public function __toString()
     {
-        return $this->path;
+        return $this->_path;
     }
 }

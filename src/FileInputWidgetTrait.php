@@ -35,7 +35,7 @@ trait FileInputWidgetTrait
     /** @var string|null название поля формы аттрибута */
     public $inputName;
 
-    /** @var \dicr\file\AbstractFile[]|null файлы */
+    /** @var \dicr\file\StoreFile[]|null файлы */
     public $value;
 
     /**
@@ -132,7 +132,7 @@ trait FileInputWidgetTrait
      * Рендерит файл
      *
      * @param int $pos
-     * @param StoreFile $file
+     * @param \dicr\file\StoreFile $file
      * @return string
      */
     protected function renderFileBlock(int $pos, StoreFile $file)

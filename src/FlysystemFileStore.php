@@ -131,7 +131,7 @@ class FlysystemFileStore extends AbstractFileStore
      * Возвращает тип файл/диретория
      *
      * @param string|array $path
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      * @return string dir|file
      */
     public function getType($path)
@@ -498,7 +498,7 @@ class FlysystemFileStore extends AbstractFileStore
     /**
      * Возвращает тип доступа (публичность) по типу Slysystem
      *
-     * @param string $visibility AdapterInterface::VISIBILITY_*
+     * @param string $visibility \League\Flysystem\AdapterInterface::VISIBILITY_*
      * @return bool флаг public
      */
     protected static function visibility2access(string $visibility)
@@ -510,7 +510,7 @@ class FlysystemFileStore extends AbstractFileStore
      * Конвертирует тип доступа public в Flysystem visibility type
      *
      * @param bool $public
-     * @return string AdapterInterface::VISIBILITY_PUBLIC
+     * @return string \League\Flysystem\AdapterInterface::VISIBILITY_PUBLIC
      */
     protected static function access2visibility(bool $public)
     {

@@ -4,6 +4,7 @@ namespace dicr\file;
 use yii\base\Component;
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
+use yii\di\Instance;
 
 /**
  * Создает превью файлов.
@@ -29,7 +30,7 @@ class Thumbnailer extends Component
     public $format = 'jpg';
 
     /** @var float image compression level 0.01 .. 0.99 */
-    public $quality = 0.85;
+    public $quality = 0.8;
 
     /**
      * {@inheritdoc}
@@ -39,18 +40,7 @@ class Thumbnailer extends Component
     {
         parent::init();
 
-        if (is_string($this->cacheStore)) {
-            $this->cacheStore = \Yii::$app->get($this->cacheStore, true);
-        } elseif (is_array($this->cacheStore)) {
-            if (! isset($this->cacheStore['class'])) {
-                $this->cacheStore['class'] = LocalFileStore::class;
-            }
-            $this->cacheStore = \Yii::createObject($this->cacheStore);
-        }
-
-        if (! ($this->cacheStore instanceof AbstractFileStore)) {
-            throw new InvalidConfigException('cacheStore');
-        }
+        Instance::ensure($this->cacheStore, AbstractFileStore::class);
 
         $this->cacheStore->fileConfig['class'] = ThumbFile::class;
 

@@ -7,6 +7,7 @@ use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
 use yii\base\Model;
 use yii\db\ActiveRecord;
+use yii\di\Instance;
 
 // @formatter:off
 /**
@@ -50,8 +51,8 @@ use yii\db\ActiveRecord;
  * Если значение не массив, то оно принимается в качестве limit.
  *
  * Типы значения аттрибутов:
- *    \dicr\file\AsbtractFile - для аттрибутов с limit = 1;
- *    \dicr\file\AsbtractFile[] - для аттрибутов с limit != 1;
+ *    \dicr\file\StoreFile - для аттрибутов с limit = 1;
+ *    \dicr\file\StoreFile[] - для аттрибутов с limit != 1;
  *
  * Данный behavior реализует get/set методы для заданных аттрибутов,
  * поэтому эти методы не должны быть отпередены в модели.
@@ -137,7 +138,7 @@ class FileAttributeBehavior extends Behavior
      */
     public $attributes;
 
-    /** @var array текущие значения аттрибутов [attibuteName => \dicr\file\StoreFile[]]  */
+    /** @var \dicr\file\StoreFile[][] текущие значения аттрибутов [attibuteName => \dicr\file\StoreFile[]]  */
     private $values = [];
 
     /**
@@ -149,15 +150,7 @@ class FileAttributeBehavior extends Behavior
         // owner не инициализирован пока не вызван attach
 
         // получаем store
-        if (is_string($this->store)) {
-            $this->store = \Yii::$app->get($this->store, true);
-        } elseif (is_array($this->store)) {
-            $this->store = \Yii::createObject($this->store);
-        }
-
-        if (!($this->store instanceof AbstractFileStore)) {
-            throw new InvalidConfigException('store');
-        }
+        $this->store = Instance::ensure($this->store, AbstractFileStore::class);
 
         // проверяем наличие аттрибутов
         if (empty($this->attributes) || ! is_array($this->attributes)) {
@@ -183,10 +176,12 @@ class FileAttributeBehavior extends Behavior
      */
     public function events()
     {
-        return [Model::EVENT_BEFORE_VALIDATE => 'validateFileAttributes',
+        return [
+            Model::EVENT_BEFORE_VALIDATE => 'validateFileAttributes',
             ActiveRecord::EVENT_AFTER_INSERT => 'saveFileAttributes',
             ActiveRecord::EVENT_AFTER_UPDATE => 'saveFileAttributes',
-            ActiveRecord::EVENT_AFTER_DELETE => 'deleteModelFolder'];
+            ActiveRecord::EVENT_AFTER_DELETE => 'deleteModelFolder'
+        ];
     }
 
     /**
@@ -194,7 +189,7 @@ class FileAttributeBehavior extends Behavior
      *
      * @param string $attribute
      * @param bool $refresh
-     * @return null|\dicr\file\AbstractFile|\dicr\file\AbstractFile[]
+     * @return null|\dicr\file\StoreFile|\dicr\file\StoreFile[]
      */
     public function getFileAttribute(string $attribute, bool $refresh = false)
     {
@@ -223,7 +218,7 @@ class FileAttributeBehavior extends Behavior
      * Возвращает значение файлового аттрибута
      *
      * @param string $attribute
-     * @param null|\dicr\file\AbstractFile|\dicr\file\AbstractFile[] $files
+     * @param null|\dicr\file\StoreFile|\dicr\file\StoreFile[] $files
      * @return static
      */
     public function setFileAttribute(string $attribute, $files)
@@ -243,7 +238,7 @@ class FileAttributeBehavior extends Behavior
 
         // проверяем элементы массива
         foreach ($files as $file) {
-            if (! ($file instanceof AbstractFile)) {
+            if (! ($file instanceof StoreFile)) {
                 throw new InvalidArgumentException('неокрректный тип элемента');
             }
         }
@@ -383,32 +378,27 @@ class FileAttributeBehavior extends Behavior
         }
 
         // проверяем каждый файл
-        foreach ($files as $i => $file) {
+        foreach ($files as $file) {
             if (empty($file)) {
-                $this->owner->addError($attribute, 'пустое значение файла');
-            } elseif ($file instanceof UploadFile) {
-                if (! empty($file->error)) {
-                    $this->owner->addError($attribute, 'ошибка загрузки файла');
-                    unset($files[$i]);
-                } elseif (! isset($file->name) || $file->name == '') {
-                    $this->owner->addError($attribute, 'не задано имя загруаемого файла: ' . $file->path);
-                    unset($files[$i]);
-                } elseif (! $file->exists) {
-                    $this->owner->addError($attribute, 'загружаемый файл не существует: ' . $file->path);
-                    unset($files[$i]);
-                } elseif ((int) $file->size <= 0) {
-                    $this->owner->addError($attribute, 'пустой размер файла: ' . $file->name);
-                    unset($files[$i]);
+                $this->owner->addError($attribute, 'Пустое значение файла');
+            } elseif ($file instanceof StoreFile) {
+                if (! $file->exists) {
+                    $this->owner->addError($attribute, 'Загружаемый файл не существует: ' . $file->path);
+                } else if ((int) $file->size <= 0) {
+                    $this->owner->addError($attribute, 'Пустой размер файла: ' . $file->name);
                 } elseif (isset($params['maxsize']) && $file->size > $params['maxsize']) {
                     $this->owner->addError($attribute, 'Размер не более ' . \Yii::$app->formatter->asSize($params['maxsize']));
-                    unset($files[$i]);
                 } elseif (isset($params['type']) && !self::matchMimeType($file->mimeType, $params['type'])) {
                     $this->owner->addError($attribute, 'Неверный тип файла: ' . $file->mimeType);
-                    unset($files[$i]);
+                } elseif ($file instanceof UploadFile) {
+                    if (! empty($file->error)) {
+                        $this->owner->addError($attribute, 'Ошибка загрузки файла');
+                    } elseif (! isset($file->name) || $file->name == '') {
+                        $this->owner->addError($attribute, 'Не задано имя загруаемого файла: ' . $file->path);
+                    }
                 }
-            } elseif (!($file instanceof AbstractFile)) {
-                $this->owner->addError($attribute, 'неизвестный тип значения');
-                unset($files[$i]);
+            } elseif (!($file instanceof StoreFile)) {
+                $this->owner->addError($attribute, 'Неизвестный тип значения');
             }
         }
 
@@ -730,8 +720,8 @@ class FileAttributeBehavior extends Behavior
      * Импортирует новый файл.
      * Либо UploadFile, либо StoreFile, у которого другой store.
      *
-     * @param StoreFile $attributePath
-     * @param AbstractFile $file файл для импорта
+     * @param \dicr\file\StoreFile $attributePath
+     * @param \dicr\file\AbstractFile $file файл для импорта
      * @return \dicr\file\StoreFile новый импортированный файл
      */
     protected static function importNewFile(StoreFile $attributePath, AbstractFile $file)
@@ -744,8 +734,8 @@ class FileAttributeBehavior extends Behavior
     /**
      * Переименовывает файл во временное имя
      *
-     * @param StoreFile $file
-     * @return StoreFile
+     * @param \dicr\file\StoreFile $file
+     * @return \dicr\file\StoreFile
      */
     protected static function renameWithTemp(StoreFile $file)
     {
@@ -756,8 +746,8 @@ class FileAttributeBehavior extends Behavior
     /**
      * Переименовывает файлы, добавляя префик позиции
      *
-     * @param StoreFile[] $files
-     * @return StoreFile[]
+     * @param \dicr\file\StoreFile[] $files
+     * @return \dicr\file\StoreFile[]
      */
     protected static function renameWithPos(array $files)
     {
@@ -775,8 +765,8 @@ class FileAttributeBehavior extends Behavior
     /**
      * Находит файл среди старых и удаляет найденный из списка
      *
-     * @param StoreFile[] $oldFiles старый файлы
-     * @param StoreFile $file файл для поиска
+     * @param \dicr\file\StoreFile[] $oldFiles старый файлы
+     * @param \dicr\file\StoreFile $file файл для поиска
      * @return boolean true если старый файл найден и удален из списка
      */
     protected static function matchOldFile(array &$oldFiles, StoreFile $file)
@@ -795,7 +785,7 @@ class FileAttributeBehavior extends Behavior
     /**
      * Удаляет старые файлы
      *
-     * @param StoreFile[] $files старые файлы для удаления
+     * @param \dicr\file\StoreFile[] $files старые файлы для удаления
      */
     protected static function deleteOldFiles(array &$files)
     {

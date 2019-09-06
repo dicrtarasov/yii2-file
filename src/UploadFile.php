@@ -2,12 +2,17 @@
 namespace dicr\file;
 
 use yii\base\Exception;
-use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
 
 /**
  * Загруженный файл.
+ *
+ * Так как хранится в LocalFileStore, то наследует StoreFile, добавляя
+ * отдельное от path имя файла name. Также добавляет возможность
+ * установить error, size, и mimeType
+ *
  * Файл необхоимо импортировать в директорию модели при ее сохранении.
+ *
  * В зависимости от присутствия названия формы и множественности аттрибута,
  * php формирует разную структуру $_FILES.
  *
@@ -19,7 +24,7 @@ use yii\helpers\ArrayHelper;
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2018
  */
-class UploadFile extends AbstractFile
+class UploadFile extends StoreFile
 {
     /** @var string наименование файла */
     private $_name;
@@ -45,28 +50,21 @@ class UploadFile extends AbstractFile
     /**
      * Конструктор
      *
-     * @param string|array $config path or config
+     * @param string|array $config path или конфиг
      */
     public function __construct($pathconfig)
     {
-        $path = '';
+        $path = null;
         $config = [];
 
         if (is_string($pathconfig)) {
             $path = $pathconfig;
-            $config = [];
         } elseif (is_array($pathconfig)) {
-            $path = $pathconfig['path'] ?? '';
             $config = $pathconfig;
-            unset($config['path']);
+            $path = ArrayHelper::remove($config, 'path');
         }
 
-        $path = trim($path, DIRECTORY_SEPARATOR);
-        if ($path == '') {
-            throw new \InvalidArgumentException('path');
-        }
-
-        parent::__construct($path, $config);
+        parent::__construct(LocalFileStore::root(), $path, $config);
     }
 
     /**
@@ -81,27 +79,51 @@ class UploadFile extends AbstractFile
             $this->_error = (int) $this->_error;
         }
 
-        // в случае ошибок name и path может быть пустым
-        if (empty($this->_error)) {
-            // если имя не задано, то берем его из пути
-            $this->_name = basename($this->_name ?: $this->_path);
-            if ($this->_name == '') {
-                throw new InvalidConfigException('name');
-            }
-        }
-
         if (isset($this->_size)) {
             $this->_size = (int) $this->_size;
         }
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFile::normalizePath()
+     * {@inheritDoc}
+     * @see \dicr\file\AbstractFile::getName()
      */
-    public function normalizePath($path)
+    public function getName(array $options = [])
     {
-        return LocalFileStore::root()->normalizePath($path);
+        // если имя файла не задано то берем его из пути
+        if (!isset($this->_name)) {
+            if (!empty($this->_error)) {
+                return null;
+            }
+
+            $this->_name = parent::getName();
+        }
+
+        $name = $this->_name;
+
+        if (!empty($options['removeExt'])) {
+            $name = static::removeExtension($name);
+        }
+
+        return $name;
+    }
+
+    /**
+     * Установить имя файла
+     *
+     * @param string $name
+     * @return $this
+     */
+    public function setName(string $name)
+    {
+        $name = $this->_store->basename($name);
+        if (empty($name)) {
+            throw new \InvalidArgumentException('name');
+        }
+
+        $this->_name = $name;
+
+        return $this;
     }
 
     /**
@@ -129,79 +151,16 @@ class UploadFile extends AbstractFile
 
     /**
      * {@inheritDoc}
-     * @see \dicr\file\AbstractFile::getName()
-     */
-    public function getName(array $options = [])
-    {
-        if (!isset($this->_name)) {
-            $this->_name = basename($this->_path);
-        }
-
-        $name = $this->_name;
-
-        if (!empty($options['removeExt'])) {
-            $locale = setlocale(LC_ALL, '0');
-            setlocale(LC_ALL, 'ru_RU.UTF-8');
-            $name = pathinfo($name, PATHINFO_FILENAME);
-            setlocale(LC_ALL, $locale);
-        }
-
-        return $name;
-    }
-
-    /**
-     * Установить имя файла
-     *
-     * @param string $name
-     * @return $this
-     */
-    public function setName(string $name)
-    {
-        $name = basename($name);
-        if (empty($name)) {
-            throw new \InvalidArgumentException('name');
-        }
-
-        $this->_name = $name;
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFile::getExists()
-     */
-    public function getExists()
-    {
-        return LocalFileStore::root()->exists($this->_path);
-    }
-
-    /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFile::getIsDir()
-     */
-    public function getIsDir()
-    {
-        return LocalFileStore::root()->isDir($this->_path);
-    }
-
-    /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFile::getIsFile()
-     */
-    public function getIsFile()
-    {
-        return LocalFileStore::root()->isFile($this->_path);
-    }
-
-    /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFile::getSize()
+     * @see \dicr\file\StoreFile::getSize()
      */
     public function getSize()
     {
-        if (! isset($this->_size)) {
-            $this->_size = LocalFileStore::root()->size($this->_path);
+        if (!isset($this->_size)) {
+            if (!empty($this->_error)) {
+                return null;
+            }
+
+            $this->_size = parent::getSize();
         }
 
         return $this->_size;
@@ -224,21 +183,16 @@ class UploadFile extends AbstractFile
 
     /**
      * {@inheritdoc}
-     * @see \dicr\file\AbstractFile::getMtime()
-     */
-    public function getMtime()
-    {
-        return LocalFileStore::root()->mtime($this->_path);
-    }
-
-    /**
-     * {@inheritdoc}
      * @see \dicr\file\AbstractFile::getMimeType()
      */
     public function getMimeType()
     {
-        if (empty($this->_mimeType)) {
-            $this->_mimeType = LocalFileStore::root()->mimeType($this->_path);
+        if (!isset($this->_mimeType)) {
+            if (!empty($this->_error)) {
+                return null;
+            }
+
+            $this->_mimeType = parent::getMimeType();
         }
 
         return $this->_mimeType;
@@ -252,63 +206,6 @@ class UploadFile extends AbstractFile
     public function setMimeType(string $type)
     {
         $this->_mimeType = $type;
-    }
-
-    /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFile::getContents()
-     */
-    public function getContents($context = null)
-    {
-        return LocalFileStore::root()->readContents($this->_path);
-    }
-
-    /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFile::getStream()
-     */
-    public function getStream($context = null)
-    {
-        return LocalFileStore::root()->readStream($this->_path);
-    }
-
-    /**
-     * Перемещение с move_uploaded_file
-     *
-     * @param array|string $path
-     * @throws StoreException
-     * @return static
-     */
-    public function rename($path)
-    {
-        LocalFileStore::root()->rename($this->_path, $path);
-
-        return $this;
-    }
-
-    /**
-     * Копирование файла
-     *
-     * @param string|array $path
-     * @return static
-     */
-    public function copy($path)
-    {
-        LocalFileStore::root()->copy($this->_path, $path);
-
-        return $this;
-    }
-
-    /**
-     * Удаляет файл
-     *
-     * @return static
-     */
-    public function delete()
-    {
-        LocalFileStore::root()->delete($this->_path);
-
-        return $this;
     }
 
     /**
