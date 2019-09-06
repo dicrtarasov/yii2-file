@@ -47,14 +47,17 @@ use yii\bootstrap\Html;
 		])?>
 
 			<?=$form->field($model, 'icon')->widget(FileInputWidget::class, [
+			    'layout' => 'images',
 				'limit' => 1,
 				'accept' => 'image/*',
 			])?>
 
-			<?=$form->field($model, 'pics')->widget(FileInputWidget::class)?>
+			<?=$form->field($model, 'pics')->widget(FileInputWidget::class, [
+			    'layout' => 'images'
+			])?>
 
 			<?=$form->field($model, 'docs')->widget(FileInputWidget::class, [
-			    'layout' => 'vertical'
+			    'layout' => 'files'
 			])?>
 
 			<div class="form-group">

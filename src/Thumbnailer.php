@@ -40,7 +40,7 @@ class Thumbnailer extends Component
     {
         parent::init();
 
-        Instance::ensure($this->cacheStore, AbstractFileStore::class);
+        $this->cacheStore = Instance::ensure($this->cacheStore, AbstractFileStore::class);
 
         $this->cacheStore->fileConfig['class'] = ThumbFile::class;
 

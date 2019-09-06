@@ -259,12 +259,13 @@ abstract class AbstractFileStore extends Component
      * @param string|string[] $path
      * @throws \dicr\file\StoreException
      * @param array $filter
-     *        - bool|null recursive
-     *        - string|null $dir - true - только директории, false - только файлы
-     *        - string|null $public - true - публичный доступ, false - приватный доступ
-     *        - bool|null $hidden - true - скрытые файлы, false - открытые
-     *        - string|null $regex - регулярная маска имени
-     *        - callable|null $filter function(StoreFile $file) : bool филььтр элементов
+     *  - bool|null recursive
+     *  - string|null $dir - true - только директории, false - только файлы
+     *  - string|null $public - true - публичный доступ, false - приватный доступ
+     *  - bool|null $hidden - true - скрытые файлы, false - открытые
+     *  - string|null $pathRegex - регулярное выражение пути
+     *  - string|null $nameRegex - регулярное выражение имени вайла
+     *  - callable|null $filter function(StoreFile $file) : bool филььтр элементов
      * @return \dicr\file\StoreFile[]
      */
     abstract public function list($path, array $filter = []);
@@ -570,7 +571,8 @@ abstract class AbstractFileStore extends Component
      *     - string|null $dir - true - только директории, false - толькофайлы
      *     - string|null $public - true - публичный доступ, false - приватный доступ
      *     - bool|null $hidden - true - скрытые файлы, false - открытые
-     *     - string|null $regex - регулярная маска имени
+     *     - string|null $pathRegex - регулярное выражение пути
+     *     - string|null $nameRegex - регулярное выражение имени вайла
      *     - callable|null $filter function(StoreFile $file) : bool филььтр элементов
      * @throws StoreException
      * @return boolean
@@ -579,8 +581,13 @@ abstract class AbstractFileStore extends Component
     {
         // ---- вначале быстрые фильтры --------
 
-        // фильтруем по регулярному выражению
-        if (! empty($filter['regex']) && ! preg_match($filter['regex'], $file->path)) {
+        // фильтруем по регулярному выражению пути
+        if (! empty($filter['pathRegex']) && ! preg_match($filter['pathRegex'], $file->path)) {
+            return false;
+        }
+
+        // фильтр по регулярному выражению имени
+        if (! empty($filter['nameRegex']) && ! preg_match($filter['nameRegex'], $file->name)) {
             return false;
         }
 

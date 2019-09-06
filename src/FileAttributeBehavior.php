@@ -121,6 +121,8 @@ use yii\di\Instance;
  * <?php } ?>
  * </xmp>
  *
+ * @property \dicr\file\StoreFile $fileModelPath путь папки модели
+ *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2018
  */
@@ -180,8 +182,81 @@ class FileAttributeBehavior extends Behavior
             Model::EVENT_BEFORE_VALIDATE => 'validateFileAttributes',
             ActiveRecord::EVENT_AFTER_INSERT => 'saveFileAttributes',
             ActiveRecord::EVENT_AFTER_UPDATE => 'saveFileAttributes',
-            ActiveRecord::EVENT_AFTER_DELETE => 'deleteModelFolder'
+            ActiveRecord::EVENT_AFTER_DELETE => 'deleteFileModelPath'
         ];
+    }
+
+    /**
+     * Проверяет существование файлового атрибута
+     *
+     * @param string $attribute
+     * @return boolean
+     */
+    public function hasFileAttribute(string $attribute)
+    {
+        return array_key_exists($attribute, $this->attributes);
+    }
+
+    /** @var \dicr\file\StoreFile путь папки модели */
+    private $_modelPath;
+
+    /**
+     * Возвращает папку модели в хранилище файлов.
+     *
+     * Путь модели в хранилище строится из:
+     * {formName}/{primaryKeys}
+     *
+     * @return \dicr\file\StoreFile
+     */
+    public function getFileModelPath()
+    {
+        if (!isset($this->_modelPath)) {
+            // проверяем владельца поведения
+            $this->checkOwner();
+
+            // относительный путь
+            $relpath = [];
+
+            // добавляем в путь имя формы
+            $formName = $this->owner->formName();
+            if (!empty($formName)) {
+                $relpath[] = $formName;
+            }
+
+            // для элементов базы данных добавляем id
+            if ($this->owner instanceof ActiveRecord) {
+                $keyName = basename(implode('~', $this->owner->getPrimaryKey(true)));
+                if ($keyName !== '') {
+                    $relpath[] = $keyName;
+                }
+            }
+
+            $this->_modelPath = $this->store->file($relpath);
+        }
+
+        return $this->_modelPath;
+    }
+
+    /**
+     * Устанавливает путь папки модели.
+     * Если путь не усановлен, то он рассчитывается автоматически.
+     *
+     * @param StoreFile $modelPathFile
+     */
+    public function setFileModelPath(StoreFile $modelPathFile)
+    {
+        $this->_modelPath = $modelPathFile;
+    }
+
+    /**
+     * Удаляет папку модели.
+     * (нужен для обработчика событий модели).
+     *
+     * @return \dicr\file\StoreFile путь удаленной директории модели
+     */
+    public function deleteFileModelPath()
+    {
+        return $this->getModelFilePath()->delete();
     }
 
     /**
@@ -193,29 +268,20 @@ class FileAttributeBehavior extends Behavior
      */
     public function getFileAttribute(string $attribute, bool $refresh = false)
     {
+        $this->checkFileAttribute($attribute);
+
         if (! isset($this->values[$attribute]) || $refresh) {
-            $attributePath = $this->getAttributePath($attribute);
-
-
-            $this->values[$attribute] = $attributePath->exists ? $this->getAttributePath($attribute)->getList([
-                'dir' => false,
-                'hidden' => false
-            ]) : [];
-
-            // сортируем фо номеру позиции
-            usort($this->values[$attribute], function($a, $b) {
-                return strnatcasecmp($a->path, $b->path);
-            });
+            $this->values[$attribute] = $this->listAttributeFiles($attribute);
         }
 
-        $value = $this->values[$attribute];
+        $values = $this->values[$attribute];
 
         // если аттрибут имеет скалярный тип, то возвращаем первое значение
-        return $this->attributes[$attribute]['limit'] == 1 ? array_shift($value) : $value;
+        return $this->attributes[$attribute]['limit'] == 1 ? reset($values) : $values;
     }
 
     /**
-     * Возвращает значение файлового аттрибута
+     * Устанавливает значение файлового аттрибута
      *
      * @param string $attribute
      * @param null|\dicr\file\StoreFile|\dicr\file\StoreFile[] $files
@@ -239,7 +305,7 @@ class FileAttributeBehavior extends Behavior
         // проверяем элементы массива
         foreach ($files as $file) {
             if (! ($file instanceof StoreFile)) {
-                throw new InvalidArgumentException('неокрректный тип элемента');
+                throw new InvalidArgumentException('files: неокрректный тип элемента');
             }
         }
 
@@ -249,7 +315,7 @@ class FileAttributeBehavior extends Behavior
             $files = array_slice($files, 0, $limit);
         }
 
-        // сохраняем значение в кеше
+        // обновляем значение в кеше
         $this->values[$attribute] = $files;
 
         return $this;
@@ -281,7 +347,7 @@ class FileAttributeBehavior extends Behavior
         }
 
         // путь аттрибута модели
-        $attributePath = $this->getAttributePath($attribute);
+        $attributePath = $this->getFileModelPath();
 
         // новое значение аттрибута
         $value = [];
@@ -332,19 +398,6 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
-     * Сравнивает Mime-тип с поддержкой шаблонов
-     *
-     * @param string $mime сравниваемый Mime-тип
-     * @param string $required шаблонный
-     * @return bool результат
-     */
-    protected static function matchMimeType(string $mime, string $required)
-    {
-        $regex = '~^' . str_replace(['/', '*'], ['\\/', '.+'], $required) . '$~uism';
-        return (bool)preg_match($mime, $regex);
-    }
-
-    /**
      * Проводит валидацию файлового аттрибута и загруженных файлов.
      * Добавляет ошибки модели по addError
      *
@@ -379,26 +432,55 @@ class FileAttributeBehavior extends Behavior
 
         // проверяем каждый файл
         foreach ($files as $file) {
+            // проверяем на пустое значение
             if (empty($file)) {
                 $this->owner->addError($attribute, 'Пустое значение файла');
-            } elseif ($file instanceof StoreFile) {
-                if (! $file->exists) {
-                    $this->owner->addError($attribute, 'Загружаемый файл не существует: ' . $file->path);
-                } else if ((int) $file->size <= 0) {
-                    $this->owner->addError($attribute, 'Пустой размер файла: ' . $file->name);
-                } elseif (isset($params['maxsize']) && $file->size > $params['maxsize']) {
-                    $this->owner->addError($attribute, 'Размер не более ' . \Yii::$app->formatter->asSize($params['maxsize']));
-                } elseif (isset($params['type']) && !self::matchMimeType($file->mimeType, $params['type'])) {
-                    $this->owner->addError($attribute, 'Неверный тип файла: ' . $file->mimeType);
-                } elseif ($file instanceof UploadFile) {
-                    if (! empty($file->error)) {
-                        $this->owner->addError($attribute, 'Ошибка загрузки файла');
-                    } elseif (! isset($file->name) || $file->name == '') {
-                        $this->owner->addError($attribute, 'Не задано имя загруаемого файла: ' . $file->path);
-                    }
+                continue;
+            }
+
+            // проверяем тип
+            if (!($file instanceof StoreFile)) {
+                $this->owner->addError($attribute, 'Некоррекный тип значения: ' . gettype($file));
+                continue;
+            }
+
+            // проверяем существование файла
+            if (! $file->exists) {
+                $this->owner->addError($attribute, 'Загружаемый файл не существует: ' . $file->path);
+                continue;
+            }
+
+            // проверяем наличие данных
+            if ($file->size <= 0) {
+                $this->owner->addError($attribute, 'Пустой размер файла: ' . $file->name);
+                continue;
+            }
+
+            // проверяем максимальный размер
+            if (isset($params['maxsize']) && $file->size > $params['maxsize']) {
+                $this->owner->addError($attribute, 'Размер не более ' . \Yii::$app->formatter->asSize($params['maxsize']));
+                continue;
+            }
+
+            // проверяем mime-тип
+            if (isset($params['type']) && !$file->matchMimeType($params['type'])) {
+                $this->owner->addError($attribute, 'Неверный тип файла: ' . $file->mimeType);
+                continue;
+            }
+
+            // загружаемый файл
+            if ($file instanceof UploadFile) {
+                // ошибка загрузки
+                if (! empty($file->error)) {
+                    $this->owner->addError($attribute, 'Ошибка загрузки файла');
+                    continue;
                 }
-            } elseif (!($file instanceof StoreFile)) {
-                $this->owner->addError($attribute, 'Неизвестный тип значения');
+
+                // пустое имя или путь файла
+                if (empty($file->name)) {
+                    $this->owner->addError($attribute, 'Не задано имя загруаемого файла: ' . $file->path);
+                    continue;
+                }
             }
         }
 
@@ -448,49 +530,75 @@ class FileAttributeBehavior extends Behavior
             return null;
         }
 
-        // готовим путь модели
-        $modelPath = $this->getAttributePath($attribute);
-
         // получаем старые файлы
-        $oldFiles = $modelPath->exists ? $modelPath->getList([
-            'dir' => false,
-            'hidden' => false
-        ]) : [];
+        $oldFiles = $this->listAttributeFiles($attribute);
 
         // импортируем новые и переименовываем старые во временные имена с точкой
         foreach ($files as $pos => $file) {
-            // пустые элементы удаляем
-            if (empty($file)) {
-                unset($files[$pos]);
-            } elseif ($file instanceof UploadFile) { // новый загруженный файл
-                if (! empty($file->error) || empty($file->path)) {
-                    unset($files[$pos]); // пропускаем файлы с ошибками
-                } else {
-                    $files[$pos] = static::importNewFile($modelPath, $file); // создаем и импортируем файл под временным именем
-                }
-            } elseif ($file instanceof StoreFile) { // старый файл
-                // если файл принадлежит другому store, то импортируем также как и UploadFile
-                if ($file->store !== $modelPath->store) {
-                    $files[$pos] = static::importNewFile($modelPath, $file); // создаем и импортируем файл под временным именем
-                } elseif (! static::matchOldFile($oldFiles, $file)) { // ищем в списке старых файлов
-                    unset($files[$pos]); // если файл уже удален, то забываем его
-                } else {
-                    static::renameWithTemp($file); // переименовываем во временное имя
-                }
-            } else {
-                throw new Exception('неизвестный тип значения фалового аттрибута ' . $attribute);
+            // некоррекный тип значения
+            if (!($file instanceof StoreFile)) {
+                throw new Exception('Неизвестный тип значения файлового аттрибута ' . $attribute);
             }
+
+            // если это загружаемый файл и содержит ошибку загрузки, то пропускаем
+            if (($file instanceof UploadFile) && !empty($file->error)) {
+                // если это загружаемый файл и содержит ошибки - пропускаем
+                unset($files[$pos]);
+                continue;
+            }
+
+            // если файл не существует
+            if (!$file->exists) {
+                // если файл в том же хранилище, то мог быть удален в параллельном запросе
+                if ($file->store === $this->store) {
+                    unset($files[$pos]);
+                    continue;
+                }
+
+                // выдаем ошибку
+                throw new Exception('Файл не существует: ' . $file->path);
+            }
+
+            // если файл в том же хранилище
+            if ($file->store == $this->store) {
+                // ищем позицию в списке старых
+                $oldPos = null;
+                foreach ($oldFiles as $i => $oldFile) {
+                    if ($oldFile->name === $file->name) {
+                        $oldPos = $i;
+                        break;
+                    }
+                }
+
+                // если файл найден в списке старых, то файл нужно сохранить как есть
+                if (isset($oldPos)) {
+                    // удаляем из списка старых на удаление
+                    unset($oldFiles[$oldPos]);
+
+                    // переименовываем во временное имя
+                    $file->name = StoreFile::createStorePrefix('.' . $attribute, rand(), $file->name);
+                    $files[$pos] = $file;
+
+                    continue;
+                }
+            }
+
+            // импорируем файл под временным именем
+            $newFile = $this->getFileModelPath()->child(StoreFile::createStorePrefix('.' . $attribute, rand(), $file->name));
+            $newFile->import($file);
+            $files[$pos] = $newFile;
         }
 
         // удаляем оставшиеся старые файлы которых не было в списке для сохранения
-        static::deleteOldFiles($oldFiles);
+        foreach ($oldFiles as $file) {
+            $file->delete();
+        }
 
-        if (! empty($files)) {
-            // переименовываем файлы в правильные имена
-            $files = static::renameWithPos($files);
-        } else {
-            // удаляем директорию аттрибута
-            $modelPath->delete();
+        // переименовываем файлы в правильные имена
+        ksort($files);
+        foreach (array_values($files) as $pos => $file) {
+            $file->name = StoreFile::createStorePrefix($attribute, $pos, $file->name);
+            $files[$pos] = $file;
         }
 
         // обновляем значение аттрибута модели
@@ -533,10 +641,12 @@ class FileAttributeBehavior extends Behavior
         $this->checkFileAttribute($attribute);
         $this->checkOwner();
 
-        // удаляем рекурсивно
-        $this->getAttributePath($attribute)->delete();
+        // удаляем файлы аттрибута
+        foreach ($this->listAttributeFiles($attribute) as $file) {
+            $file->delete();
+        }
 
-        // запоминаем новое значение
+        // обновляем значение
         $this->values[$attribute] = [];
 
         return true;
@@ -557,22 +667,12 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
-     * Удаляет папку модели
-     *
-     * @return \dicr\file\StoreFile путь удаленной директории модели
-     */
-    public function deleteModelFolder()
-    {
-        return $this->getAttributePath('')->delete();
-    }
-
-    /**
      * {@inheritdoc}
      * @see \yii\base\BaseObject::__isset()
      */
     public function __isset($name)
     {
-        if ($this->isFileAttribute($name)) {
+        if ($this->hasFileAttribute($name)) {
             return isset($this->attributes[$name]);
         }
 
@@ -585,7 +685,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function __get($name)
     {
-        if ($this->isFileAttribute($name)) {
+        if ($this->hasFileAttribute($name)) {
             return $this->getFileAttribute($name);
         }
 
@@ -598,7 +698,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function __set($name, $value)
     {
-        if ($this->isFileAttribute($name)) {
+        if ($this->hasFileAttribute($name)) {
             $this->setFileAttribute($name, $value);
         } else {
             parent::__set($name, $value);
@@ -611,7 +711,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function hasProperty($name, $checkVars = true)
     {
-        if ($this->isFileAttribute($name)) {
+        if ($this->hasFileAttribute($name)) {
             return true;
         }
 
@@ -624,7 +724,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function canGetProperty($name, $checkVars = true)
     {
-        if ($this->isFileAttribute($name)) {
+        if ($this->hasFileAttribute($name)) {
             return true;
         }
 
@@ -637,7 +737,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function canSetProperty($name, $checkVars = true)
     {
-        if ($this->isFileAttribute($name)) {
+        if ($this->hasFileAttribute($name)) {
             return true;
         }
 
@@ -660,140 +760,41 @@ class FileAttributeBehavior extends Behavior
      * Проверяет существование файлового атрибута
      *
      * @param string $attribute
-     * @return boolean
-     */
-    protected function isFileAttribute(string $attribute)
-    {
-        return array_key_exists($attribute, $this->attributes);
-    }
-
-    /**
-     * Проверяет существование файлового атрибута
-     *
-     * @param string $attribute
      * @throws Exception
      */
     protected function checkFileAttribute(string $attribute)
     {
-        if (! $this->isFileAttribute($attribute)) {
-            throw new Exception('файловы аттрибут "' . $attribute . '" не существует');
+        if (! $this->hasFileAttribute($attribute)) {
+            throw new Exception('файловый аттрибут "' . $attribute . '" не существует');
         }
     }
 
     /**
-     * Возвращает директори аттрибута
+     * Получает список файлов аттрибута модели.
      *
-     * @param string $attribute
-     * @throws InvalidConfigException
-     * @return \dicr\file\StoreFile
+     * @param string $attribute аттрибут
+     * @return \dicr\file\StoreFile[] файлы
      */
-    protected function getAttributePath(string $attribute = '')
+    protected function listAttributeFiles(string $attribute)
     {
-        // проверяем алвдельца поведения
-        $this->checkOwner();
+        // путь папки модели
+        $modelPath = $this->getFileModelPath();
 
-        // проверяем что файловый аттрибут существует
-        if ($attribute !== '') {
-            $this->checkFileAttribute($attribute);
+        // если папка не существует, то возвращаем пустой список
+        if (!$modelPath->exists) {
+            return [];
         }
 
-        // добавляем в путь имя формы
-        $relpath = [$this->owner->formName()];
+        // получаем список файлов
+        $files = $modelPath->getList([
+            'nameRegex' => '~^' . preg_quote($attribute) . '\~\d+\~.+~ui'
+        ]);
 
-        // для элементов базы данных добавляем id
-        if ($this->owner instanceof ActiveRecord) {
-            $keyName = basename(implode('~', $this->owner->getPrimaryKey(true)));
-            if ($keyName !== '') {
-                $relpath[] = $keyName;
-            }
-        }
-
-        // добавляем в путь имя аттрибута
-        if ($attribute !== '') {
-            $relpath[] = $attribute;
-        }
-
-        return $this->store->file($relpath);
-    }
-
-    /**
-     * Импортирует новый файл.
-     * Либо UploadFile, либо StoreFile, у которого другой store.
-     *
-     * @param \dicr\file\StoreFile $attributePath
-     * @param \dicr\file\AbstractFile $file файл для импорта
-     * @return \dicr\file\StoreFile новый импортированный файл
-     */
-    protected static function importNewFile(StoreFile $attributePath, AbstractFile $file)
-    {
-        $newFile = $attributePath->child(StoreFile::setTempPrefix($file->name));
-        $newFile->contents = $file->contents;
-        return $newFile;
-    }
-
-    /**
-     * Переименовывает файл во временное имя
-     *
-     * @param \dicr\file\StoreFile $file
-     * @return \dicr\file\StoreFile
-     */
-    protected static function renameWithTemp(StoreFile $file)
-    {
-        $file->name = StoreFile::setTempPrefix($file->name);
-        return $file;
-    }
-
-    /**
-     * Переименовывает файлы, добавляя префик позиции
-     *
-     * @param \dicr\file\StoreFile[] $files
-     * @return \dicr\file\StoreFile[]
-     */
-    protected static function renameWithPos(array $files)
-    {
-        // переиндексируем
-        $files = array_values($files);
-
-        foreach ($files as $pos => $file) {
-            $file->name = StoreFile::setPosPrefix($file->name, $pos);
-            $files[$pos] = $file;
-        }
+        // сортируем по полному пути (path/model/id/{attribute}-{pos}-{filename}.ext)
+        usort($files, function(StoreFile $a, StoreFile $b) {
+            return strnatcasecmp($a->path, $b->path);
+        });
 
         return $files;
-    }
-
-    /**
-     * Находит файл среди старых и удаляет найденный из списка
-     *
-     * @param \dicr\file\StoreFile[] $oldFiles старый файлы
-     * @param \dicr\file\StoreFile $file файл для поиска
-     * @return boolean true если старый файл найден и удален из списка
-     */
-    protected static function matchOldFile(array &$oldFiles, StoreFile $file)
-    {
-        $found = false;
-        foreach ($oldFiles as $i => $oldFile) {
-            if ($oldFile->name == $file->name) {
-                $found = true;
-                unset($oldFiles[$i]); // найденый старый файл удаляем из списка
-                break;
-            }
-        }
-        return $found;
-    }
-
-    /**
-     * Удаляет старые файлы
-     *
-     * @param \dicr\file\StoreFile[] $files старые файлы для удаления
-     */
-    protected static function deleteOldFiles(array &$files)
-    {
-        foreach ($files as $i => $file) {
-            $file->delete();
-            unset($files[$i]);
-        }
-
-        unset($files);
     }
 }

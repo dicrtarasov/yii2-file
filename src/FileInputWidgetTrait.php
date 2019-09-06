@@ -54,9 +54,6 @@ trait FileInputWidgetTrait
             throw new InvalidConfigException('attribute');
         }
 
-        // удаляем индекс массива в конце
-        $this->attribute = preg_replace('~\[\]$~uism', '', $this->attribute);
-
         if (!in_array($this->layout, ['images', 'files'])) {
             throw new InvalidConfigException('layout');
         }

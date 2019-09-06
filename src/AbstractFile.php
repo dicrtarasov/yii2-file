@@ -116,6 +116,18 @@ abstract class AbstractFile extends BaseObject
     abstract public function getMimeType();
 
     /**
+     * Сравнивает Mime-тип файла.
+     *
+     * @param string $type mime-тип с импользованием шаблонов (image/png, text/*)
+     * @return boolean
+     */
+    public function matchMimeType(string $type)
+    {
+        $regex = '~^' . str_replace(['/', '*'], ['\\/', '.+'], $type) . '$~uism';
+        return (bool)preg_match($this->mimeType, $regex);
+    }
+
+    /**
      * Возвращает содержимое файла.
      *
      * @throws \dicr\file\StoreException

@@ -24,8 +24,11 @@ use yii\base\NotSupportedException;
  */
 class StoreFile extends AbstractFile
 {
+    // регулярное выражение имени файла со служебным префиксом
+    const STORE_PREFIX_REGEX = '~^\.?([^\~]+)\~(\d+)\~(.+)$~ui';
+
     /** @var \dicr\file\AbstractFileStore */
-    private $_store;
+    protected $_store;
 
     /** @var string кэш абсолютного пути */
     private $_absolutePath;
@@ -127,7 +130,7 @@ class StoreFile extends AbstractFile
         $name = $this->_store->basename($this->_path);
 
         if (!empty($options['removePrefix'])) {
-            $name = static::removeNamePrefix($name);
+            $name = static::removeStorePrefix($name);
         }
 
         if (!empty($options['removeExt'])) {
@@ -197,21 +200,13 @@ class StoreFile extends AbstractFile
         return $this->_store->file($this->_store->childname($this->_path, $path));
     }
 
-    // @formatter:off
     /**
      * Возвращает список файлов директории
      *
-     * @param array $options
-     * - bool|null recursive
-     * - string|null $dir - true - только директории, false - толькофайлы
-     * - string|null $public - true - публичный доступ, false - приватный доступ
-     * - bool|null $hidden - true - скрытые файлы, false - открытые
-     * - string|null $regex - регулярная маска имени
-     * - callable|null $filter function(StoreFile $file) : bool филььтр элементов
+     * @param array $options опции и фильтры {@link AbstractFileStore::list}
      * @throws \dicr\file\StoreException
      * @return static[]
      */
-    // @formatter:on
     public function getList(array $options = [])
     {
         return $this->_store->list($this->_path, $options);
@@ -443,52 +438,36 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * Удаляет из имени файла технический префикс позиции.
+     * Добавляет к имени файла служебный префикс хранилища файлов.
+     * Существующий префикс удаляется.
+     *
+     * @param string $attribute аттрибут модели
+     * @param int $pos норядок сортировки
+     * @param string $name пользовательское имя файла
+     * @return string имя файла со служебным префиксом.
+     */
+    public static function createStorePrefix(string $attribute, int $pos, string $name)
+    {
+        // удаляем текущий префикс
+        $name = static::removeStorePrefix($name);
+
+        // добавляем служебный префикс
+        return sprintf('%s~%d~%s', $attribute, $pos, $name);
+    }
+
+    /**
+     * Удаляет из имени файла служебный префикс хранилища файлов.
      *
      * @param string $name имя файла
      * @return string оригинальное имя без префикса
      */
-    public static function removeNamePrefix(string $name)
+    public static function removeStorePrefix(string $name)
     {
         $matches = null;
-        if (preg_match('~^(\.tmp)?\d+\~(.+)$~uism', $name, $matches)) {
-            $name = $matches[2];
+        if (preg_match(self::STORE_PREFIX_REGEX, $name, $matches)) {
+            $name = $matches[3];
         }
 
         return $name;
-    }
-
-    /**
-     * Добавляет имени файла временный случайный префикс позиции.
-     *
-     * Предварительно удаляется существующий префикс.
-     *
-     * @param string $name
-     * @return string
-     */
-    public static function setTempPrefix(string $name)
-    {
-        // удаляем текущий префикс
-        $name = static::removeNamePrefix($name);
-
-        // добавляем временный префиск
-        return sprintf('.tmp%d~%s', rand(), $name);
-    }
-
-    /**
-     * Добавляет к имени файла служебнй префикс позиции.
-     *
-     * Существующий префикс удаляется.
-     *
-     * @param string $name
-     * @return string
-     */
-    public static function setPosPrefix(string $name, int $pos)
-    {
-        // удаляем текущий префикс
-        $name = static::removeNamePrefix($name);
-
-        // добавляем порядковый префиск
-        return sprintf('%d~%s', $pos, $name);
     }
 }

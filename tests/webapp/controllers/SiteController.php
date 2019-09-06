@@ -32,6 +32,7 @@ class SiteController extends Controller
 
 		    if ($model->validate()) {
 	           $model->save();
+	           return $this->redirect(['index'], 303);
 		    }
 		}
 
