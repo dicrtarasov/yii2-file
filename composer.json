@@ -38,7 +38,8 @@
 	],
 	"autoload" : {
 		"psr-4" : {
-			"dicr\\file\\" : "src/"
+			"dicr\\file\\" : "src/",
+			"dicr\\file\\migrate" : "migrate"
 		}
 	},
 	"support" : {
