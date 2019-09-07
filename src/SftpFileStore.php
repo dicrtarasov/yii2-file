@@ -124,7 +124,7 @@ class SftpFileStore extends LocalFileStore
     {
         $absPath = $this->absolutePath($path);
 
-        $dir = @opendir($absPath, $this->context);
+        $dir = @opendir($absPath, /** @scrutinizer ignore-type */ $this->context);
         if ($dir === false) {
             $this->throwLastError('Чтение каталога', $absPath);
         }
@@ -148,6 +148,7 @@ class SftpFileStore extends LocalFileStore
                 }
             }
         } finally {
+            /** @scrutinizer ignore-unhandled */
             @closedir($dir);
         }
 
@@ -271,6 +272,7 @@ class SftpFileStore extends LocalFileStore
     public function __destruct()
     {
         if (!empty($this->session)) {
+            /** @scrutinizer ignore-unhandled */
             @ssh2_disconnect($this->session);
         }
     }

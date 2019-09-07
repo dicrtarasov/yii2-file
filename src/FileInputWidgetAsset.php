@@ -29,6 +29,6 @@ class FileInputWidgetAsset extends AssetBundle
     /** @var string[] */
     public $depends = [
         JqueryAsset::class,
-        JuiAsset::class
+        JuiAsset::class,
     ];
 }

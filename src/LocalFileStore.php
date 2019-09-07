@@ -67,14 +67,8 @@ class LocalFileStore extends AbstractFileStore
             $this->readMode = 'rb';
         }
 
-        if (empty($this->context)) {
-            $this->context = [];
-        }
-
-        if (is_array($this->context)) {
+        if (!is_resource($this->context)) {
             $this->context = stream_context_create($this->context);
-        } elseif (! is_resource($this->context)) {
-            throw new InvalidConfigException('context');
         }
 
         if (!is_array($this->perms) || ! isset($this->perms['dir']) || ! isset($this->perms['file'])) {
@@ -125,7 +119,7 @@ class LocalFileStore extends AbstractFileStore
         }
 
         // получаем реальный путь
-        $this->_path = $path === '/' ? $path : realpath($path);
+        $this->_path = $path === '/' ? $path : realpath(/** @scrutinizer ignore-type */ $path);
         if ($this->_path === false) {
             throw new StoreException('Путь не существует: ' . $path);
         }
@@ -316,7 +310,7 @@ class LocalFileStore extends AbstractFileStore
         $absPath = $this->absolutePath($path);
 
         $finfo = new \finfo(FILEINFO_MIME_TYPE);
-        $type = @$finfo->file($absPath, null, $this->context);
+        $type = @$finfo->file($absPath, null, /** @scrutinizer ignore-type */ $this->context);
         if ($type === false) {
             $this->throwLastError('Получение mime-типа', $absPath);
         }
@@ -348,7 +342,7 @@ class LocalFileStore extends AbstractFileStore
         // строим абсолютный путь
         $absPath = $this->absolutePath($path);
 
-        $bytes = @file_put_contents($absPath, $contents, $this->writeFlags, $this->context);
+        $bytes = @file_put_contents($absPath, $contents, $this->writeFlags, /** @scrutinizer ignore-type */ $this->context);
         if ($bytes === false) {
             $this->throwLastError('Запись файла', $absPath);
         }
@@ -363,8 +357,8 @@ class LocalFileStore extends AbstractFileStore
             }
         } catch (\Throwable $ex) {
             // для удаленных систем не обращаем внимание на исключение при установке прав
-            if (stream_is_local($absPath)) {
-                throw new StoreException($path, $ex);
+            if (@stream_is_local($absPath)) {
+                throw new StoreException($absPath, $ex);
             }
         }
 
@@ -379,7 +373,7 @@ class LocalFileStore extends AbstractFileStore
     {
         $absPath = $this->absolutePath($path);
 
-        $contents = @file_get_contents($absPath, false, $this->context);
+        $contents = @file_get_contents($absPath, false, /** @scrutinizer ignore-type */ $this->context);
         if ($contents === false) {
             $this->throwLastError('Чтение файла', $absPath);
         }
@@ -404,7 +398,7 @@ class LocalFileStore extends AbstractFileStore
     {
         $absPath = $this->absolutePath($path);
 
-        $stream = @fopen($absPath, $this->readMode, false, $this->context);
+        $stream = @fopen($absPath, $this->readMode, false, /** @scrutinizer ignore-type */ $this->context);
         if ($stream === false) {
             $this->throwLastError('Открытие файла', $absPath);
         }
@@ -443,7 +437,7 @@ class LocalFileStore extends AbstractFileStore
 
         $this->checkDir($newpath);
 
-        if (@copy($absPath, $absNew, $this->context) === false) {
+        if (@copy($absPath, $absNew, /** @scrutinizer ignore-type */ $this->context) === false) {
             $this->throwLastError('Копирование файла', $absNew);
         }
 
@@ -474,7 +468,7 @@ class LocalFileStore extends AbstractFileStore
         // проверяем директорию назначения
         $this->checkDir($this->dirname($newpath));
 
-        if (@rename($absPath, $absNew, $this->context) === false) {
+        if (@rename($absPath, $absNew, /** @scrutinizer ignore-type */ $this->context) === false) {
             $this->throwLastError('Переименование файла', $absNew);
         }
 
@@ -508,7 +502,7 @@ class LocalFileStore extends AbstractFileStore
         $perms = $this->permsByPublic(true, $this->public);
 
         // создаем иректорию
-        if (@mkdir($absPath, $perms, true, $this->context) === false) {
+        if (@mkdir($absPath, $perms, true, /** @scrutinizer ignore-type */ $this->context) === false) {
             $this->throwLastError('Создание директории', $absPath);
         }
 
@@ -528,7 +522,7 @@ class LocalFileStore extends AbstractFileStore
         $absPath = $this->absolutePath($path);
 
         // удаляем
-        if (@unlink($absPath, $this->context) === false) {
+        if (@unlink($absPath, /** @scrutinizer ignore-type */ $this->context) === false) {
             $this->throwLastError('Удаление файла', $absPath);
         }
 
@@ -550,7 +544,7 @@ class LocalFileStore extends AbstractFileStore
         $absPath = $this->absolutePath($path);
 
         // удаляем директорию
-        if (@rmdir($absPath, $this->context) === false) {
+        if (@rmdir($absPath, /** @scrutinizer ignore-type */ $this->context) === false) {
             $this->throwLastError('Удаление директории', $absPath);
         }
 

@@ -118,7 +118,7 @@ class FtpFileStore extends LocalFileStore
             throw new StoreException('not a directory: ' . $this->normalizePath($path));
         }
 
-        $dir = @opendir($this->absolutePath($path), $this->context);
+        $dir = @opendir($this->absolutePath($path), /** @scrutinizer ignore-type */ $this->context);
         if ($dir === false) {
             $this->throwLastError('Чтение каталога', $this->absolutePath($path));
         }
@@ -142,6 +142,7 @@ class FtpFileStore extends LocalFileStore
                 }
             }
         } finally {
+            /** @scrutinizer ignore-unhandled */
             @closedir($dir);
         }
 
@@ -234,7 +235,7 @@ class FtpFileStore extends LocalFileStore
         $path = $this->filterRootPath($path);
 
         if ($this->exists($path)) {
-            throw new StoreException('уже существует: ' . $path);
+            throw new StoreException('уже существует: ' . $this->absolutePath($path));
         }
 
         if (! @ftp_mkdir($this->connection, $this->relativePath($path))) {
@@ -285,6 +286,7 @@ class FtpFileStore extends LocalFileStore
      */
     public function __destruct() {
         if (!empty($this->connection)) {
+            /** @scrutinizer ignore-unhandled */
             @ftp_close($this->connection);
         }
     }

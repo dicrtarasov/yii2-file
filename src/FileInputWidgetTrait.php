@@ -2,8 +2,8 @@
 namespace dicr\file;
 
 use yii\base\InvalidConfigException;
-use yii\helpers\Html;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Html;
 
 /**
  * Виджет ввода картинок.
@@ -251,4 +251,12 @@ trait FileInputWidgetTrait
             $this->options
         );
     }
+
+    /**
+     * Register bootstrap plugin (method of bootstrap widget).
+     *
+     * @see \yii\bootstrap\BootstrapWidgetTrait::registerPlugin($name)
+     * @param string $name
+     */
+    protected abstract function registerPlugin($name);
 }

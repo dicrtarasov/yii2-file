@@ -22,6 +22,7 @@ class StoreException extends Exception
     {
         if ($msg == '') {
             $error = @error_get_last();
+            /** @scrutinizer ignore-unhandled */
             @error_clear_last();
             $msg = $error['message'] ?? 'Неопределенная ошибка';
         }

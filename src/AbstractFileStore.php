@@ -286,8 +286,6 @@ abstract class AbstractFileStore extends Component
         // проверяем аргументы
         if (is_string($src) || is_array($src)) {
             $src = LocalFileStore::root()->file($src);
-        } elseif (!($src instanceof AbstractFile)) {
-            throw new \InvalidArgumentException('src');
         }
 
         // пропускаем существующие файлы более новой версии
@@ -311,6 +309,7 @@ abstract class AbstractFileStore extends Component
         try {
             $this->writeStream($path, $srcStream);
         } finally {
+            /** @scrutinizer ignore-unhandled */
             @fclose($srcStream);
         }
 
@@ -458,8 +457,9 @@ abstract class AbstractFileStore extends Component
     {
         $stream = $this->readStream($path);
         try {
-            $this->writeStream($stream, $newpath);
+            $this->writeStream($newpath, $stream);
         } finally {
+            /** @scrutinizer ignore-unhandled */
             @fclose($stream);
         }
 
@@ -499,7 +499,7 @@ abstract class AbstractFileStore extends Component
             if (! $this->exists($path)) {
                 $this->mkdir($path);
             } elseif (! $this->isDir($path)) {
-                throw new StoreException('не является директорией: ' . $dir);
+                throw new StoreException('не является директорией: ' . $this->absolutePath($path));
             }
         }
 
@@ -557,10 +557,13 @@ abstract class AbstractFileStore extends Component
      * Очищает внуренний кэш файлов PHP.
      *
      * @param string|string[] $path относительный путь
+     * @return $this
      */
     public function clearStatCache($path)
     {
+        /** @scrutinizer ignore-unhandled */
         @clearstatcache(null, $this->absolutePath($path));
+        return $this;
     }
 
     /**
@@ -638,6 +641,7 @@ abstract class AbstractFileStore extends Component
 
         // добавляем последнюю ошибку
         $err = @error_get_last();
+        /** @scrutinizer ignore-unhandled */
         @error_clear_last();
         if (!empty($err['message'])) {
             $messages[] = $err['message'];

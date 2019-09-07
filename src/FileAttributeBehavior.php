@@ -218,6 +218,7 @@ class FileAttributeBehavior extends Behavior
             $relpath = [];
 
             // добавляем в путь имя формы
+            /** @scrutinizer ignore-call */
             $formName = $this->owner->formName();
             if (!empty($formName)) {
                 $relpath[] = $formName;
@@ -256,7 +257,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function deleteFileModelPath()
     {
-        return $this->getModelFilePath()->delete();
+        return $this->getFileModelPath()->delete();
     }
 
     /**
@@ -621,8 +622,8 @@ class FileAttributeBehavior extends Behavior
             $res = $this->saveFileAttribute($attribute);
 
             // пропускаем если атрибут не инициализирован
-            if ($res !== null) {
-                $ret = $ret && $res;
+            if ($res === false) {
+                $ret = false;
             }
         }
 

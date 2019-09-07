@@ -66,12 +66,13 @@ class Store200 extends BaseObject
                 foreach ($idDir->getList(['dirs' => true]) as $attrDir) {
                     self::processAttribute($attrDir);
                 }
+
+                // если директория id пустая, то удаляем
+                if (empty($idDir->list)) {
+                    $idDir->delete();
+                }
             }
 
-            // если директория id пустая, то удаляем
-            if (empty($idDir->list)) {
-                $idDir->delete();
-            }
         } else {
             // модель не содержит id
             foreach ($dirs as $attrDir) {

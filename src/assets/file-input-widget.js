@@ -68,9 +68,6 @@
                 // получаем URL картинки
                 const url = URL.createObjectURL(file);
 
-                // готовим картинку
-                const $img = $('<img/>', {'class': 'image', src: url});
-
                 // создаем новый элемент файла
                 $('<div></div>', {'class': 'file', data: {url: url}}).append(
                     // файл
