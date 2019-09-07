@@ -24,7 +24,7 @@ abstract class AbstractFileStoreTest extends TestCase
      *
      * @return \yii\console\Application
      */
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         return new \yii\console\Application([
             'id' => 'testapp',

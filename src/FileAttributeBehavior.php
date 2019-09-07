@@ -336,6 +336,7 @@ class FileAttributeBehavior extends Behavior
 
         // имя формы
         if (empty($formName)) {
+            /** @scrutinizer ignore-call */
             $formName = $this->owner->formName();
         }
 

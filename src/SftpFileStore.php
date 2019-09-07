@@ -148,8 +148,10 @@ class SftpFileStore extends LocalFileStore
                 }
             }
         } finally {
-            /** @scrutinizer ignore-unhandled */
-            @closedir($dir);
+            if (!empty($dir)) {
+                /** @scrutinizer ignore-unhandled */
+                @closedir($dir);
+            }
         }
 
         usort($files, function ($a, $b) {
@@ -220,7 +222,7 @@ class SftpFileStore extends LocalFileStore
         $path = $this->filterRootPath($path);
 
         if ($this->exists($path)) {
-            throw new StoreException('уже существует: ' . $path);
+            throw new StoreException('уже существует: ' . $this->absolutePath($path));
         }
 
         $perms = $this->permsByPublic(true, $this->public);

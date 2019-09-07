@@ -142,8 +142,10 @@ class FtpFileStore extends LocalFileStore
                 }
             }
         } finally {
-            /** @scrutinizer ignore-unhandled */
-            @closedir($dir);
+            if (!empty($dir)) {
+                /** @scrutinizer ignore-unhandled */
+                @closedir($dir);
+            }
         }
 
         usort($files, function ($a, $b) {
