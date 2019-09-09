@@ -400,6 +400,39 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
+     * Выполняет валидаию файла файлового атибута.
+     *
+     * @param string $attribute
+     * @param StoreFile $file
+     */
+    protected function validateFile(string $attribute, StoreFile $file)
+    {
+        // параметры аттрибута
+        $params = $this->attributes[$attribute] ?? [];
+
+        // проверяем на пустое значение
+        if (empty($file)) {
+            $this->owner->addError($attribute, 'Пустое значение файла');
+        } elseif (!($file instanceof StoreFile)) {
+            $this->owner->addError($attribute, 'Некоррекный тип значения: ' . gettype($file));
+        } elseif (! $file->exists) {
+            $this->owner->addError($attribute, 'Загружаемый файл не существует: ' . $file->path);
+        } elseif ($file->size <= 0) {
+            $this->owner->addError($attribute, 'Пустой размер файла: ' . $file->name);
+        } elseif (isset($params['maxsize']) && $file->size > $params['maxsize']) {
+            $this->owner->addError($attribute, 'Размер не более ' . \Yii::$app->formatter->asSize($params['maxsize']));
+        } elseif (isset($params['type']) && !$file->matchMimeType($params['type'])) {
+            $this->owner->addError($attribute, 'Неверный тип файла: ' . $file->mimeType);
+        } elseif ($file instanceof UploadFile) {
+            if (! empty($file->error)) {
+                $this->owner->addError($attribute, 'Ошибка загрузки файла');
+            } elseif (empty($file->name)) {
+                $this->owner->addError($attribute, 'Не задано имя загруаемого файла: ' . $file->path);
+            }
+        }
+    }
+
+    /**
      * Проводит валидацию файлового аттрибута и загруженных файлов.
      * Добавляет ошибки модели по addError
      *
@@ -436,56 +469,7 @@ class FileAttributeBehavior extends Behavior
 
         // проверяем каждый файл
         foreach ($files as $file) {
-            // проверяем на пустое значение
-            if (empty($file)) {
-                $this->owner->addError($attribute, 'Пустое значение файла');
-                continue;
-            }
-
-            // проверяем тип
-            if (!($file instanceof StoreFile)) {
-                $this->owner->addError($attribute, 'Некоррекный тип значения: ' . gettype($file));
-                continue;
-            }
-
-            // проверяем существование файла
-            if (! $file->exists) {
-                $this->owner->addError($attribute, 'Загружаемый файл не существует: ' . $file->path);
-                continue;
-            }
-
-            // проверяем наличие данных
-            if ($file->size <= 0) {
-                $this->owner->addError($attribute, 'Пустой размер файла: ' . $file->name);
-                continue;
-            }
-
-            // проверяем максимальный размер
-            if (isset($params['maxsize']) && $file->size > $params['maxsize']) {
-                $this->owner->addError($attribute, 'Размер не более ' . \Yii::$app->formatter->asSize($params['maxsize']));
-                continue;
-            }
-
-            // проверяем mime-тип
-            if (isset($params['type']) && !$file->matchMimeType($params['type'])) {
-                $this->owner->addError($attribute, 'Неверный тип файла: ' . $file->mimeType);
-                continue;
-            }
-
-            // загружаемый файл
-            if ($file instanceof UploadFile) {
-                // ошибка загрузки
-                if (! empty($file->error)) {
-                    $this->owner->addError($attribute, 'Ошибка загрузки файла');
-                    continue;
-                }
-
-                // пустое имя или путь файла
-                if (empty($file->name)) {
-                    $this->owner->addError($attribute, 'Не задано имя загруаемого файла: ' . $file->path);
-                    continue;
-                }
-            }
+            $this->validateFile($attribute, $file, $params);
         }
 
         return empty($this->owner->getErrors($attribute));
@@ -511,6 +495,26 @@ class FileAttributeBehavior extends Behavior
         }
 
         return $ret;
+    }
+
+    /**
+     * Находит позицию файла в списке файлов по имени.
+     *
+     * @param \dicr\file\StoreFile $file
+     * @param \dicr\file\StoreFile[] $files
+     * @return int|null
+     */
+    protected static function searchFileByName(StoreFile $file, array $files)
+    {
+        $name = $file->name;
+
+        foreach ($files as $i => $f) {
+            if ($f->name === $name) {
+                return $i;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -566,13 +570,7 @@ class FileAttributeBehavior extends Behavior
             // если файл в том же хранилище
             if ($file->store == $this->store) {
                 // ищем позицию в списке старых
-                $oldPos = null;
-                foreach ($oldFiles as $i => $oldFile) {
-                    if ($oldFile->name === $file->name) {
-                        $oldPos = $i;
-                        break;
-                    }
-                }
+                $oldPos = self::searchFileByName($file, $oldFiles);
 
                 // если файл найден в списке старых, то файл нужно сохранить как есть
                 if (isset($oldPos)) {
