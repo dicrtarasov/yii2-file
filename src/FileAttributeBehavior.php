@@ -403,9 +403,9 @@ class FileAttributeBehavior extends Behavior
      * Выполняет валидаию файла файлового атибута.
      *
      * @param string $attribute
-     * @param StoreFile $file
+     * @param mixed $file
      */
-    protected function validateFile(string $attribute, StoreFile $file)
+    protected function validateFile(string $attribute, $file)
     {
         // параметры аттрибута
         $params = $this->attributes[$attribute] ?? [];
@@ -477,7 +477,7 @@ class FileAttributeBehavior extends Behavior
 
         // проверяем каждый файл
         foreach ($files as $file) {
-            $this->validateFile($attribute, $file, $params);
+            $this->validateFile($attribute, $file);
         }
 
         return empty($this->owner->getErrors($attribute));
