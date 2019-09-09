@@ -3,34 +3,29 @@ namespace dicr\file;
 
 use yii\base\Component;
 use yii\base\Exception;
-use yii\base\InvalidConfigException;
 use yii\di\Instance;
+use yii\helpers\ArrayHelper;
 
 /**
  * Создает превью файлов.
  *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
+ *
+ *
+ * $file = $file;
+ * $tmb = $file->thumb(
  */
 class Thumbnailer extends Component
 {
-    /** @var string|array|AbstractFileStore хранилище файлов кэша */
+    /** @var \dicr\file\LocalFileStore|array|string хранилище файлов кэша */
     public $cacheStore;
 
-    /** @var string путь картинки по-умолчанию когда нет возможности создать превью */
+    /** @var string|null путь картинки-заглушки по-умолчанию */
     public $noimage = '@dicr/file/res/noimage.png';
 
-    /** @var string путь картинки для наложения водяного знака */
-    public $watermark = '';
-
-    /** @var float watermark opacity 0.01 .. 0.99 */
-    public $watermarkOpacity = 0.07;
-
-    /** @var string thumbnail image format */
-    public $format = 'jpg';
-
-    /** @var float image compression level 0.01 .. 0.99 */
-    public $quality = 0.8;
+    /** @var array конфиг файла превью по-умолчанию */
+    public $thumbFileConfig = [];
 
     /**
      * {@inheritdoc}
@@ -42,117 +37,37 @@ class Thumbnailer extends Component
 
         $this->cacheStore = Instance::ensure($this->cacheStore, AbstractFileStore::class);
 
-        $this->cacheStore->fileConfig['class'] = ThumbFile::class;
-
-        $this->noimage = trim($this->noimage);
-        if ($this->noimage != '') {
+        // noimage
+        if (!empty($this->noimage)) {
             $this->noimage = \Yii::getAlias($this->noimage, true);
-            if ($this->noimage === false) {
-                throw new InvalidConfigException('noimage');
-            }
         }
 
-        $this->watermark = trim($this->watermark);
-        if ($this->watermark != '') {
+        // watermark
+        if (!empty($this->watermark)) {
             $this->watermark = \Yii::getAlias($this->watermark, true);
-            if ($this->watermark === false) {
-                throw new InvalidConfigException('watermark');
-            }
-        }
-
-        $this->watermarkOpacity = (float) $this->watermarkOpacity;
-        if ($this->watermarkOpacity < 0 || $this->watermarkOpacity > 1) {
-            throw new InvalidConfigException('watermarkOpacity');
-        }
-
-        $this->format = trim($this->format);
-        if ($this->format == '') {
-            throw new InvalidConfigException('format');
-        }
-
-        $this->quality = (float) $this->quality;
-        if ($this->quality < 0 || $this->quality > 1) {
-            throw new InvalidConfigException('quality must be 0.01 .. 0.99');
         }
     }
 
     /**
-     * Возвращает файл кэша, соответствующий оригинальному файлу с заданными параметрами
+     * Читает картинку.
      *
-     * @param AbstractFile $origFile относительный путь файла
-     * @param int $width ширина превью
-     * @param int $height высота превью
-     * @param bool $watermark наличие водяного знака
-     * @return \dicr\file\ThumbFile кэш файл
-     */
-    public function cacheFile(AbstractFile $origFile, int $width, int $height, bool $watermark)
-    {
-        return ThumbFile::forFile($origFile, $this->cacheStore, $width, $height, $watermark, $this->format);
-    }
-
-    /**
-     * Возвращает список всех имеющихся в кэше превью файла с заданным путем
-     *
-     * @param AbstractFile $origFile относительный путь оригинального файла
-     * @throws StoreException
-     * @return \dicr\file\StoreFile[] список существующих в кэше превью
-     */
-    public function listFiles(AbstractFile $origFile)
-    {
-        if (empty($origFile)) {
-            throw new \InvalidArgumentException('origFile');
-        }
-
-        $cacheDir = $this->cacheStore->file($origFile)->parent;
-        if (empty($cacheDir)) {
-            throw new \InvalidArgumentException('origFile');
-        }
-
-        $list = $cacheDir->getList(['dir' => false,'filter' => [ThumbFile::class,'filterListFile']]);
-
-        usort($list, function ($a, $b) {
-            return strnatcasecmp($a->path, $b->path);
-        });
-
-        return $list;
-    }
-
-    /**
-     * Удаляет их кэша все превью файла с заданным путем.
-     *
-     * @param AbstractFile $origFile оригинальный файл
-     * @throws StoreException
-     * @return static
-     */
-    public function deleteFiles(AbstractFile $origFile)
-    {
-        foreach ($this->listFiles($origFile) as $cacheFile) {
-            $cacheFile->delete();
-        }
-
-        return $this;
-    }
-
-    /**
-     * Create image from file
-     *
-     * @param AbstractFile $origFile file or path
-     * @throws StoreException
+     * @param \dicr\file\ThumbFile $thumbFile
+     * @throws \dicr\file\StoreException
      * @return \Imagick
      */
-    protected function readImage(AbstractFile $origFile)
+    protected function readImage(ThumbFile $thumbFile)
     {
         // читаем картинку
         $image = new \Imagick();
-        $stream = $origFile->stream;
+        $stream = $thumbFile->src->stream;
 
         try {
             if (! $image->readimagefile($stream)) {
-                throw new StoreException('error reading image');
+                throw new StoreException('Ошибка чтения картинки: ' . $thumbFile->src->path);
             }
         } finally {
-            if (is_resource($stream)) {
-                fclose($stream);
+            if (!empty($stream)) {
+                @fclose($stream);
             }
         }
 
@@ -160,31 +75,21 @@ class Thumbnailer extends Component
     }
 
     /**
-     * Resize image
+     * Масштабирует картинку.
      *
+     * @param \dicr\file\ThumbFile $thumbFile
      * @param \Imagick $image
-     * @param int $width
-     * @param int $height
-     * @return static
+     * @return $this
      */
-    protected function resizeImage(\Imagick $image, int $width, int $height)
+    protected function resizeImage(ThumbFile $file, \Imagick $image)
     {
         if (empty($image)) {
             throw new \InvalidArgumentException('image');
         }
 
-        if ($width < 0) {
-            throw new \InvalidArgumentException('width');
-        }
-
-        if ($height < 0) {
-            throw new \InvalidArgumentException('height');
-        }
-
         // если заданы размеры, то делаем масштабирование
-        if ($width > 0 || $height > 0) {
-
-            if (! $image->thumbnailImage($width, $height, $width && $height, $width && $height)) {
+        if ($file->width > 0 || $file->height > 0) {
+            if (! $image->thumbnailimage($file->width, $file->height, $file->width && $file->height, $file->width && $file->height)) {
                 throw new Exception('error creating thumb');
             }
         }
@@ -193,71 +98,75 @@ class Thumbnailer extends Component
     }
 
     /**
-     * Накладывает водяной знак
+     * Накладывает водяной знак.
      *
+     * @param \dicr\file\ThumbFile $thumbFile
      * @param \Imagick $image исходная каринка
-     * @param string $watermark путь файла водяного знака
-     * @throws StoreException
-     * @return static
+     * @throws \dicr\file\StoreException
+     * @return $this
      */
-    protected function watermarkImage(\Imagick $image, string $watermark)
+    protected function watermarkImage(ThumbFile $thumbFile, \Imagick $image)
     {
-        if (empty($image)) {
-            throw new \InvalidArgumentException('image');
+        if (empty($thumbFile->watermark)) {
+            return $this;
         }
 
-        if (empty($watermark)) {
-            return;
+        try {
+            // создаем картинку для водяного знака
+            $watermark = new \Imagick();
+            if (! $watermark->readimage($thumbFile->watermark)) {
+                throw new StoreException('Ошибка чтения маски: ' . $thumbFile->watermark);
+            }
+
+            // применяем opacity
+            if (! empty($thumbFile->watermarkOpacity) && $thumbFile->watermarkOpacity < 1) {
+                $watermark->evaluateImage(\Imagick::EVALUATE_MULTIPLY, 0.07, \Imagick::CHANNEL_ALPHA);
+            }
+
+            // получаем размеры изображения
+            $width = $image->getimagewidth();
+            $height = $image->getimageheight();
+
+            // масштабируем водяной знак
+            if ($watermark->getimagewidth() != $width || $watermark->getimageheight() != $height) {
+                $watermark->scaleImage($width, $height, true);
+            }
+
+            // накладываем на изображение
+            $image->compositeImage($watermark, \Imagick::COMPOSITE_DEFAULT,
+                ($width - $watermark->getImageWidth()) / 2,
+                ($height - $watermark->getImageHeight()) / 2);
+        } finally {
+            if (!empty($watermark)) {
+                // освобождаем каринку водяного знака
+                $watermark->destroy();
+            }
         }
-
-        $watermark = new \Imagick();
-        if (! $watermark->readimage($watermark)) {
-            throw new StoreException('error reading watermark: ' . $watermark);
-        }
-
-        if (! empty($this->watermarkOpacity)) {
-            $watermark->evaluateImage(\Imagick::EVALUATE_MULTIPLY, 0.07, \Imagick::CHANNEL_ALPHA);
-        }
-
-        $watermark->scaleImage($image->getImageWidth(), $image->getImageHeight(), true);
-        $image->compositeImage($watermark, \Imagick::COMPOSITE_DEFAULT,
-            ($image->getImageWidth() - $watermark->getImageWidth()) / 2,
-            ($image->getImageHeight() - $watermark->getImageHeight()) / 2);
-
-        $watermark->destroy();
 
         return $this;
     }
 
     /**
-     * Сохраняет изображение
+     * Сохраняет изображение.
      *
+     * @param \dicr\file\ThumbFile $thumbFile
      * @param \Imagick $image
-     * @param string $thumbFile
-     * @throws Exception
-     * @return static
+     * @throws \dicr\file\StoreException
+     * @return $this
      */
-    protected function writeImage(\Imagick $image, ThumbFile $thumbFile)
+    protected function writeImage(ThumbFile $thumbFile, \Imagick $image)
     {
-        if (empty($image)) {
-            throw new \InvalidArgumentException('image');
-        }
-
-        if (empty($thumbFile)) {
-            throw new \InvalidArgumentException('thumbFile');
-        }
-
         // очищаем лишнюю информацию
         $image->stripImage();
 
         // формат
-        if ($image->setImageFormat($this->format) === false) {
-            throw new Exception('error setting image format: ' . $this->format);
+        if ($image->setImageFormat($thumbFile->format) === false) {
+            throw new Exception('Ошибка установки формата картинки: ' . $thumbFile->format);
         }
 
         // сжатие
-        if ($image->setImageCompressionQuality((int) round($this->quality * 100)) === false) {
-            throw new Exception('error setting image compression quality');
+        if ($image->setImageCompressionQuality((int) round($thumbFile->quality * 100)) === false) {
+            throw new Exception('Ошибка установки качества изображения: ' . $thumbFile->quality);
         }
 
         // сохраняем
@@ -267,46 +176,26 @@ class Thumbnailer extends Component
     }
 
     /**
-     * Create image thumbnail
+     * Создает превью из файла.
      *
-     * @param AbstractFile $origFile
-     * @param array $options
-     * @throws \Throwable
-     * @return ThumbFile
+     * @param \dicr\file\ThumbFile $src
+     * @return \dicr\file\ThumbFile
      */
-    protected function thumbnailFile(AbstractFile $origFile, array $options)
+    protected function processFile(ThumbFile $thumbFile)
     {
-        if (empty($origFile)) {
-            throw new \InvalidArgumentException('origFile');
+        // если файл уже существует и свежий, то возвращаем его без изменений
+        if ($thumbFile->isValid()) {
+            return $thumbFile;
         }
 
-        $width = (int) ($options['width'] ?? 0);
-        if ($width < 0) {
-            throw new \InvalidArgumentException('width');
-        }
-
-        $height = (int) ($options['height'] ?? 0);
-        if ($height < 0) {
-            throw new \InvalidArgumentException('height');
-        }
-
-        $watermark = $options['watermark'] ?? true;
-        if (is_bool($watermark)) {
-            $watermark = $watermark ? $this->watermark : '';
-        }
-
-        $thumbFile = $this->cacheFile($origFile, $width, $height, $watermark);
-
-        if (! $thumbFile->exists || $thumbFile->mtime < $origFile->mtime) {
-            try {
-                $image = $this->readImage($origFile);
-                $this->resizeImage($image, $width, $height);
-                $this->watermarkImage($image, $watermark);
-                $this->writeImage($image, $thumbFile);
-            } finally {
-                if (! empty($image)) {
-                    $image->destroy();
-                }
+        try {
+            $image = $this->readImage($thumbFile);
+            $this->resizeImage($thumbFile, $image);
+            $this->watermarkImage($thumbFile, $image);
+            $this->writeImage($thumbFile, $image);
+        } finally {
+            if (! empty($image)) {
+                $image->destroy();
             }
         }
 
@@ -316,49 +205,87 @@ class Thumbnailer extends Component
     /**
      * Создает превью файла
      *
-     * @param AbstractFile $origFile оригинальный файл
-     * @param array $options опции
-     *        - int|null $with
-     *        - int|null $height
-     *        - bool|string $watermark водяной знак. Если true или не задан, то используется по-умолчанию
-     *        - bool|string $noimage заглушка при ошике создания. Если true или не задан, то используется по-умлчанию.
+     * @param \dicr\file\AbstractFile $src оригинальный файл
+     *
+     * @param array $config конфиг \dicr\file\ThumbFile
+     *  - int|null $with
+     *  - int|null $height
+     *
+     *  - bool|string|null $watermark водяной знак.
+     *  Если true или не задан, то используется значение по-умолчанию.
+     *
+     *  - bool|string $noimage заглушка при ошике создания.
+     *  Если true или не задан, то используется значение по-умлчанию.
+     *
      * @throws \InvalidArgumentException
-     * @throws StoreException
-     * @return \dicr\file\ThumbFile
+     * @throws \dicr\file\StoreException
+     *
+     * @return \dicr\file\ThumbFile|null файл превью или null если исходный файл не существует
      */
-    public function process(AbstractFile $origFile, array $options = [])
+    public function process(AbstractFile $src, array $config = [])
     {
-        if (empty($origFile)) {
+        // проверяем аргументы
+        if (empty($src)) {
             throw new \InvalidArgumentException('origFile');
         }
 
-        // noimage
-        $noimage = $options['noimage'] ?? true;
-        if (is_bool($noimage)) {
-            $noimage = $noimage ? $this->noimage : '';
+        // если $confg['watermark'] == ture, то удаляем, точбы не перезаписывал
+        if (isset($config['watermark']) && $config['watermark'] === true) {
+            unset($config['watermark']);
         }
 
-        // пытаемся создать оригинальный превью
-        try {
-            $thumbFile = $this->thumbnailFile($origFile, $options);
-        } catch (\Throwable $ex) {
-            \Yii::warning('Ошибка создания превью файла: ' . $origFile->path . ': ' . $ex->getMessage(), __METHOD__);
+        // дополняем конфиг значениями по-умолчанию
+        $config = array_merge($this->thumbFileConfig, $config);
 
-            if (! empty($noimage)) {
+        // выделяем параметр noimage
+        $noimage = ArrayHelper::remove($config, 'noimage');
+        if ($noimage === true) {
+            $noimage = $this->noimage;
+        }
 
-                // пытаемся создать превью из заглушки
-                try {
-                    $noimageFile = LocalFileStore::root()->file($noimage);
-                    $options['watermark'] = false;
-                    $thumbFile = $this->thumbnailFile($noimageFile, $options);
-                } catch (\Throwable $ex) {
-                    throw new StoreException('ошибка создания превью: ' . $origFile->path, $ex);
-                }
-            } else {
-                throw new StoreException('ошибка создания превью: ' . $origFile->path, $ex);
+        // если файл сущесвует
+        if ($src->exists) {
+            $thumbFile = new ThumbFile($this->cacheStore, $src, array_merge($config, [
+                'noimage' => false
+            ]));
+
+            try {
+                return $this->processFile($thumbFile);
+            } catch (\Throwable $ex) {
+                \Yii::warning($ex, __METHOD__);
             }
         }
 
-        return $thumbFile;
+        // возращаем noimage нужного размера
+        if (! empty($noimage)) {
+            $srcNoimage = LocalFileStore::root()->file($noimage);
+
+            $thumbFile = new ThumbFile($this->cacheStore, $srcNoimage, array_merge($config, [
+                'noimage' => true,
+                'watermark' => null
+            ]));
+
+            return $this->processFile($thumbFile);
+        }
+
+        return null;
+    }
+
+    /**
+     * Удаляет их кэша превью файла.
+     *
+     * @param AbstractFile $src относительный путь оригинального файла
+     * @throws \dicr\file\StoreException
+     */
+    public function clear(AbstractFile $src)
+    {
+        $files = $this->cacheStore->file($src->path)->parent->getList([
+            'nameRegex' => ThumbFile::PATHNAME_REGEX,
+            'dir' => false
+        ]);
+
+        foreach ($files as $file) {
+            $file->delete();
+        }
     }
 }

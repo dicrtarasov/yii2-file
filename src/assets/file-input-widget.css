@@ -27,29 +27,28 @@
 /** элемент файла */
 .file-input-widget .file {
     flex: 0 0 0;
-    display: flex;
-    flex-flow: row nowrap;
     border-radius: 0.3rem;
     cursor: move !important;
 }
 
 .file-input-widget.layout-images .file {
+    display: block;
     position: relative;
-    justify-content: center;
-    align-items:stretch;
+    text-align: center;
     background-color: hsl(0, 0%, 95%);
     padding: 0;
-    margin: 0.5rem;
     box-shadow: 1px 1px 10px hsla(0, 0%, 0%, 0.3);
+    margin: 0 0.5rem 1rem 0.5rem;
 }
 
-
 .file-input-widget.layout-files .file {
+    display: flex;
+    flex-flow: row nowrap;
     justify-content: flex-start;
     align-items: center;
     background: hsl(0, 0%, 98%);
     border: 1px solid hsl(0, 0%, 90%);
-    margin: 0.5rem 0.5rem 0 0.5rem;
+    margin: 0.25rem 0.5rem 0.25rem 0.5rem;
 }
 
 .file-input-widget.layout-images .file:hover {
@@ -177,24 +176,24 @@
     flex: 0 0 0;
     display: flex;
     align-items: center;
-    margin: 0.5rem 0.5rem 0.5rem 1rem;
+    margin: 0.25rem 0.5rem 0.8rem 0.5rem;
     cursor: pointer;
 }
 
 .file-input-widget.layout-images .add {
-    justify-content: center;
     align-self: center;
 }
 
-.file-input-widget.layout-images .add .fa {
-    font-size: 2.5rem;
-}
-
-.file-input-widget.layout-files .add .fa {
-    font-size: 1.5rem;
+.file-input-widget.layout-files .add {
+    align-self: flex-start;
 }
 
 .file-input-widget.layout-files .add:after {
     content: "Добавить";
-    margin-left: 1rem;
+    margin-left: 0.8rem;
 }
+
+.file-input-widget .add .fa {
+    font-size: 2.0rem;
+}
+

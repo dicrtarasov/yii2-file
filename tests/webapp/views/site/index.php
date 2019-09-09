@@ -19,6 +19,12 @@ use yii\bootstrap\Html;
 	<meta charset="UTF-8"/>
 	<title>dicr\\file\\Storage test</title>
 	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css"/>
+	<style type="text/css">
+	   .form-group .help-block:empty {
+	       display: none;
+       }
+
+	</style>
 	<?php $this->head() ?>
 </head>
 

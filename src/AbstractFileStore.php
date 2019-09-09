@@ -28,7 +28,7 @@ abstract class AbstractFileStore extends Component
     /** @var string path separator */
     public $pathSeparator = DIRECTORY_SEPARATOR;
 
-    /** @var array|\dicr\file\Thumbnailer конфиг thumbnailer для создания превью */
+    /** @var \dicr\file\Thumbnailer|array|string thumbnailer  */
     public $thumbnailer;
 
     /**
@@ -49,14 +49,8 @@ abstract class AbstractFileStore extends Component
             $this->url = $url;
         }
 
-        // проверяем thumbnailer
+        // thumbnailer
         if (isset($this->thumbnailer)) {
-            if (is_array($this->thumbnailer)) {
-                if (!isset($this->thumbnailer['class'])) {
-                    $this->thumbnailer['class'] = Thumbnailer::class;
-                }
-            }
-
             $this->thumbnailer = Instance::ensure($this->thumbnailer, Thumbnailer::class);
         }
     }
@@ -209,28 +203,6 @@ abstract class AbstractFileStore extends Component
      */
     abstract public function absolutePath($path);
 
-    /* === Работа с URL ================================================================= */
-
-    /**
-     * Возвращает URL файла
-     *
-     * @param string|string[] $path
-     * @return string|null URL файла
-     */
-    public function url($path)
-    {
-        if (empty($this->url)) {
-            return null;
-        }
-
-        $url = $this->url;
-        if (is_array($url)) {
-            $url = Url::to($url, true);
-        }
-
-        return implode('/', array_merge([$url], $this->filterPath($path)));
-    }
-
     /* === Создание файла и листинг директории ========================================== */
 
     /**
@@ -251,6 +223,26 @@ abstract class AbstractFileStore extends Component
 
         // создаем файл
         return \Yii::createObject($fileConfig, [$this, $path]);
+    }
+
+    /**
+     * Возвращает URL файла
+     *
+     * @param string|string[] $path
+     * @return string|null URL файла
+     */
+    public function url($path)
+    {
+        if (empty($this->url)) {
+            return null;
+        }
+
+        $url = $this->url;
+        if (is_array($url)) {
+            $url = Url::to($url, true);
+        }
+
+        return implode('/', array_merge([$url], $this->filterPath($path)));
     }
 
     /**

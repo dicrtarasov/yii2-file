@@ -422,10 +422,10 @@ class StoreFile extends AbstractFile
     /**
      * Создает превью файла
      *
-     * @param array $options
-     * @return \dicr\file\ThumbFile
+     * @param array $options опции Thumbnailer::process
      * @throws \dicr\file\StoreException
      * @throws \yii\base\NotSupportedException
+     * @return \dicr\file\ThumbFile
      * @see \dicr\file\Thumbnailer::process()
      */
     public function thumb(array $options=[])

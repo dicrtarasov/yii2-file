@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a978c8711c4588c8e746e48516ab1dce",
+    "content-hash": "974ce87cdba1f862002c28f86c04056f",
     "packages": [
         {
             "name": "bower-asset/inputmask",
@@ -2359,7 +2359,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=7.2",
+        "php": ">=7.1",
         "ext-fileinfo": "*",
         "ext-imagick": "*"
     },

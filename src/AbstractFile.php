@@ -8,6 +8,7 @@ use yii\base\BaseObject;
  *
  * @property-read string $path путь файла
  * @property-read string $name имя файла без пути
+ * @property-read string|null $extension расширение файла
  * @property-read bool $exists существует
  * @property-read bool $isDir поддерживает листинг
  * @property-read bool $isFile поддерживает получение содержимого
@@ -66,6 +67,28 @@ abstract class AbstractFile extends BaseObject
      * @return string basename
      */
     abstract public function getName(array $options = []);
+
+    /**
+     * Возвращает расширение файла по имени.
+     *
+     * @return string|NULL
+     */
+    public function getExtension()
+    {
+        $matches = null;
+        return preg_match('~^.+\.([^\.]+)$~ui', $this->name, $matches) ? $matches[1] : null;
+    }
+
+    /**
+     * Возвращает имя файла без расширения.
+     *
+     * @param string $name
+     * @return string
+     */
+    public static function removeExtension(string $name)
+    {
+        return preg_replace('~^(.+)\.[^\.]+$~ui', '${1}', $name);
+    }
 
     /**
      * Возвращает флаг существования файла.
@@ -142,24 +165,6 @@ abstract class AbstractFile extends BaseObject
      * @return resource
      */
     abstract public function getStream();
-
-    /**
-     * Возвращает имя файла без расширения.
-     *
-     * @param string $name
-     * @return string
-     */
-    protected static function removeExtension(string $name)
-    {
-        if (!empty($name)) {
-            $locale = setlocale(LC_ALL, '0');
-            setlocale(LC_ALL, 'ru_RU.UTF-8');
-            $name = pathinfo($name, PATHINFO_FILENAME);
-            setlocale(LC_ALL, $locale);
-        }
-
-        return $name;
-    }
 
     /**
      * Конвертирует в строку.
