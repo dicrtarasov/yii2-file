@@ -430,6 +430,7 @@ class FileAttributeBehavior extends Behavior
 
         // максимальное количество
         if (!empty($params['limit']) && count($files) > $params['limit']) {
+            /** @scrutinizer ignore-call */
             $this->owner->addError($attribute, 'Максимальное кол-во файлов: ' . intval($params['limit']));
         }
 

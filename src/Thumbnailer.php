@@ -43,8 +43,8 @@ class Thumbnailer extends Component
         }
 
         // thumbFileConfig
-        if (!empty($this->fileConfig['watermark'])) {
-            $this->fileConfig['watermark'] = \Yii::getAlias($this->fileConfig['watermark'], true);
+        if (!empty($this->thumbFileConfig['watermark'])) {
+            $this->thumbFileConfig['watermark'] = \Yii::getAlias($this->thumbFileConfig['watermark'], true);
         }
     }
 
