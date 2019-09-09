@@ -27,6 +27,9 @@ class Store200 extends BaseObject
     protected static function processAttribute(StoreFile $attrDir)
     {
         $parent = $attrDir->parent;
+        if (empty($parent)) {
+            throw new \InvalidArgumentException('attrDir has not parent');
+        }
 
         foreach ($attrDir->getList(['dir' => false]) as $file) {
             // разбираем имя файла

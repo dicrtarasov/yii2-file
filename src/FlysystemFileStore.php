@@ -27,7 +27,7 @@ class FlysystemFileStore extends AbstractFileStore
     public function init()
     {
         if (is_callable($this->flysystem)) {
-            $this->flysystem = call_user_func($this->flysystem, $this);
+            $this->flysystem = call_user_func(/** @scrutinizer ignore-type */ $this->flysystem, $this);
         }
 
         if (! ($this->flysystem instanceof Filesystem)) {

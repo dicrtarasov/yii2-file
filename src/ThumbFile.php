@@ -6,12 +6,6 @@ use yii\base\InvalidConfigException;
 /**
  * Превью файл в кэше.
  *
- * @property int $width ширина
- * @property int $height высота
- * @property bool $noimage картинка noimage
- * @property bool $watermark используется водяной знак
- * @property string $format формат файла (png, jpg, ...)
- *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
  */

@@ -424,6 +424,7 @@ class FileAttributeBehavior extends Behavior
 
         // минимальное количество
         if (!empty($params['min']) && count($files) < $params['min']) {
+            /** @scrutinizer ignore-call */
             $this->owner->addError($attribute, 'Необходимо не менее '. intval($params['min']) . ' количество файлов');
         }
 

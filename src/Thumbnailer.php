@@ -42,9 +42,9 @@ class Thumbnailer extends Component
             $this->noimage = \Yii::getAlias($this->noimage, true);
         }
 
-        // watermark
-        if (!empty($this->watermark)) {
-            $this->watermark = \Yii::getAlias($this->watermark, true);
+        // thumbFileConfig
+        if (!empty($this->fileConfig['watermark'])) {
+            $this->fileConfig['watermark'] = \Yii::getAlias($this->fileConfig['watermark'], true);
         }
     }
 
@@ -67,6 +67,7 @@ class Thumbnailer extends Component
             }
         } finally {
             if (!empty($stream)) {
+                /** @scrutinizer ignore-unhandled */
                 @fclose($stream);
             }
         }
@@ -279,7 +280,12 @@ class Thumbnailer extends Component
      */
     public function clear(AbstractFile $src)
     {
-        $files = $this->cacheStore->file($src->path)->parent->getList([
+        $dir = $this->cacheStore->file($src->path)->parent;
+        if (empty($dir)) {
+            throw new StoreException('Некорректный файл для очистки');
+        }
+
+        $files = $dir->getList([
             'nameRegex' => ThumbFile::PATHNAME_REGEX,
             'dir' => false
         ]);

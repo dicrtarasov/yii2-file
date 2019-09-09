@@ -15,6 +15,9 @@ use yii\helpers\Html;
  *   use FileInputWidgetTrait;
  * }
  *
+ * @property array clientOptions
+ *
+ *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2018
  */
@@ -252,11 +255,5 @@ trait FileInputWidgetTrait
         );
     }
 
-    /**
-     * Register bootstrap plugin (method of bootstrap widget).
-     *
-     * @see \yii\bootstrap\BootstrapWidgetTrait::registerPlugin($name)
-     * @param string $name
-     */
     protected abstract function registerPlugin($name);
 }

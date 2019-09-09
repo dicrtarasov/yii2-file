@@ -149,8 +149,7 @@ class SftpFileStore extends LocalFileStore
             }
         } finally {
             if (!empty($dir)) {
-                /** @scrutinizer ignore-unhandled */
-                @closedir($dir);
+                closedir($dir);
             }
         }
 
