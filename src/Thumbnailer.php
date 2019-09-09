@@ -35,7 +35,7 @@ class Thumbnailer extends Component
     {
         parent::init();
 
-        $this->cacheStore = Instance::ensure($this->cacheStore, AbstractFileStore::class);
+        $this->cacheStore = Instance::ensure($this->cacheStore, LocalFileStore::class);
 
         // noimage
         if (!empty($this->noimage)) {
