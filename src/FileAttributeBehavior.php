@@ -412,21 +412,29 @@ class FileAttributeBehavior extends Behavior
 
         // проверяем на пустое значение
         if (empty($file)) {
+            /** @scrutinizer ignore-call */
             $this->owner->addError($attribute, 'Пустое значение файла');
         } elseif (!($file instanceof StoreFile)) {
+            /** @scrutinizer ignore-call */
             $this->owner->addError($attribute, 'Некоррекный тип значения: ' . gettype($file));
         } elseif (! $file->exists) {
+            /** @scrutinizer ignore-call */
             $this->owner->addError($attribute, 'Загружаемый файл не существует: ' . $file->path);
         } elseif ($file->size <= 0) {
+            /** @scrutinizer ignore-call */
             $this->owner->addError($attribute, 'Пустой размер файла: ' . $file->name);
         } elseif (isset($params['maxsize']) && $file->size > $params['maxsize']) {
+            /** @scrutinizer ignore-call */
             $this->owner->addError($attribute, 'Размер не более ' . \Yii::$app->formatter->asSize($params['maxsize']));
         } elseif (isset($params['type']) && !$file->matchMimeType($params['type'])) {
+            /** @scrutinizer ignore-call */
             $this->owner->addError($attribute, 'Неверный тип файла: ' . $file->mimeType);
         } elseif ($file instanceof UploadFile) {
             if (! empty($file->error)) {
+                /** @scrutinizer ignore-call */
                 $this->owner->addError($attribute, 'Ошибка загрузки файла');
             } elseif (empty($file->name)) {
+                /** @scrutinizer ignore-call */
                 $this->owner->addError($attribute, 'Не задано имя загруаемого файла: ' . $file->path);
             }
         }
