@@ -1,7 +1,6 @@
 <?php
 namespace dicr\file;
 
-use yii\base\NotSupportedException;
 
 /**
  * Файл хранилища файлов.
@@ -420,21 +419,23 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * Создает превью файла
+     * Создает превью файла.
      *
-     * @param array $options опции Thumbnailer::process
+     * @param array $config опции ThumbFile
      * @throws \dicr\file\StoreException
-     * @throws \yii\base\NotSupportedException
-     * @return \dicr\file\ThumbFile
-     * @see \dicr\file\Thumbnailer::process()
+     * @return \dicr\file\ThumbFile|false ThumbFile или false если не настроен
      */
-    public function thumb(array $options=[])
+    public function thumb(array $config = [])
     {
-        if (empty($this->_store->thumbnailer)) {
-            throw new NotSupportedException('thumbnailer не настроен');
-        }
+        return $this->store->thumb($this, $config);
+    }
 
-        return $this->_store->thumbnailer->process($this, $options);
+    /**
+     * Очищает все превью файла.
+     */
+    public function clearThumb()
+    {
+        $this->store->clearThumb($this);
     }
 
     /**

@@ -4,12 +4,13 @@ namespace dicr\file;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
-use yii\di\Instance;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
 
 /**
  * Abstract Fle Store.
+ *
+ * @property-read bool $isThumbAvailable
  *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
@@ -28,8 +29,8 @@ abstract class AbstractFileStore extends Component
     /** @var string path separator */
     public $pathSeparator = DIRECTORY_SEPARATOR;
 
-    /** @var \dicr\file\Thumbnailer|array|string thumbnailer  */
-    public $thumbnailer;
+    /** @var array|false конфиг файлов превью картинок ThumbFile */
+    public $thumbFileConfig;
 
     /**
      * {@inheritdoc}
@@ -49,9 +50,9 @@ abstract class AbstractFileStore extends Component
             $this->url = $url;
         }
 
-        // thumbnailer
-        if (isset($this->thumbnailer)) {
-            $this->thumbnailer = Instance::ensure($this->thumbnailer, Thumbnailer::class);
+        // проверяем thumbFileConfig
+        if (!empty($this->thumbFileConfig) && !is_array($this->thumbFileConfig)) {
+            throw new InvalidConfigException('thumbFileConfig');
         }
     }
 
@@ -556,6 +557,113 @@ abstract class AbstractFileStore extends Component
         /** @scrutinizer ignore-unhandled */
         @clearstatcache(null, $this->absolutePath($path));
         return $this;
+    }
+
+    /**
+     * Проверяет доступны ли создание ThumbFile.
+     *
+     * @return boolean true, если конфиг настроен
+     */
+    public function getIsThumbAvailable()
+    {
+        return !empty($this->thumbFileConfig);
+    }
+
+    /**
+     * Создает ThumbFile.
+     *
+     * @param array $config
+     * @return \dicr\file\ThumbFile|false ThumbFile или false если не конфиг не настроен
+     */
+    protected function createThumb(array $config = [])
+    {
+        if (!$this->isThumbAvailable) {
+            return false;
+        }
+
+        $config = array_merge($this->thumbFileConfig, $config);
+
+        if (empty($config['class'])) {
+            $config['class'] = ThumbFile::class;
+        }
+
+        return \Yii::createObject($config);
+    }
+
+
+    /**
+     * Создает файл предпросмотра каринки.
+     *
+     * @param string|array|\dicr\file\StoreFile $file
+     * @param array $config
+     * @return \dicr\file\ThumbFile|false превью или false, если thumbFileConfig не настроен
+     */
+    public function thumb($file, array $config = [])
+    {
+        // проверяем аргументы
+        if (empty($file)) {
+            throw new \InvalidArgumentException('file');
+        } elseif (!($file instanceof StoreFile)) {
+            $file = $this->file($file);
+        }
+
+        // создаем превью
+        $thumb = $this->createThumb(array_merge($config, [
+            'source' => $file
+        ]));
+
+        // если превью настроено, то обновляем файл
+        if (!empty($thumb) && !$thumb->isReady) {
+            $thumb->update();
+        }
+
+        return $thumb;
+    }
+
+    /**
+     * Возвращает превью для noimage.
+     *
+     * @param array $config конфиг превью.
+     * @return \dicr\file\ThumbFile
+     */
+    public function noimage(array $config = [])
+    {
+        // создаем превью для пустого файла
+        $thumb = $this->createThumb(array_merge($config, [
+            'source' => null
+        ]));
+
+        // если превью настроено, то обновляем файл
+        if (!empty($thumb) && !$thumb->isReady) {
+            $thumb->update();
+        }
+
+        return $thumb;
+    }
+
+    /**
+     * Очищает превью для заданного файла.
+     *
+     * @param string|array|\dicr\file\StoreFile $file
+     */
+    public function clearThumb($file)
+    {
+        // проверяем аргументы
+        if (empty($file)) {
+            throw new \InvalidArgumentException('file');
+        } elseif (!($file instanceof StoreFile)) {
+            $file = $this->file($file);
+        }
+
+        // создаем ThumbFile
+        $thumb = $this->createThumb([
+            'source' => $file
+        ]);
+
+        // если настроен, то очищаем все файлы превью
+        if (!empty($thumb)) {
+            $thumb->clear();
+        }
     }
 
     /**
