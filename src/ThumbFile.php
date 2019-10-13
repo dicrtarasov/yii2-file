@@ -153,7 +153,7 @@ class ThumbFile extends StoreFile
             }
         } elseif (!empty($this->noimage)) {
             // если не указан источник, то считаем это noimage
-            $this->source = LocalFileStore::root()->file($this->watermark);
+            $this->source = LocalFileStore::root()->file($this->noimage);
             $this->isNoimage = true;
         } else {
             throw new InvalidConfigException('не указан source и noimage');
