@@ -24,6 +24,9 @@ class Thumbnailer extends Component
     /** @var string|null путь картинки-заглушки по-умолчанию */
     public $noimage = '@dicr/file/res/noimage.png';
 
+    /** @var callable функция для дополниельной обработки function(\Imagick $image, ThumbFile $thumbFile) : \Imagick */
+    public $postProcess;
+
     /** @var array конфиг файла превью по-умолчанию */
     public $thumbFileConfig = [];
 
@@ -193,7 +196,12 @@ class Thumbnailer extends Component
             $image = $this->readImage($thumbFile);
             $this->resizeImage($thumbFile, $image);
             $this->watermarkImage($thumbFile, $image);
-            $this->writeImage($thumbFile, $image);
+            if (!empty($this->postProcess)) {
+                $image = call_user_func($this->postProcess, $image, $thumbFile);
+            }
+            if (!empty($image)) {
+                $this->writeImage($thumbFile, $image);
+            }
         } finally {
             if (! empty($image)) {
                 $image->destroy();
@@ -230,7 +238,7 @@ class Thumbnailer extends Component
             throw new \InvalidArgumentException('origFile');
         }
 
-        // если $confg['watermark'] == ture, то удаляем, точбы не перезаписывал
+        // если $confg['watermark'] == ture, то удаляем, чтобы не перезаписывал
         if (isset($config['watermark']) && $config['watermark'] === true) {
             unset($config['watermark']);
         }

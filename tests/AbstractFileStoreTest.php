@@ -30,13 +30,6 @@ abstract class AbstractFileStoreTest extends TestCase
             'id' => 'testapp',
             'basePath' => __DIR__,
             'vendorPath' => VENDOR,
-            'components' => [
-                'request' => [
-                    'cookieValidationKey' => 'MD44rEeFtNSeJ37sOzD954sI',
-                    'scriptFile' => __DIR__ .'/index.php',
-                    'scriptUrl' => '/index.php',
-                ],
-            ]
         ]);
     }
 
