@@ -33,6 +33,9 @@ class ThumbFile extends StoreFile
     /** @var float прозрачность картинки watermark */
     public $watermarkOpacity = 0.7;
 
+    /** @var string|false путь каринки дисклеймера */
+    public $disclaimer;
+
     /** @var float качество сжаия каринки */
     public $quality = 0.8;
 
@@ -54,12 +57,22 @@ class ThumbFile extends StoreFile
      */
     public function __construct(array $config = [])
     {
-        $store = ArrayHelper::remove($config, 'store');
-        if (empty($store)) {
-            throw new \InvalidArgumentException('empty store');
+        $store = Instance::ensure(ArrayHelper::remove($config, 'store'), AbstractFileStore::class);
+
+        // если noimage === true, то удаляем из конфига чтобы не переписать дефолтное значение
+        if (!empty($config['noimage']) && $config['noimage'] === true) {
+            unset($config['noimage']);
         }
 
-        $store = Instance::ensure($store, AbstractFileStore::class);
+        // если watermark === true, то удаляем из конфига чтобы не перезаписать дефолтное значение
+        if (!empty($config['watermark']) && $config['watermark'] === true) {
+            unset($config['watermark']);
+        }
+
+        // если disclaimer === true, то удаляем из конфига чтобы не перезаписать дефолтное значение
+        if (!empty($config['disclaimer']) && $config['disclaimer'] === true) {
+            unset($config['disclaimer']);
+        }
 
         parent::__construct($store, '', $config);
     }
@@ -119,6 +132,17 @@ class ThumbFile extends StoreFile
             $this->quality = (float)$this->quality;
             if ($this->quality < 0 || $this->quality > 1) {
                 throw new InvalidConfigException('quality: ' . $this->quality);
+            }
+        }
+
+        if (isset($this->disclaimer)) {
+            if (is_string($this->disclaimer)) {
+                $this->disclaimer = \Yii::getAlias($this->disclaimer, true);
+                if (!is_file($this->disclaimer) || !is_readable($this->disclaimer)) {
+                    throw new InvalidConfigException('disclaimer не доступен');
+                }
+            } elseif ($this->disclaimer !== false) {
+                throw new InvalidConfigException('disclaimer: ' . gettype($this->disclaimer));
             }
         }
 
@@ -249,6 +273,8 @@ class ThumbFile extends StoreFile
             return;
         }
 
+        $watermark = null;
+
         try {
             // получаем размеры изображения
             $image = $this->getImage();
@@ -270,13 +296,54 @@ class ThumbFile extends StoreFile
             }
 
             // накладываем на изображение
-            $image->compositeImage($watermark, \Imagick::COMPOSITE_DEFAULT,
+            $image->compositeImage(
+                $watermark, \Imagick::COMPOSITE_DEFAULT,
                 ($width - $watermark->getImageWidth()) / 2,
-                ($height - $watermark->getImageHeight()) / 2);
+                ($height - $watermark->getImageHeight()) / 2
+            );
         } finally {
             if (!empty($watermark)) {
                 // освобождаем каринку водяного знака
                 $watermark->destroy();
+            }
+        }
+    }
+
+    /**
+     * Накладывает пометку о возрастных ограничениях.
+     */
+    protected function placeDisclaimer()
+    {
+        if (empty($this->disclaimer)) {
+            return;
+        }
+
+        $disclaimer = null;
+        try {
+            // получаем картинку
+            $image = $this->getImage();
+            $width = $image->getimagewidth();
+            $height = $image->getimageheight();
+
+            // создаем изображение
+            $disclaimer = new \Imagick($this->disclaimer);
+
+            // изменяем размер
+            $disclaimer->scaleImage($width * 0.10, $height * 0.10, true);
+
+            // добавляем прозрачность
+            $disclaimer->evaluateImage(\Imagick::EVALUATE_MULTIPLY, 0.65, \Imagick::CHANNEL_OPACITY);
+
+            // выполняем наложение
+            $image->compositeImage(
+                $disclaimer, \Imagick::COMPOSITE_DEFAULT,
+                $width - $width * 1.3,
+                $height * 0.3
+            );
+        } finally {
+            // удаляем объект
+            if (!empty($disclaimer)) {
+                $disclaimer->destroy();
             }
         }
     }
@@ -323,6 +390,7 @@ class ThumbFile extends StoreFile
         $this->preprocessImage();
         $this->resizeImage();
         $this->watermarkImage();
+        $this->placeDisclaimer();
         $this->postprocessImage();
         $this->writeImage();
     }

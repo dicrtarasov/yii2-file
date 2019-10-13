@@ -581,6 +581,21 @@ abstract class AbstractFileStore extends Component
             return false;
         }
 
+        // если noimage === true, то удаляем из конфига чтобы не переписать дефолтное значение
+        if (!empty($config['noimage']) && $config['noimage'] === true) {
+            unset($config['noimage']);
+        }
+
+        // если watermark === true, то удаляем из конфига чтобы не перезаписать дефолтное значение
+        if (!empty($config['watermark']) && $config['watermark'] === true) {
+            unset($config['watermark']);
+        }
+
+        // если disclaimer === true, то удаляем из конфига чтобы не перезаписать дефолтное значение
+        if (!empty($config['disclaimer']) && $config['disclaimer'] === true) {
+            unset($config['disclaimer']);
+        }
+
         $config = array_merge($this->thumbFileConfig, $config);
 
         if (empty($config['class'])) {
