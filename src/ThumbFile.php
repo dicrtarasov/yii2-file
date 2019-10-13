@@ -185,7 +185,7 @@ class ThumbFile extends StoreFile
     {
         return preg_replace('~^(.+)\.[^\.]+$~ui',
             sprintf('${1}~%dx%d%s.%s', $this->width, $this->height,
-                !$this->noimage && !empty($this->watermark) ? '~w' : '',
+                !$this->isNoimage && !empty($this->watermark) ? '~w' : '',
                 preg_quote($this->format)
             ),
             $this->isNoimage ? 'noimage/' . $this->source->name : $this->source->path
@@ -269,7 +269,7 @@ class ThumbFile extends StoreFile
      */
     protected function watermarkImage()
     {
-        if (empty($this->watermark)) {
+        if ($this->isNoimage || empty($this->watermark)) {
             return;
         }
 
@@ -314,7 +314,7 @@ class ThumbFile extends StoreFile
      */
     protected function placeDisclaimer()
     {
-        if (empty($this->disclaimer)) {
+        if ($this->isNoimage || empty($this->disclaimer)) {
             return;
         }
 
