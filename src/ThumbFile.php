@@ -266,12 +266,13 @@ class ThumbFile extends StoreFile
         try {
             // получаем размеры изображения
             $image = $this->getImage();
-
             $width = $image->getimagewidth();
             $height = $image->getimageheight();
 
             // создаем картинку для водяного знака
             $watermark = new \Imagick($this->watermark);
+            $wwidth = $watermark->getimagewidth();
+            $wheight = $watermark->getimageheight();
 
             // применяем opacity
             if (! empty($this->watermarkOpacity) && $this->watermarkOpacity < 1) {
@@ -279,19 +280,18 @@ class ThumbFile extends StoreFile
             }
 
             // масштабируем водяной знак
-            if ($watermark->getimagewidth() != $width || $watermark->getimageheight() != $height) {
+            if ($wwidth != $width || $wheight != $height) {
                 $watermark->scaleImage($width, $height, true);
             }
 
             // накладываем на изображение
             $image->compositeImage(
                 $watermark, \Imagick::COMPOSITE_DEFAULT,
-                ($width - $watermark->getImageWidth()) / 2,
-                ($height - $watermark->getImageHeight()) / 2
+                (int)round(($width - $wwidth) / 2),
+                (int)round(($height - $wheight) / 2)
             );
         } finally {
             if (!empty($watermark)) {
-                // освобождаем каринку водяного знака
                 $watermark->destroy();
             }
         }
@@ -310,14 +310,16 @@ class ThumbFile extends StoreFile
         try {
             // получаем картинку
             $image = $this->getImage();
-            $width = $image->getimagewidth();
-            $height = $image->getimageheight();
+            $iwidth = $image->getimagewidth();
+            $iheight = $image->getimageheight();
 
             // создаем изображение
             $disclaimer = new \Imagick($this->disclaimer);
+            $dwidth = (int)round($iwidth / 10);
+            $dheight = (int)round($iheight / 10);
 
             // изменяем размер
-            $disclaimer->scaleImage($width * 0.10, $height * 0.10, true);
+            $disclaimer->scaleImage($dwidth, $dheight, true);
 
             // добавляем прозрачность
             $disclaimer->evaluateImage(\Imagick::EVALUATE_MULTIPLY, 0.65, \Imagick::CHANNEL_OPACITY);
@@ -325,11 +327,10 @@ class ThumbFile extends StoreFile
             // выполняем наложение
             $image->compositeImage(
                 $disclaimer, \Imagick::COMPOSITE_DEFAULT,
-                $width - $width * 1.3,
-                $height * 0.3
+                (int)round($iwidth - $dwidth * 1.3),
+                (int)round($dheight * 0.3)
             );
         } finally {
-            // удаляем объект
             if (!empty($disclaimer)) {
                 $disclaimer->destroy();
             }
