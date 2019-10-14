@@ -258,8 +258,8 @@ class ThumbFile extends StoreFile
         try {
             // получаем размеры изображения
             $image = $this->getImage();
-            $width = $image->getimagewidth();
-            $height = $image->getimageheight();
+            $iwidth = $image->getimagewidth();
+            $iheight = $image->getimageheight();
 
             // создаем картинку для водяного знака
             $watermark = new \Imagick($this->watermark);
@@ -272,15 +272,17 @@ class ThumbFile extends StoreFile
             }
 
             // масштабируем водяной знак
-            if ($wwidth != $width || $wheight != $height) {
-                $watermark->scaleImage($width, $height, true);
+            if ($wwidth != $iwidth || $wheight != $iheight) {
+                $watermark->scaleImage($iwidth, $iheight, true);
+                $wwidth = $watermark->getimagewidth();
+                $wheight = $watermark->getimageheight();
             }
 
             // накладываем на изображение
             $image->compositeImage(
                 $watermark, \Imagick::COMPOSITE_DEFAULT,
-                (int)round(($width - $wwidth) / 2),
-                (int)round(($height - $wheight) / 2)
+                (int)round(($iwidth - $wwidth) / 2),
+                (int)round(($iheight - $wheight) / 2)
             );
         } finally {
             if (!empty($watermark)) {
@@ -307,11 +309,11 @@ class ThumbFile extends StoreFile
 
             // создаем изображение
             $disclaimer = new \Imagick($this->disclaimer);
-            $dwidth = (int)round($iwidth / 10);
-            $dheight = (int)round($iheight / 10);
 
             // изменяем размер
-            $disclaimer->scaleImage($dwidth, $dheight, true);
+            $disclaimer->scaleImage((int)round($iwidth / 10), (int)round($iheight / 10), true);
+            $dwidth = $disclaimer->getimagewidth();
+            $dheight = $disclaimer->getimageheight();
 
             // добавляем прозрачность
             $disclaimer->evaluateImage(\Imagick::EVALUATE_MULTIPLY, 0.65, \Imagick::CHANNEL_OPACITY);
