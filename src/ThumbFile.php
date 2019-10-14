@@ -164,19 +164,6 @@ class ThumbFile extends StoreFile
     }
 
     /**
-     * Возвращает превью для noimage-картинки.
-     *
-     * @param array $config
-     * @return \dicr\file\ThumbFile
-     */
-    public static function noimage(array $config)
-    {
-        return new self(array_merge($config, [
-            'source' => null
-        ]));
-    }
-
-    /**
      * Обновляет путь картинки в кеше.
      *
      * @return string
@@ -184,8 +171,9 @@ class ThumbFile extends StoreFile
     protected function createPath()
     {
         return preg_replace('~^(.+)\.[^\.]+$~ui',
-            sprintf('${1}~%dx%d%s.%s', $this->width, $this->height,
+            sprintf('${1}~%dx%d%s%s.%s', $this->width, $this->height,
                 !$this->isNoimage && !empty($this->watermark) ? '~w' : '',
+                !$this->isNoimage && !empty($this->disclaimer) ? '~d' : '',
                 preg_quote($this->format)
             ),
             $this->isNoimage ? 'noimage/' . $this->source->name : $this->source->path
@@ -411,7 +399,7 @@ class ThumbFile extends StoreFile
         $dir = $this->store->file($this->source->path)->parent;
 
         $files = $dir->getList([
-            'nameRegex' => '~^.+\~\d+x\d+(\~w)?\.[^\.]+$~',
+            'nameRegex' => '~^.+\~\d+x\d+(\~[wd])*\.[^\.]+$~',
             'dir' => false
         ]);
 
