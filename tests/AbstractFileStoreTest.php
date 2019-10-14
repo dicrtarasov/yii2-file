@@ -256,7 +256,7 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertSame(4, $store->file('test-file')->size);
 
         $stream = $store->file('test-file')->stream;
-        self::assertInternalType('resource', $stream);
+        self::assertIsResource($stream);
         self::assertSame('test', stream_get_contents($stream));
 
         self::expectException(StoreException::class);
