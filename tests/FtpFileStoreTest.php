@@ -14,7 +14,7 @@ class FtpFileStoreTest extends AbstractFileStoreTest
     /**
      * {@inheritdoc}
      */
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         parent::setUpBeforeClass();
 

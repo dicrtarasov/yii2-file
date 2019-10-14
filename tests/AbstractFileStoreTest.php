@@ -24,7 +24,7 @@ abstract class AbstractFileStoreTest extends TestCase
      *
      * @return \yii\console\Application
      */
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         new \yii\console\Application([
             'id' => 'testapp',
@@ -36,7 +36,7 @@ abstract class AbstractFileStoreTest extends TestCase
     /**
      * {@inheritdoc}
      */
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass(): void
     {
         Yii::$app = null;
         Yii::$container = new Container();
