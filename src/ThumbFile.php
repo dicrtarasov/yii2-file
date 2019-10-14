@@ -2,8 +2,8 @@
 namespace dicr\file;
 
 use yii\base\InvalidConfigException;
-use yii\helpers\ArrayHelper;
 use yii\di\Instance;
+use yii\helpers\ArrayHelper;
 
 /**
  * Превью файл в кэше.
@@ -59,19 +59,11 @@ class ThumbFile extends StoreFile
     {
         $store = Instance::ensure(ArrayHelper::remove($config, 'store'), AbstractFileStore::class);
 
-        // если noimage === true, то удаляем из конфига чтобы не переписать дефолтное значение
-        if (!empty($config['noimage']) && $config['noimage'] === true) {
-            unset($config['noimage']);
-        }
-
-        // если watermark === true, то удаляем из конфига чтобы не перезаписать дефолтное значение
-        if (!empty($config['watermark']) && $config['watermark'] === true) {
-            unset($config['watermark']);
-        }
-
-        // если disclaimer === true, то удаляем из конфига чтобы не перезаписать дефолтное значение
-        if (!empty($config['disclaimer']) && $config['disclaimer'] === true) {
-            unset($config['disclaimer']);
+        // удаляем значения true, чтобы не перезаписывали дефолтные значения
+        foreach (['noimage', 'watermark', 'disclaimer'] as $field) {
+            if (isset($config[$field]) && $config[$field] === true) {
+                unset($config[$field]);
+            }
         }
 
         parent::__construct($store, '', $config);

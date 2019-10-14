@@ -581,23 +581,24 @@ abstract class AbstractFileStore extends Component
             return false;
         }
 
-        // если noimage === true, то удаляем из конфига чтобы не переписать дефолтное значение
-        if (!empty($config['noimage']) && $config['noimage'] === true) {
-            unset($config['noimage']);
+        // устанавливаем парамеры по-умолчанию
+        $config = array_merge([
+            'noimage' => true,
+            'watermark' => false, // по-умолчанию не создавать waermark
+            'disclaimer' => false // по-умолчанию не применять disclaimer
+        ], $config);
+
+        // если значение true, то не перезаписываем конфиг по-умолчанию
+        foreach (['noimage', 'watermark', 'disclaimer'] as $field) {
+            if ($config[$field] === true) {
+                unset($config[$field]);
+            }
         }
 
-        // если watermark === true, то удаляем из конфига чтобы не перезаписать дефолтное значение
-        if (!empty($config['watermark']) && $config['watermark'] === true) {
-            unset($config['watermark']);
-        }
-
-        // если disclaimer === true, то удаляем из конфига чтобы не перезаписать дефолтное значение
-        if (!empty($config['disclaimer']) && $config['disclaimer'] === true) {
-            unset($config['disclaimer']);
-        }
-
+        // добавляем конфиг по-умолчанию
         $config = array_merge($this->thumbFileConfig, $config);
 
+        // добавляем класс по-умолчанию
         if (empty($config['class'])) {
             $config['class'] = ThumbFile::class;
         }
