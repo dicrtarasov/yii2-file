@@ -596,7 +596,7 @@ abstract class AbstractFileStore extends Component
         }
 
         // добавляем конфиг по-умолчанию
-        $config = array_merge($this->thumbFileConfig, $config);
+        $config = array_merge($this->thumbFileConfig ?: [], $config);
 
         // добавляем класс по-умолчанию
         if (empty($config['class'])) {

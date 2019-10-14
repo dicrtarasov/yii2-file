@@ -480,6 +480,7 @@ class FileAttributeBehavior extends Behavior
             $this->validateFile($attribute, $file);
         }
 
+        /** @scrutinizer ignore-call */
         return empty($this->owner->getErrors($attribute));
     }
 
