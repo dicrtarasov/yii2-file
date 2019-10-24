@@ -206,7 +206,7 @@ class FileAttributeBehavior extends Behavior
      * Путь модели в хранилище строится из:
      * {formName}/{primaryKeys}
      *
-     * @return \dicr\file\StoreFile
+     * @return \dicr\file\StoreFile|null
      */
     public function getFileModelPath()
     {
@@ -226,6 +226,12 @@ class FileAttributeBehavior extends Behavior
 
             // для элементов базы данных добавляем id
             if ($this->owner instanceof ActiveRecord) {
+                // если модель базы данных еще не сохранена, то нет пути
+                if ($this->owner->isNewRecord) {
+                    return null;
+                }
+
+                // добавляем ключ
                 $keyName = basename(implode('~', $this->owner->getPrimaryKey(true)));
                 if ($keyName !== '') {
                     $relpath[] = $keyName;
@@ -240,7 +246,7 @@ class FileAttributeBehavior extends Behavior
 
     /**
      * Устанавливает путь папки модели.
-     * Если путь не усановлен, то он рассчитывается автоматически.
+     * Если путь не установлен, то он рассчитывается автоматически.
      *
      * @param StoreFile $modelPathFile
      */
@@ -257,7 +263,12 @@ class FileAttributeBehavior extends Behavior
      */
     public function deleteFileModelPath()
     {
-        return $this->getFileModelPath()->delete();
+        $path = $this->fileModelPath;
+        if (!empty($path)) {
+            $path->delete();
+        }
+
+        return $path;
     }
 
     /**
@@ -275,10 +286,14 @@ class FileAttributeBehavior extends Behavior
             $this->values[$attribute] = $this->listAttributeFiles($attribute);
         }
 
-        $values = $this->values[$attribute];
+        $vals = $this->values[$attribute];
 
         // если аттрибут имеет скалярный тип, то возвращаем первое значение
-        return $this->attributes[$attribute]['limit'] == 1 ? reset($values) : $values;
+        if ($this->attributes[$attribute]['limit'] == 1) {
+            return !empty($vals) ? reset($vals) : null;
+        }
+
+        return $vals;
     }
 
     /**
@@ -539,6 +554,11 @@ class FileAttributeBehavior extends Behavior
         $this->checkOwner();
         $this->checkFileAttribute($attribute);
 
+        // проверяем что модель сохранена перед тем как сохранять ее файлы
+        if (($this->owner instanceof ActiveRecord) && $this->owner->isNewRecord) {
+            throw new \LogicException('модель еще не сохранена');
+        }
+
         // текущее значение аттрибута
         $files = $this->values[$attribute] ?? null;
 
@@ -792,7 +812,7 @@ class FileAttributeBehavior extends Behavior
         $modelPath = $this->getFileModelPath();
 
         // если папка не существует, то возвращаем пустой список
-        if (!$modelPath->exists) {
+        if (empty($modelPath) || !$modelPath->exists) {
             return [];
         }
 
