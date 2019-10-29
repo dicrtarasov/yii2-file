@@ -1,7 +1,15 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+declare(strict_types = 1);
 namespace dicr\tests;
 
 use dicr\file\LocalFileStore;
+use Yii;
 
 /**
  * LocalStore Test
@@ -13,17 +21,21 @@ class LocalFileStoreTest extends AbstractFileStoreTest
 {
     /**
      * {@inheritdoc}
+     * @throws \yii\base\InvalidConfigException
      */
     public static function setUpBeforeClass(): void
     {
         parent::setUpBeforeClass();
 
-        \Yii::$app->set(self::STORE_ID, [
+        Yii::$app->set(self::STORE_ID, [
             'class' => LocalFileStore::class,
             'path' => __DIR__ . '/files'
         ]);
     }
 
+    /**
+     * @throws \yii\base\InvalidConfigException
+     */
     public function testAbsolutePath()
     {
         $store = static::store();

@@ -1,9 +1,16 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+declare(strict_types = 1);
 namespace app\controllers;
 
-use yii\web\Controller;
 use app\models\TestModel;
-use yii\web\NotFoundHttpException;
+use Yii;
+use yii\web\Controller;
 
 /**
  * Default test Controller
@@ -13,31 +20,30 @@ use yii\web\NotFoundHttpException;
  */
 class SiteController extends Controller
 {
-	/**
-	 * Индекс
-	 *
-	 * @throws NotFoundHttpException
-	 * @return string
-	 */
-	public function actionIndex()
-	{
-		$model = TestModel::findOne(['id' => 1]);
-		if (empty($model)) {
-		    $model = new TestModel();
-		}
+    /**
+     * Индекс
+     *
+     * @return string
+     */
+    public function actionIndex()
+    {
+        $model = TestModel::findOne(['id' => 1]);
+        if ($model === null) {
+            $model = new TestModel();
+        }
 
-		if (\Yii::$app->request->isPost) {
-		    $model->load(\Yii::$app->request->post());
-		    $model->loadFileAttributes();
+        if (Yii::$app->request->isPost) {
+            $model->load(Yii::$app->request->post());
+            $model->loadFileAttributes();
 
-		    if ($model->validate()) {
-	           $model->save();
-	           return $this->redirect(['index'], 303);
-		    }
-		}
+            if ($model->validate()) {
+                $model->save();
+                return $this->redirect(['index'], 303);
+            }
+        }
 
-		return $this->render('index', [
-			'model' => $model
-		]);
-	}
+        return $this->render('index', [
+            'model' => $model
+        ]);
+    }
 }

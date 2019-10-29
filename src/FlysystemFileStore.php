@@ -1,10 +1,22 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+declare(strict_types = 1);
 namespace dicr\file;
 
+use Exception;
 use League\Flysystem\AdapterInterface;
 use League\Flysystem\Filesystem;
+use Throwable;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
+use function is_array;
+use function is_callable;
+use function strlen;
 
 /**
  * FileStore based on FLYsystem adapters.
@@ -43,13 +55,24 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
+     * Конвертирует тип доступа public в Flysystem visibility type
+     *
+     * @param bool $public
+     * @return string \League\Flysystem\AdapterInterface::VISIBILITY_PUBLIC
+     */
+    protected static function access2visibility(bool $public)
+    {
+        return $public ? AdapterInterface::VISIBILITY_PUBLIC : AdapterInterface::VISIBILITY_PRIVATE;
+    }
+
+    /**
      * Возвращает адаптер
      *
      * @return \League\Flysystem\AdapterInterface|NULL
      */
     public function getAdapter()
     {
-        if (! empty($this->flysystem) && is_callable([$this->flysystem,'getAdapter'])) {
+        if (! empty($this->flysystem) && is_callable([$this->flysystem, 'getAdapter'])) {
             return $this->flysystem->getAdapter();
         }
 
@@ -58,23 +81,7 @@ class FlysystemFileStore extends AbstractFileStore
 
     /**
      * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::absolutePath()
-     * @throws \yii\base\NotSupportedException
-     */
-    public function absolutePath($path)
-    {
-        $path = $this->normalizePath($path);
-
-        $adapter = $this->adapter;
-        if (isset($adapter) && is_callable([$adapter, 'applyPathPrefix'])) {
-            return $adapter->applyPathPrefix($path);
-        }
-
-        throw new NotSupportedException('адаптер не поддерживает метод applyPathPrefix');
-    }
-
-    /**
-     * {@inheritdoc}
+     * @throws \yii\base\InvalidConfigException
      * @see \dicr\file\AbstractFileStore::list()
      */
     public function list($path, array $options = [])
@@ -87,7 +94,7 @@ class FlysystemFileStore extends AbstractFileStore
 
         try {
             $items = $this->flysystem->listContents($path, $options['recursive'] ?? false);
-        } catch (\Throwable $ex) {
+        } catch (Throwable $ex) {
             throw new StoreException($path, $ex);
         }
 
@@ -103,7 +110,7 @@ class FlysystemFileStore extends AbstractFileStore
         }
 
         // сортируем
-        usort($files, function ($a, $b) {
+        usort($files, static function($a, $b) {
             return $a->path <=> $b->path;
         });
 
@@ -120,7 +127,7 @@ class FlysystemFileStore extends AbstractFileStore
 
         try {
             $ret = $this->flysystem->has($path);
-        } catch (\Throwable $ex) {
+        } catch (Throwable $ex) {
             throw new StoreException($path, $ex);
         }
 
@@ -128,11 +135,20 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
+     * {@inheritdoc}
+     * @see \dicr\file\AbstractFileStore::isDir()
+     */
+    public function isDir($path)
+    {
+        return $this->getType($path) === 'dir';
+    }
+
+    /**
      * Возвращает тип файл/диретория
      *
      * @param string|array $path
-     * @throws \dicr\file\StoreException
      * @return string dir|file
+     * @throws \dicr\file\StoreException
      */
     public function getType($path)
     {
@@ -140,7 +156,7 @@ class FlysystemFileStore extends AbstractFileStore
 
         try {
             $ret = $this->flysystem->getMetadata($path);
-        } catch (\Throwable $ex) {
+        } catch (Throwable $ex) {
             throw new StoreException($path, $ex);
         }
 
@@ -153,15 +169,6 @@ class FlysystemFileStore extends AbstractFileStore
         }
 
         return $ret;
-    }
-
-    /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::isDir()
-     */
-    public function isDir($path)
-    {
-        return $this->getType($path) === 'dir';
     }
 
     /**
@@ -183,7 +190,7 @@ class FlysystemFileStore extends AbstractFileStore
 
         try {
             $ret = $this->flysystem->getVisibility($path);
-        } catch (\Throwable $ex) {
+        } catch (Throwable $ex) {
             throw new StoreException($path, $ex);
         }
 
@@ -191,7 +198,18 @@ class FlysystemFileStore extends AbstractFileStore
             throw new StoreException($path);
         }
 
-        return $this->visibility2access($ret);
+        return self::visibility2access($ret);
+    }
+
+    /**
+     * Возвращает тип доступа (публичность) по типу Slysystem
+     *
+     * @param string $visibility \League\Flysystem\AdapterInterface::VISIBILITY_*
+     * @return bool флаг public
+     */
+    protected static function visibility2access(string $visibility)
+    {
+        return $visibility === AdapterInterface::VISIBILITY_PUBLIC;
     }
 
     /**
@@ -205,7 +223,7 @@ class FlysystemFileStore extends AbstractFileStore
 
         try {
             $ret = $this->flysystem->setVisibility($path, $visibility);
-        } catch (\Throwable $ex) {
+        } catch (Throwable $ex) {
             throw new StoreException($path, $ex);
         }
 
@@ -228,7 +246,7 @@ class FlysystemFileStore extends AbstractFileStore
 
         try {
             $ret = $this->flysystem->getSize($path);
-        } catch (\Throwable $ex) {
+        } catch (Throwable $ex) {
             throw new StoreException($path, $ex);
         }
 
@@ -249,7 +267,7 @@ class FlysystemFileStore extends AbstractFileStore
 
         try {
             $ret = $this->flysystem->getTimestamp($path);
-        } catch (\Exception $ex) {
+        } catch (Exception $ex) {
             throw new StoreException($path, $ex);
         }
 
@@ -270,7 +288,7 @@ class FlysystemFileStore extends AbstractFileStore
 
         try {
             $ret = $this->flysystem->getMimetype($path);
-        } catch (\Throwable $ex) {
+        } catch (Throwable $ex) {
             throw new StoreException($path, $ex);
         }
 
@@ -291,7 +309,7 @@ class FlysystemFileStore extends AbstractFileStore
 
         try {
             $ret = $this->flysystem->read($path);
-        } catch (\Throwable $ex) {
+        } catch (Throwable $ex) {
             throw new StoreException($path, $ex);
         }
 
@@ -312,7 +330,7 @@ class FlysystemFileStore extends AbstractFileStore
 
         try {
             $ret = $this->flysystem->put($path, $contents);
-        } catch (\THrowable $ex) {
+        } catch (Throwable $ex) {
             throw new StoreException($path, $ex);
         }
 
@@ -338,7 +356,7 @@ class FlysystemFileStore extends AbstractFileStore
 
         try {
             $ret = $this->flysystem->readStream($path);
-        } catch (\Throwable $ex) {
+        } catch (Throwable $ex) {
             throw new StoreException($path, $ex);
         }
 
@@ -359,7 +377,7 @@ class FlysystemFileStore extends AbstractFileStore
 
         try {
             $ret = $this->flysystem->putStream($path, $stream);
-        } catch (\Throwable $ex) {
+        } catch (Throwable $ex) {
             throw new StoreException($path, $ex);
         }
 
@@ -374,6 +392,7 @@ class FlysystemFileStore extends AbstractFileStore
 
     /**
      * {@inheritdoc}
+     * @throws \yii\base\NotSupportedException
      * @see \dicr\file\AbstractFileStore::copy()
      */
     public function copy($path, $newpath)
@@ -387,7 +406,7 @@ class FlysystemFileStore extends AbstractFileStore
 
         try {
             $ret = $this->flysystem->copy($path, $newpath);
-        } catch (\Throwable $ex) {
+        } catch (Throwable $ex) {
             throw new StoreException($path, $ex);
         }
 
@@ -398,6 +417,24 @@ class FlysystemFileStore extends AbstractFileStore
         $this->clearStatCache($newpath);
 
         return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @throws \yii\base\NotSupportedException
+     * @throws \dicr\file\StoreException
+     * @see \dicr\file\AbstractFileStore::absolutePath()
+     */
+    public function absolutePath($path)
+    {
+        $path = $this->normalizePath($path);
+
+        $adapter = $this->adapter;
+        if (isset($adapter) && is_callable([$adapter, 'applyPathPrefix'])) {
+            return $adapter->applyPathPrefix($path);
+        }
+
+        throw new NotSupportedException('адаптер не поддерживает метод applyPathPrefix');
     }
 
     /**
@@ -415,7 +452,7 @@ class FlysystemFileStore extends AbstractFileStore
 
         try {
             $ret = $this->flysystem->rename($path, $newpath);
-        } catch (\Throwable $ex) {
+        } catch (Throwable $ex) {
             throw new StoreException($path, $ex);
         }
 
@@ -438,7 +475,7 @@ class FlysystemFileStore extends AbstractFileStore
 
         try {
             $ret = $this->flysystem->createDir($path);
-        } catch (\Throwable $ex) {
+        } catch (Throwable $ex) {
             throw new StoreException($path, $ex);
         }
 
@@ -459,7 +496,7 @@ class FlysystemFileStore extends AbstractFileStore
 
         try {
             $ret = $this->flysystem->delete($path);
-        } catch (\Throwable $ex) {
+        } catch (Throwable $ex) {
             throw new StoreException($path, $ex);
         }
 
@@ -482,7 +519,7 @@ class FlysystemFileStore extends AbstractFileStore
 
         try {
             $ret = $this->flysystem->deleteDir($path);
-        } catch (\Throwable $ex) {
+        } catch (Throwable $ex) {
             throw new StoreException($path, $ex);
         }
 
@@ -493,27 +530,5 @@ class FlysystemFileStore extends AbstractFileStore
         $this->clearStatCache($path);
 
         return $this;
-    }
-
-    /**
-     * Возвращает тип доступа (публичность) по типу Slysystem
-     *
-     * @param string $visibility \League\Flysystem\AdapterInterface::VISIBILITY_*
-     * @return bool флаг public
-     */
-    protected static function visibility2access(string $visibility)
-    {
-        return $visibility == AdapterInterface::VISIBILITY_PUBLIC;
-    }
-
-    /**
-     * Конвертирует тип доступа public в Flysystem visibility type
-     *
-     * @param bool $public
-     * @return string \League\Flysystem\AdapterInterface::VISIBILITY_PUBLIC
-     */
-    protected static function access2visibility(bool $public)
-    {
-        return $public ? AdapterInterface::VISIBILITY_PUBLIC : AdapterInterface::VISIBILITY_PRIVATE;
     }
 }

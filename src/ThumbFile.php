@@ -1,9 +1,26 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+/** @noinspection LongInheritanceChainInspection */
+/** @noinspection SpellCheckingInspection */
+
+declare(strict_types = 1);
 namespace dicr\file;
 
+use Imagick;
+use LogicException;
+use RuntimeException;
+use Throwable;
+use Yii;
 use yii\base\InvalidConfigException;
 use yii\di\Instance;
 use yii\helpers\ArrayHelper;
+use function gettype;
+use function is_string;
 
 /**
  * Превью файл в кэше.
@@ -51,9 +68,8 @@ class ThumbFile extends StoreFile
     /**
      * Конструктор.
      *
-     * @param \dicr\file\AbstractFileStore $store хранилище файлов
-     * @param \dicr\file\AbstractFile $src исходный файл
      * @param array $config конфиг
+     * @throws \yii\base\InvalidConfigException
      */
     public function __construct(array $config = [])
     {
@@ -66,11 +82,13 @@ class ThumbFile extends StoreFile
             }
         }
 
+        /** @noinspection PhpParamsInspection */
         parent::__construct($store, '', $config);
     }
 
     /**
      * {@inheritDoc}
+     * @throws \yii\base\InvalidConfigException
      * @see \yii\base\BaseObject::init()
      */
     public function init()
@@ -93,8 +111,8 @@ class ThumbFile extends StoreFile
 
         if (isset($this->noimage)) {
             if (is_string($this->noimage)) {
-                $this->noimage = \Yii::getAlias($this->noimage, true);
-                if (!is_file($this->noimage) || !is_readable($this->noimage)) {
+                $this->noimage = Yii::getAlias($this->noimage, true);
+                if (! is_file($this->noimage) || ! is_readable($this->noimage)) {
                     throw new InvalidConfigException('noimage не доступен: ' . $this->noimage);
                 }
             } elseif ($this->noimage !== false) {
@@ -104,8 +122,8 @@ class ThumbFile extends StoreFile
 
         if (isset($this->watermark)) {
             if (is_string($this->watermark)) {
-                $this->watermark = \Yii::getAlias($this->watermark);
-                if (!is_file($this->watermark) || !is_readable($this->watermark)) {
+                $this->watermark = Yii::getAlias($this->watermark);
+                if (! is_file($this->watermark) || ! is_readable($this->watermark)) {
                     throw new InvalidConfigException('watermark не доступен: ' . $this->watermark);
                 }
             } elseif ($this->watermark !== false) {
@@ -129,8 +147,8 @@ class ThumbFile extends StoreFile
 
         if (isset($this->disclaimer)) {
             if (is_string($this->disclaimer)) {
-                $this->disclaimer = \Yii::getAlias($this->disclaimer, true);
-                if (!is_file($this->disclaimer) || !is_readable($this->disclaimer)) {
+                $this->disclaimer = Yii::getAlias($this->disclaimer, true);
+                if (! is_file($this->disclaimer) || ! is_readable($this->disclaimer)) {
                     throw new InvalidConfigException('disclaimer не доступен');
                 }
             } elseif ($this->disclaimer !== false) {
@@ -140,10 +158,10 @@ class ThumbFile extends StoreFile
 
         // проверяем источник
         if (isset($this->source)) {
-            if (!($this->source instanceof AbstractFile)) {
+            if (! ($this->source instanceof AbstractFile)) {
                 throw new InvalidConfigException('source: ' . gettype($this->source));
             }
-        } elseif (!empty($this->noimage)) {
+        } elseif (! empty($this->noimage)) {
             // если не указан источник, то считаем это noimage
             $this->source = LocalFileStore::root()->file($this->noimage);
             $this->isNoimage = true;
@@ -162,191 +180,10 @@ class ThumbFile extends StoreFile
      */
     protected function createPath()
     {
-        return preg_replace('~^(.+)\.[^\.]+$~ui',
-            sprintf('${1}~%dx%d%s%s.%s', $this->width, $this->height,
-                !$this->isNoimage && !empty($this->watermark) ? '~w' : '',
-                !$this->isNoimage && !empty($this->disclaimer) ? '~d' : '',
-                preg_quote($this->format)
-            ),
-            $this->isNoimage ? 'noimage/' . $this->source->name : $this->source->path
-        );
-    }
-
-    /**
-     * Возвращает каринку.
-     *
-     * @throws \ImagickException
-     * @return \Imagick
-     */
-    protected function getImage()
-    {
-        if (!isset($this->_image)) {
-            // создаем каринку
-            $this->_image = new \Imagick();
-
-            // пытаемся прочитать исходную каринку
-            try {
-                $this->_image->readimageblob($this->source->contents);
-            } catch (\Throwable $ex) {
-                // если уже noimage или не задан noimage, то выбрасываем исключение
-                if ($this->isNoimage || empty($this->noimage)) {
-                    throw $ex;
-                }
-
-                // читаем каринку noimage
-                $this->_image->readimage($this->noimage);
-                $this->isNoimage = true;
-                $this->_path = $this->createPath();
-            }
-        }
-
-        return $this->_image;
-    }
-
-    /**
-     * Сохраняет картинку превью.
-     */
-    protected function writeImage()
-    {
-        if (empty($this->_image)) {
-            throw new \LogicException('empty image');
-        }
-
-        // очищаем лишнюю информацию
-        $this->_image->stripImage();
-
-        // формат
-        if ($this->_image->setImageFormat($this->format) === false) {
-            throw new \Exception('Ошибка установки формата картинки: ' . $this->format);
-        }
-
-        // сжатие
-        if ($this->image->setImageCompressionQuality((int) round($this->quality * 100)) === false) {
-            throw new \Exception('Ошибка установки качества изображения: ' . $this->quality);
-        }
-
-        // сохраняем
-        $this->contents = $this->_image->getimageblob();
-    }
-
-    /**
-     * Масштабирует картинку.
-     */
-    protected function resizeImage()
-    {
-        // если заданы размеры, то делаем масштабирование
-        if ($this->width > 0 || $this->height > 0) {
-            $image = $this->getImage();
-
-            if (! $image->thumbnailimage($this->width, $this->height, $this->width && $this->height, $this->width && $this->height)) {
-                throw new \Exception('error creating thumb');
-            }
-        }
-    }
-
-    /**
-     * Накладывает водяной знак.
-     */
-    protected function watermarkImage()
-    {
-        if ($this->isNoimage || empty($this->watermark)) {
-            return;
-        }
-
-        $watermark = null;
-
-        try {
-            // получаем размеры изображения
-            $image = $this->getImage();
-            $iwidth = $image->getimagewidth();
-            $iheight = $image->getimageheight();
-
-            // создаем картинку для водяного знака
-            $watermark = new \Imagick($this->watermark);
-            $wwidth = $watermark->getimagewidth();
-            $wheight = $watermark->getimageheight();
-
-            // применяем opacity
-            if (! empty($this->watermarkOpacity) && $this->watermarkOpacity < 1) {
-                $watermark->evaluateImage(\Imagick::EVALUATE_MULTIPLY, $this->watermarkOpacity, \Imagick::CHANNEL_ALPHA);
-            }
-
-            // масштабируем водяной знак
-            if ($wwidth != $iwidth || $wheight != $iheight) {
-                $watermark->scaleImage($iwidth, $iheight, true);
-                $wwidth = $watermark->getimagewidth();
-                $wheight = $watermark->getimageheight();
-            }
-
-            // накладываем на изображение
-            $image->compositeImage(
-                $watermark, \Imagick::COMPOSITE_DEFAULT,
-                (int)round(($iwidth - $wwidth) / 2),
-                (int)round(($iheight - $wheight) / 2)
-            );
-        } finally {
-            if (!empty($watermark)) {
-                $watermark->destroy();
-            }
-        }
-    }
-
-    /**
-     * Накладывает пометку о возрастных ограничениях.
-     */
-    protected function placeDisclaimer()
-    {
-        if ($this->isNoimage || empty($this->disclaimer)) {
-            return;
-        }
-
-        $disclaimer = null;
-        try {
-            // получаем картинку
-            $image = $this->getImage();
-            $iwidth = $image->getimagewidth();
-            $iheight = $image->getimageheight();
-
-            // создаем изображение
-            $disclaimer = new \Imagick($this->disclaimer);
-
-            // изменяем размер
-            $disclaimer->scaleImage((int)round($iwidth / 10), (int)round($iheight / 10), true);
-            $dwidth = $disclaimer->getimagewidth();
-            $dheight = $disclaimer->getimageheight();
-
-            // добавляем прозрачность
-            $disclaimer->evaluateImage(\Imagick::EVALUATE_MULTIPLY, 0.65, \Imagick::CHANNEL_OPACITY);
-
-            // выполняем наложение
-            $image->compositeImage(
-                $disclaimer, \Imagick::COMPOSITE_DEFAULT,
-                (int)round($iwidth - $dwidth * 1.3),
-                (int)round($dheight * 0.3)
-            );
-        } finally {
-            if (!empty($disclaimer)) {
-                $disclaimer->destroy();
-            }
-        }
-    }
-
-    /**
-     * Предварительная обработка картинки после загрузки.
-     * (для дочерних классов)
-     */
-    protected function preprocessImage()
-    {
-        // NOOP
-    }
-
-    /**
-     * После обработка перед сохранением.
-     * (для дочерних классов)
-     */
-    protected function postprocessImage()
-    {
-        // NOOP
+        return preg_replace('~^(.+)\.[^.]+$~u', sprintf('${1}~%dx%d%s%s.%s', $this->width, $this->height,
+            ! $this->isNoimage && ! empty($this->watermark) ? '~w' : '',
+            ! $this->isNoimage && ! empty($this->disclaimer) ? '~d' : '', preg_quote($this->format, '~')),
+            $this->isNoimage ? 'noimage/' . $this->source->name : $this->source->path);
     }
 
     /**
@@ -357,7 +194,7 @@ class ThumbFile extends StoreFile
     public function getIsReady()
     {
         if (empty($this->source)) {
-            throw new \LogicException('empty source');
+            throw new LogicException('empty source');
         }
 
         return $this->exists && $this->mtime >= $this->source->mtime;
@@ -367,6 +204,7 @@ class ThumbFile extends StoreFile
      * Обновляет превью.
      *
      * @throws \Exception
+     * @throws \Throwable
      */
     public function update()
     {
@@ -379,16 +217,199 @@ class ThumbFile extends StoreFile
     }
 
     /**
+     * Предварительная обработка картинки после загрузки.
+     * (для дочерних классов)
+     */
+    protected function preprocessImage()
+    {
+        // NOOP
+    }
+
+    /**
+     * Масштабирует картинку.
+     *
+     * @throws \ImagickException
+     * @throws \Throwable
+     */
+    protected function resizeImage()
+    {
+        // если заданы размеры, то делаем масштабирование
+        if ($this->width > 0 || $this->height > 0) {
+            $image = $this->getImage();
+
+            if (! $image->thumbnailImage($this->width, $this->height, $this->width && $this->height,
+                $this->width && $this->height)) {
+                throw new RuntimeException('error creating thumb');
+            }
+        }
+    }
+
+    /**
+     * Возвращает каринку.
+     *
+     * @return \Imagick
+     * @throws \ImagickException
+     * @throws \Throwable
+     */
+    protected function getImage()
+    {
+        if (! isset($this->_image)) {
+            // создаем каринку
+            $this->_image = new Imagick();
+
+            // пытаемся прочитать исходную каринку
+            try {
+                $this->_image->readImageBlob($this->source->contents);
+            } catch (Throwable $ex) {
+                // если уже noimage или не задан noimage, то выбрасываем исключение
+                if ($this->isNoimage || empty($this->noimage)) {
+                    throw $ex;
+                }
+
+                // читаем каринку noimage
+                $this->_image->readImage($this->noimage);
+                $this->isNoimage = true;
+                $this->_path = $this->createPath();
+            }
+        }
+
+        return $this->_image;
+    }
+
+    /**
+     * Накладывает водяной знак.
+     *
+     * @throws \ImagickException
+     * @throws \Throwable
+     */
+    protected function watermarkImage()
+    {
+        if ($this->isNoimage || empty($this->watermark)) {
+            return;
+        }
+
+        $watermark = null;
+
+        /** @noinspection BadExceptionsProcessingInspection */
+        try {
+            // получаем размеры изображения
+            $image = $this->getImage();
+            $iwidth = (int)$image->getImageWidth();
+            $iheight = (int)$image->getImageHeight();
+
+            // создаем картинку для водяного знака
+            $watermark = new Imagick($this->watermark);
+            $wwidth = (int)$watermark->getImageWidth();
+            $wheight = (int)$watermark->getImageHeight();
+
+            // применяем opacity
+            if (! empty($this->watermarkOpacity) && $this->watermarkOpacity < 1) {
+                $watermark->evaluateImage(Imagick::EVALUATE_MULTIPLY, $this->watermarkOpacity, Imagick::CHANNEL_ALPHA);
+            }
+
+            // масштабируем водяной знак
+            if ($wwidth !== $iwidth || $wheight !== $iheight) {
+                $watermark->scaleImage($iwidth, $iheight, true);
+                $wwidth = $watermark->getImageWidth();
+                $wheight = $watermark->getImageHeight();
+            }
+
+            // накладываем на изображение
+            $image->compositeImage($watermark, Imagick::COMPOSITE_DEFAULT, (int)round(($iwidth - $wwidth) / 2),
+                (int)round(($iheight - $wheight) / 2));
+        } finally {
+            if ($watermark !== null) {
+                $watermark->destroy();
+            }
+        }
+    }
+
+    /**
+     * Накладывает пометку о возрастных ограничениях.
+     *
+     * @throws \ImagickException
+     * @throws \Throwable
+     */
+    protected function placeDisclaimer()
+    {
+        if ($this->isNoimage || empty($this->disclaimer)) {
+            return;
+        }
+
+        $disclaimer = null;
+        /** @noinspection BadExceptionsProcessingInspection */
+        try {
+            // получаем картинку
+            $image = $this->getImage();
+            $iwidth = $image->getImageWidth();
+            $iheight = $image->getImageHeight();
+
+            // создаем изображение
+            $disclaimer = new Imagick($this->disclaimer);
+
+            // изменяем размер
+            $disclaimer->scaleImage((int)round($iwidth / 10), (int)round($iheight / 10), true);
+            $dwidth = $disclaimer->getImageWidth();
+            $dheight = $disclaimer->getImageHeight();
+
+            // добавляем прозрачность
+            $disclaimer->evaluateImage(Imagick::EVALUATE_MULTIPLY, 0.65, Imagick::CHANNEL_OPACITY);
+
+            // выполняем наложение
+            $image->compositeImage($disclaimer, Imagick::COMPOSITE_DEFAULT, (int)round($iwidth - $dwidth * 1.3),
+                (int)round($dheight * 0.3));
+        } finally {
+            if ($disclaimer !== null) {
+                $disclaimer->destroy();
+            }
+        }
+    }
+
+    /**
+     * После обработка перед сохранением.
+     * (для дочерних классов)
+     */
+    protected function postprocessImage()
+    {
+        // NOOP
+    }
+
+    /**
+     * Сохраняет картинку превью.
+     */
+    protected function writeImage()
+    {
+        if (empty($this->_image)) {
+            throw new LogicException('empty image');
+        }
+
+        // очищаем лишнюю информацию
+        $this->_image->stripImage();
+
+        // формат
+        if ($this->_image->setImageFormat($this->format) === false) {
+            throw new RuntimeException('Ошибка установки формата картинки: ' . $this->format);
+        }
+
+        // сжатие
+        if ($this->_image->setImageCompressionQuality((int)round($this->quality * 100)) === false) {
+            throw new RuntimeException('Ошибка установки качества изображения: ' . $this->quality);
+        }
+
+        // сохраняем
+        $this->contents = $this->_image->getImageBlob();
+    }
+
+    /**
      * Удаляет все превью для заданного файла.
      *
-     * @param StoreFile $file оригинальный файл, все преью которого очищаются.
-     * @param array $config конфиг для ThumbFile
-     * @throws InvalidConfigException
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
      */
     public function clear()
     {
         if (empty($this->source)) {
-            throw new \Exception('empty source');
+            throw new RuntimeException('empty source');
         }
 
         $dir = $this->store->file($this->source->path)->parent;
@@ -408,7 +429,7 @@ class ThumbFile extends StoreFile
      */
     public function __destruct()
     {
-        if (!empty($this->_image)) {
+        if (! empty($this->_image)) {
             $this->_image->destroy();
             $this->_image = null;
         }

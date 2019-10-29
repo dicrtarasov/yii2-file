@@ -1,4 +1,11 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+declare(strict_types = 1);
 namespace dicr\file;
 
 use yii\base\BaseObject;
@@ -40,6 +47,25 @@ abstract class AbstractFile extends BaseObject
     }
 
     /**
+     * Нормализация пути.
+     *
+     * @param string|string[] $path
+     * @return string
+     */
+    abstract protected function normalizePath($path);
+
+    /**
+     * Возвращает имя файла без расширения.
+     *
+     * @param string $name
+     * @return string
+     */
+    public static function removeExtension(string $name)
+    {
+        return preg_replace('~^(.+)\.[^.]+$~u', '${1}', $name);
+    }
+
+    /**
      * Возвращает путь
      *
      * @return string
@@ -48,14 +74,6 @@ abstract class AbstractFile extends BaseObject
     {
         return $this->_path;
     }
-
-    /**
-     * Нормализация пути.
-     *
-     * @param string|string[] $path
-     * @return string
-     */
-    abstract protected function normalizePath($path);
 
     /**
      * Возвращает имя файла.
@@ -76,65 +94,54 @@ abstract class AbstractFile extends BaseObject
     public function getExtension()
     {
         $matches = null;
-        return preg_match('~^.+\.([^\.]+)$~ui', $this->name, $matches) ? $matches[1] : null;
-    }
-
-    /**
-     * Возвращает имя файла без расширения.
-     *
-     * @param string $name
-     * @return string
-     */
-    public static function removeExtension(string $name)
-    {
-        return preg_replace('~^(.+)\.[^\.]+$~ui', '${1}', $name);
+        return preg_match('~^.+\.([^.]+)$~u', $this->name, $matches) ? $matches[1] : null;
     }
 
     /**
      * Возвращает флаг существования файла.
      *
-     * @throws StoreException
      * @return bool
+     * @throws StoreException
      */
     abstract public function getExists();
 
     /**
      * Возвращает признак директории.
      *
-     * @throws StoreException
      * @return boolean
+     * @throws StoreException
      */
     abstract public function getIsDir();
 
     /**
      * Возвращает признак файла.
      *
-     * @throws StoreException
      * @return boolean
+     * @throws StoreException
      */
     abstract public function getIsFile();
 
     /**
      * Возвращает размер.
      *
-     * @throws \dicr\file\StoreException
      * @return int размер в байтах
+     * @throws \dicr\file\StoreException
      */
     abstract public function getSize();
 
     /**
      * Возвращает время изменения файла.
      *
-     * @throws StoreException
      * @return int timestamp
+     * @throws StoreException
      */
     abstract public function getMtime();
 
     /**
      * Возвращает Mime-ип файла.
      *
-     * @throws StoreException
      * @return string
+     * @throws StoreException
      */
     abstract public function getMimeType();
 
@@ -153,16 +160,16 @@ abstract class AbstractFile extends BaseObject
     /**
      * Возвращает содержимое файла.
      *
-     * @throws \dicr\file\StoreException
      * @return string
+     * @throws \dicr\file\StoreException
      */
     abstract public function getContents();
 
     /**
      * Возвращает контент в виде потока.
      *
-     * @throws StoreException
      * @return resource
+     * @throws StoreException
      */
     abstract public function getStream();
 

@@ -1,9 +1,21 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ *
+ */
+
+declare(strict_types = 1);
 namespace dicr\file;
 
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
+use function array_slice;
+use function count;
+use function in_array;
+use function is_array;
 
 /**
  * Виджет ввода картинок.
@@ -16,10 +28,7 @@ use yii\helpers\Html;
  * }
  *
  * @property array clientOptions
- *
- *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 2018
+ * @property \yii\web\View $view
  */
 trait FileInputWidgetTrait
 {
@@ -43,6 +52,10 @@ trait FileInputWidgetTrait
 
     /**
      * {@inheritdoc}
+     * @throws \yii\base\InvalidConfigException
+     * @throws \yii\base\InvalidConfigException
+     * @throws \yii\base\InvalidConfigException
+     * @throws \yii\base\InvalidConfigException
      * @see \yii\widgets\InputWidget::init()
      */
     public function init()
@@ -57,21 +70,21 @@ trait FileInputWidgetTrait
             throw new InvalidConfigException('attribute');
         }
 
-        if (!in_array($this->layout, ['images', 'files'])) {
+        if (! in_array($this->layout, ['images', 'files'])) {
             throw new InvalidConfigException('layout');
         }
 
-        if (!isset($this->removeExt)) {
-            $this->removeExt = $this->layout == 'files';
+        if (! isset($this->removeExt)) {
+            $this->removeExt = $this->layout === 'files';
         }
 
         // получаем название поля ввода файлов
-        if (!isset($this->inputName)) {
+        if (! isset($this->inputName)) {
             $this->inputName = Html::getInputName($this->model, $this->attribute);
         }
 
         // получаем файлы
-        if (!isset($this->value)) {
+        if (! isset($this->value)) {
             $this->value = Html::getAttributeValue($this->model, $this->attribute);
         }
 
@@ -105,75 +118,32 @@ trait FileInputWidgetTrait
     }
 
     /**
-     * Рендерит картинку
-     *
-     * @return string
+     * {@inheritdoc}
+     * @throws \yii\base\InvalidConfigException
+     * @see \yii\base\Widget::render()
      */
-    protected function renderImage(StoreFile $file)
+    public function run()
     {
-        $img = null;
+        // регистрируем ассет
+        $this->view->registerAssetBundle(FileInputWidgetAsset::class);
 
-        if ($this->layout == 'images') {
-            $img = Html::img(preg_match('~^image\/.+~uism', $file->mimeType) ? $file->url : null, [
-                'alt' => '',
-                'class' => 'image'
-            ]);
-        } else {
-            $img = Html::tag('i', '', [ 'class' => 'image fa fas fa-download']);
-        }
+        // регистрируем плагин
+        $this->registerPlugin('fileInputWidget');
 
-        return Html::a($img, $file->url, [
-            'class' => 'download',
-            'download' => $file->getName(['removePrefix' => 1])
-        ]);
+        return Html::tag('div', // для того чтобы имя аттрибута было в $_POST[formName][attribute] как делает Yii
+            // если дальше отсутствуют input с таким же именем которые перезапишут это поле
+            Html::hiddenInput($this->inputName) .
+
+            // файлы
+            $this->renderFiles() .
+
+            // кнопка добавления
+            $this->renderAddButton(),
+
+            $this->options);
     }
 
-    /**
-     * Рендерит файл
-     *
-     * @param int $pos
-     * @param \dicr\file\StoreFile $file
-     * @return string
-     */
-    protected function renderFileBlock(int $pos, StoreFile $file)
-    {
-        ob_start();
-
-        echo Html::beginTag('div', ['class' => 'file']);
-
-        // $_POST - параметр с именем старого файла
-        echo Html::hiddenInput($this->inputName . '[' . $pos . ']', $file->name);
-
-        // картинка
-        echo $this->renderImage($file);
-
-        // имя файла
-        if ($this->layout != 'images') {
-            echo Html::a(
-                $file->getName([
-                    'removePrefix' => 1,
-                    'removeExt' => $this->removeExt
-                ]),
-
-                $file->url,
-
-                [
-                    'class' => 'name',
-                    'download' => $file->getName(['removePrefix' => 1])
-                ]
-            );
-        }
-
-        // кнопка удаления файла
-        echo Html::button('&times;', [
-            'class' => 'del btn btn-link text-danger',
-            'title' => 'Удалить'
-        ]);
-
-        echo Html::endTag('div');
-
-        return ob_get_clean();
-    }
+    abstract protected function registerPlugin($name);
 
     /**
      * Рендерит блок файлов
@@ -194,6 +164,80 @@ trait FileInputWidgetTrait
     }
 
     /**
+     * Рендерит файл
+     *
+     * @param int $pos
+     * @param \dicr\file\StoreFile $file
+     * @return string
+     * @throws \dicr\file\StoreException
+     * @throws \dicr\file\StoreException
+     */
+    protected function renderFileBlock(int $pos, StoreFile $file)
+    {
+        ob_start();
+
+        echo Html::beginTag('div', ['class' => 'file']);
+
+        // $_POST - параметр с именем старого файла
+        echo Html::hiddenInput($this->inputName . '[' . $pos . ']', $file->name);
+
+        // картинка
+        echo $this->renderImage($file);
+
+        // имя файла
+        if ($this->layout !== 'images') {
+            echo Html::a($file->getName([
+                'removePrefix' => 1,
+                'removeExt' => $this->removeExt
+            ]),
+
+                $file->url,
+
+                [
+                    'class' => 'name',
+                    'download' => $file->getName(['removePrefix' => 1])
+                ]);
+        }
+
+        // кнопка удаления файла
+        echo Html::button('&times;', [
+            'class' => 'del btn btn-link text-danger',
+            'title' => 'Удалить'
+        ]);
+
+        echo Html::endTag('div');
+
+        return ob_get_clean();
+    }
+
+    /**
+     * Рендерит картинку
+     *
+     * @param \dicr\file\StoreFile $file
+     * @return string
+     * @throws \dicr\file\StoreException
+     * @throws \dicr\file\StoreException
+     */
+    protected function renderImage(StoreFile $file)
+    {
+        $img = null;
+
+        if ($this->layout === 'images') {
+            $img = Html::img(preg_match('~^image/.+~uism', $file->mimeType) ? $file->url : null, [
+                'alt' => '',
+                'class' => 'image'
+            ]);
+        } else {
+            $img = Html::tag('i', '', ['class' => 'image fa fas fa-download']);
+        }
+
+        return Html::a($img, $file->url, [
+            'class' => 'download',
+            'download' => $file->getName(['removePrefix' => 1])
+        ]);
+    }
+
+    /**
      * Рендерит кнопку добавления картинки
      *
      * @return string
@@ -201,11 +245,11 @@ trait FileInputWidgetTrait
     protected function renderAddButton()
     {
         // id поля файла
-        $fileId = $this->id . '-addinput-' . rand(1, 999999);
+        $fileId = $this->id . '-addinput-' . mt_rand();
 
         return Html::label(
 
-            // $_FILES параметр файла
+        // $_FILES параметр файла
             Html::fileInput(null, null, [
                 'accept' => $this->accept ?: null,
                 'id' => $fileId
@@ -224,36 +268,6 @@ trait FileInputWidgetTrait
                 'style' => [
                     'display' => $this->limit > 0 && count($this->value) >= $this->limit ? 'none' : 'flex'
                 ]
-            ]
-        );
+            ]);
     }
-
-    /**
-     * {@inheritdoc}
-     * @see \yii\base\Widget::render()
-     */
-    public function run()
-    {
-        // регистрируем ассет
-        $this->view->registerAssetBundle(FileInputWidgetAsset::class);
-
-        // регистрируем плагин
-        $this->registerPlugin('fileInputWidget');
-
-        return Html::tag('div',
-            // для того чтобы имя аттрибута было в $_POST[formName][attribute] как делает Yii
-            // если дальше отсутствуют input с таким же именем которые перезапишут это поле
-            Html::hiddenInput($this->inputName) .
-
-            // файлы
-            $this->renderFiles() .
-
-            // кнопка добавления
-            $this->renderAddButton(),
-
-            $this->options
-        );
-    }
-
-    protected abstract function registerPlugin($name);
 }

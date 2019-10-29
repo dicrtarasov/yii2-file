@@ -1,6 +1,15 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+declare(strict_types = 1);
 namespace dicr\file;
 
+use InvalidArgumentException;
+use function is_resource;
 
 /**
  * Файл хранилища файлов.
@@ -24,7 +33,7 @@ namespace dicr\file;
 class StoreFile extends AbstractFile
 {
     // регулярное выражение имени файла со служебным префиксом
-    const STORE_PREFIX_REGEX = '~^\.?([^\~]+)\~(\d+)\~(.+)$~ui';
+    protected const STORE_PREFIX_REGEX = '~^\.?([^\~]+)\~(\d+)\~(.+)$~u';
 
     /** @var \dicr\file\AbstractFileStore */
     protected $_store;
@@ -40,11 +49,12 @@ class StoreFile extends AbstractFile
      *
      * @param AbstractFileStore $store
      * @param string|array $path относительный путь
+     * @param array $config
      */
-    public function __construct(AbstractFileStore $store, $path, array $config=[])
+    public function __construct(AbstractFileStore $store, $path, array $config = [])
     {
-        if (empty($store)) {
-            throw new \InvalidArgumentException('store');
+        if ($store === null) {
+            throw new InvalidArgumentException('store');
         }
 
         // store необходимо установить до установки пути, потому что parent::__construct
@@ -55,15 +65,37 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * Генерирует ошибку при доступе к корневому каталогу
+     * Добавляет к имени файла служебный префикс хранилища файлов.
+     * Существующий префикс удаляется.
      *
-     * @throws StoreException
+     * @param string $attribute аттрибут модели
+     * @param int $pos норядок сортировки
+     * @param string $name пользовательское имя файла
+     * @return string имя файла со служебным префиксом.
      */
-    protected function checkRootAccess()
+    public static function createStorePrefix(string $attribute, int $pos, string $name)
     {
-        if ($this->_path == '') {
-            throw new StoreException('доступ к корневому каталогу');
+        // удаляем текущий префикс
+        $name = static::removeStorePrefix($name);
+
+        // добавляем служебный префикс
+        return sprintf('%s~%d~%s', $attribute, $pos, $name);
+    }
+
+    /**
+     * Удаляет из имени файла служебный префикс хранилища файлов.
+     *
+     * @param string $name имя файла
+     * @return string оригинальное имя без префикса
+     */
+    public static function removeStorePrefix(string $name)
+    {
+        $matches = null;
+        if (preg_match(self::STORE_PREFIX_REGEX, $name, $matches)) {
+            $name = $matches[3];
         }
+
+        return $name;
     }
 
     /**
@@ -77,43 +109,15 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFile::normalizePath()
-     */
-    protected function normalizePath($path)
-    {
-        return $this->_store->normalizePath($path);
-    }
-
-    /**
-     * Устанавливает путь.
-     *
-     * @param string|string[] $path new path
-     * @throws \dicr\file\StoreException
-     * @return $this
-     */
-    public function setPath($path)
-    {
-        $path = $this->normalizePath($path);
-
-        if (!empty($this->_path) && $path != $this->_path) {
-            $this->_store->rename($this->_path, $path);
-            $this->_path = $path;
-            $this->_absolutePath = null;
-            $this->_absoluteUrl = null;
-        }
-
-        return $this;
-    }
-
-    /**
      * Возвращает родительскую директорию.
      *
      * @return static|null
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
      */
     public function getParent()
     {
-        if ($this->_path == '') {
+        if ($this->_path === '') {
             return null;
         }
 
@@ -122,17 +126,18 @@ class StoreFile extends AbstractFile
 
     /**
      * {@inheritDoc}
+     * @throws \dicr\file\StoreException
      * @see \dicr\file\AbstractFile::getName()
      */
     public function getName(array $options = [])
     {
         $name = $this->_store->basename($this->_path);
 
-        if (!empty($options['removePrefix'])) {
+        if (! empty($options['removePrefix'])) {
             $name = static::removeStorePrefix($name);
         }
 
-        if (!empty($options['removeExt'])) {
+        if (! empty($options['removeExt'])) {
             $name = static::removeExtension($name);
         }
 
@@ -144,13 +149,14 @@ class StoreFile extends AbstractFile
      *
      * @param string $name новое имя
      * @return $this
+     * @throws \dicr\file\StoreException
      */
     public function setName(string $name)
     {
         // получаем новое имя файла
         $name = $this->_store->basename($name);
-        if ($name == '') {
-            throw new \InvalidArgumentException('name');
+        if ($name === '') {
+            throw new InvalidArgumentException('name');
         }
 
         // переименовываем
@@ -160,9 +166,39 @@ class StoreFile extends AbstractFile
     }
 
     /**
+     * Устанавливает путь.
+     *
+     * @param string|string[] $path new path
+     * @return $this
+     * @throws \dicr\file\StoreException
+     */
+    public function setPath($path)
+    {
+        $path = $this->normalizePath($path);
+
+        if (! empty($this->_path) && $path !== $this->_path) {
+            $this->_store->rename($this->_path, $path);
+            $this->_path = $path;
+            $this->_absolutePath = null;
+            $this->_absoluteUrl = null;
+        }
+
+        return $this;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @throws \dicr\file\StoreException
+     * @see \dicr\file\AbstractFile::normalizePath()
+     */
+    protected function normalizePath($path)
+    {
+        return $this->_store->normalizePath($path);
+    }
+
+    /**
      * Возвращает абсолютный путь.
      *
-     * @throws \dicr\file\StoreException
      * @return string
      */
     public function getAbsolutePath()
@@ -178,10 +214,11 @@ class StoreFile extends AbstractFile
      * Возвращает url.
      *
      * @return string|null
+     * @throws \dicr\file\StoreException
      */
     public function getUrl()
     {
-        if (!isset($this->_absoluteUrl)) {
+        if (! isset($this->_absoluteUrl)) {
             $this->_absoluteUrl = $this->_store->url($this->_path);
         }
 
@@ -193,6 +230,8 @@ class StoreFile extends AbstractFile
      *
      * @param string|string[] $path
      * @return static
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
      */
     public function child($path)
     {
@@ -203,8 +242,8 @@ class StoreFile extends AbstractFile
      * Возвращает список файлов директории
      *
      * @param array $options опции и фильтры {@link AbstractFileStore::list}
-     * @throws \dicr\file\StoreException
      * @return static[]
+     * @throws \dicr\file\StoreException
      */
     public function getList(array $options = [])
     {
@@ -243,6 +282,7 @@ class StoreFile extends AbstractFile
      *
      * @throw \dicr\file\StoreException если не существует
      * @return bool
+     * @throws \dicr\file\StoreException
      */
     public function getHidden()
     {
@@ -252,8 +292,8 @@ class StoreFile extends AbstractFile
     /**
      * Возвращает флаг публичного доступа
      *
-     * @throws \dicr\file\StoreException не существует
      * @return bool
+     * @throws \dicr\file\StoreException не существует
      */
     public function getPublic()
     {
@@ -264,8 +304,8 @@ class StoreFile extends AbstractFile
      * Устанавливает флаг публичного доступа
      *
      * @param bool $public
-     * @throws \dicr\file\StoreException не существует
      * @return $this
+     * @throws \dicr\file\StoreException не существует
      */
     public function setPublic(bool $public)
     {
@@ -315,6 +355,7 @@ class StoreFile extends AbstractFile
      *
      * @param string $contents
      * @return $this
+     * @throws \dicr\file\StoreException
      */
     public function setContents(string $contents)
     {
@@ -336,13 +377,13 @@ class StoreFile extends AbstractFile
      * Сохраняет содержимое файла из потока
      *
      * @param resource $stream
-     * @throws \dicr\file\StoreException
      * @return $this
+     * @throws \dicr\file\StoreException
      */
     public function setStream($stream)
     {
         if (! @is_resource($stream)) {
-            throw new \InvalidArgumentException('stream');
+            throw new InvalidArgumentException('stream');
         }
 
         $this->_store->writeStream($this->_path, $stream);
@@ -353,9 +394,10 @@ class StoreFile extends AbstractFile
     /**
      * Копирует файл.
      *
-     * @param string|string[] $newpath новый путь
-     * @throws \dicr\file\StoreException
+     * @param $path
      * @return static новый файл
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
      */
     public function copy($path)
     {
@@ -367,8 +409,8 @@ class StoreFile extends AbstractFile
     /**
      * Создает директорию.
      *
-     * @throws \dicr\file\StoreException
      * @return $this
+     * @throws \dicr\file\StoreException
      */
     public function mkdir()
     {
@@ -380,8 +422,8 @@ class StoreFile extends AbstractFile
     /**
      * Проверяет создает родительскую директорию.
      *
-     * @throws \dicr\file\StoreException
      * @return $this
+     * @throws \dicr\file\StoreException
      */
     public function checkDir()
     {
@@ -396,20 +438,22 @@ class StoreFile extends AbstractFile
      * @param string|string[]|\dicr\file\AbstractFile $src импорируемый файл
      * @param array $options опции
      *  - bool $ifModified - импортировать файл только если время новее или размер отличается (по-умолчанию true)
-     * @throws \dicr\file\StoreException
      * @return $this
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
      * @see AbstractFileStore::import()
      */
     public function import($src, array $options = [])
     {
         $this->_store->import($src, $this->_path, $options);
+        return $this;
     }
 
     /**
      * Удаляет файл
      *
-     * @throws \dicr\file\StoreException
      * @return $this
+     * @throws \dicr\file\StoreException
      */
     public function delete()
     {
@@ -422,8 +466,8 @@ class StoreFile extends AbstractFile
      * Создает превью файла.
      *
      * @param array $config опции ThumbFile
-     * @throws \dicr\file\StoreException
      * @return \dicr\file\ThumbFile|false ThumbFile или false если не настроен
+     * @throws \yii\base\InvalidConfigException
      */
     public function thumb(array $config = [])
     {
@@ -432,43 +476,11 @@ class StoreFile extends AbstractFile
 
     /**
      * Очищает все превью файла.
+     *
+     * @throws \yii\base\InvalidConfigException
      */
     public function clearThumb()
     {
         $this->store->clearThumb($this);
-    }
-
-    /**
-     * Добавляет к имени файла служебный префикс хранилища файлов.
-     * Существующий префикс удаляется.
-     *
-     * @param string $attribute аттрибут модели
-     * @param int $pos норядок сортировки
-     * @param string $name пользовательское имя файла
-     * @return string имя файла со служебным префиксом.
-     */
-    public static function createStorePrefix(string $attribute, int $pos, string $name)
-    {
-        // удаляем текущий префикс
-        $name = static::removeStorePrefix($name);
-
-        // добавляем служебный префикс
-        return sprintf('%s~%d~%s', $attribute, $pos, $name);
-    }
-
-    /**
-     * Удаляет из имени файла служебный префикс хранилища файлов.
-     *
-     * @param string $name имя файла
-     * @return string оригинальное имя без префикса
-     */
-    public static function removeStorePrefix(string $name)
-    {
-        $matches = null;
-        if (preg_match(self::STORE_PREFIX_REGEX, $name, $matches)) {
-            $name = $matches[3];
-        }
-
-        return $name;
     }
 }

@@ -1,7 +1,17 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+/** @noinspection LongInheritanceChainInspection */
+
+declare(strict_types = 1);
 namespace dicr\file;
 
 use yii\base\InvalidConfigException;
+use function is_resource;
 
 /**
  * Файловая система SFTP
@@ -40,6 +50,7 @@ class SftpFileStore extends LocalFileStore
 
     /**
      * {@inheritdoc}
+     * @throws \dicr\file\StoreException
      * @see \dicr\file\LocalFileStore::init()
      */
     public function init()
@@ -49,7 +60,7 @@ class SftpFileStore extends LocalFileStore
             throw new InvalidConfigException('host');
         }
 
-        $this->port = (int) $this->port;
+        $this->port = (int)$this->port;
         if (empty($this->port)) {
             throw new InvalidConfigException('port');
         }
@@ -67,7 +78,7 @@ class SftpFileStore extends LocalFileStore
             if (! @ssh2_auth_password($this->session, $this->username, $this->password)) {
                 throw new StoreException('ошибка авторизации по логину и паролю');
             }
-        } elseif (isset($this->pubkeyfile) && isset($this->privkeyfile)) {
+        } elseif (isset($this->pubkeyfile, $this->privkeyfile)) {
             if (! @ssh2_auth_pubkey_file($this->session, $this->username, $this->pubkeyfile, $this->privkeyfile,
                 $this->passphrase)) {
                 throw new StoreException('ошибка авторизации по открытому ключу');
@@ -97,27 +108,8 @@ class SftpFileStore extends LocalFileStore
     }
 
     /**
-     * Возвращает относительный путь
-     *
-     * @param string|array $path
-     * @return string
-     */
-    public function relativePath($path)
-    {
-        return parent::absolutePath($path);
-    }
-
-    /**
-     * {@inheritdoc}
-     * @see \dicr\file\LocalFileStore::absolutePath()
-     */
-    public function absolutePath($path)
-    {
-        return 'ssh2.sftp://' . intval($this->sftp) . $this->relativePath($path);
-    }
-
-    /**
      * {@inheritDoc}
+     * @throws \yii\base\InvalidConfigException
      * @see \dicr\file\LocalFileStore::list()
      */
     public function list($path, array $filter = [])
@@ -133,7 +125,7 @@ class SftpFileStore extends LocalFileStore
 
         try {
             while (($item = @readdir($dir)) !== false) {
-                if ($item == '' || $item == '.' || $item == '..') {
+                if ($item === '' || $item === '.' || $item === '..') {
                     continue;
                 }
 
@@ -144,20 +136,43 @@ class SftpFileStore extends LocalFileStore
                 }
 
                 if ($this->isDir($file->path)) {
+                    /** @noinspection SlowArrayOperationsInLoopInspection */
                     $files = array_merge($files, $this->list($file->path, $filter));
                 }
             }
         } finally {
-            if (!empty($dir)) {
+            if (! empty($dir)) {
                 closedir($dir);
             }
         }
 
-        usort($files, function ($a, $b) {
+        usort($files, static function($a, $b) {
             return $a->path <=> $b->path;
         });
 
         return $files;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\LocalFileStore::absolutePath()
+     */
+    public function absolutePath($path)
+    {
+        return 'ssh2.sftp://' . (int)$this->sftp . $this->relativePath($path);
+    }
+
+    /**
+     * Возвращает относительный путь
+     *
+     * @param string|array $path
+     * @return string
+     * @throws \dicr\file\StoreException
+     * @throws \dicr\file\StoreException
+     */
+    public function relativePath($path)
+    {
+        return parent::absolutePath($path);
     }
 
     /**
@@ -234,6 +249,17 @@ class SftpFileStore extends LocalFileStore
     }
 
     /**
+     * Деструктор
+     */
+    public function __destruct()
+    {
+        if (! empty($this->session)) {
+            /** @scrutinizer ignore-unhandled */
+            @ssh2_disconnect($this->session);
+        }
+    }
+
+    /**
      * {@inheritdoc}
      * @see \dicr\file\LocalFileStore::unlink()
      */
@@ -265,16 +291,5 @@ class SftpFileStore extends LocalFileStore
         $this->clearStatCache($path);
 
         return $this;
-    }
-
-    /**
-     * Деструктор
-     */
-    public function __destruct()
-    {
-        if (!empty($this->session)) {
-            /** @scrutinizer ignore-unhandled */
-            @ssh2_disconnect($this->session);
-        }
     }
 }

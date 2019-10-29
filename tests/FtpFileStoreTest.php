@@ -1,7 +1,17 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ *
+ */
+
+declare(strict_types = 1);
+
 namespace dicr\tests;
 
 use dicr\file\FtpFileStore;
+use Yii;
 
 /**
  * LocalStore Test
@@ -18,7 +28,7 @@ class FtpFileStoreTest extends AbstractFileStoreTest
     {
         parent::setUpBeforeClass();
 
-        \Yii::$app->set(self::STORE_ID, [
+        Yii::$app->set(self::STORE_ID, [
             'class' => FtpFileStore::class,
             'host' => REMOTE_FILE_HOST,
             'username' => REMOTE_FILE_LOGIN,

@@ -1,8 +1,17 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+declare(strict_types = 1);
 namespace dicr\tests;
 
-use League\Flysystem\Adapter\Local;
 use dicr\file\FlysystemFileStore;
+use League\Flysystem\Adapter\Local;
+use League\Flysystem\Filesystem;
+use Yii;
 
 /**
  * Ftp file store test
@@ -19,12 +28,12 @@ class FlysystemFileStoreTest extends AbstractFileStoreTest
     {
         parent::setUpBeforeClass();
 
-        \Yii::$app->set(self::STORE_ID, [
+        Yii::$app->set(self::STORE_ID, [
             'class' => FlysystemFileStore::class,
-            'flysystem' => function(FlysystemFileStore $fileStore) {
-                $adapter = new Local(__DIR__.'/files', LOCK_EX, Local::SKIP_LINKS);
+            'flysystem' => static function(FlysystemFileStore $fileStore) {
+                $adapter = new Local(__DIR__ . '/files', LOCK_EX, Local::SKIP_LINKS);
 
-                return new \League\Flysystem\Filesystem($adapter);
+                return new Filesystem($adapter);
             }
         ]);
     }

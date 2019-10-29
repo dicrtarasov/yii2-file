@@ -1,8 +1,25 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+declare(strict_types = 1);
 namespace dicr\file;
 
+use DirectoryIterator;
+use FilesystemIterator;
+use finfo;
 use InvalidArgumentException;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use Throwable;
+use Yii;
 use yii\base\InvalidConfigException;
+use function in_array;
+use function is_array;
+use function is_resource;
 
 /**
  * Локальная файловая система.
@@ -24,8 +41,8 @@ use yii\base\InvalidConfigException;
  */
 class LocalFileStore extends AbstractFileStore
 {
-    /** @var string корневой путь */
-    protected $_path;
+    /** @var static instance for root "/" */
+    private static $_rootInstance;
 
     /** @var int флаги для записи file_put_contents (например LOCK_EX) */
     public $writeFlags = 0;
@@ -45,36 +62,8 @@ class LocalFileStore extends AbstractFileStore
         'file' => 0644
     ];
 
-    /** @var static instance for root "/" */
-    private static $_rootInstance;
-
-    /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::init()
-     */
-    public function init()
-    {
-        parent::init();
-
-        if (!isset($this->_path)) {
-            throw new InvalidConfigException('path');
-        }
-
-        $this->writeFlags = (int)$this->writeFlags;
-
-        $this->readMode = trim($this->readMode);
-        if (empty($this->readMode)) {
-            $this->readMode = 'rb';
-        }
-
-        if (!is_resource($this->context)) {
-            $this->context = stream_context_create($this->context);
-        }
-
-        if (!is_array($this->perms) || ! isset($this->perms['dir']) || ! isset($this->perms['file'])) {
-            throw new InvalidConfigException('perms');
-        }
-    }
+    /** @var string корневой путь */
+    protected $_path;
 
     /**
      * Возвращает экземпляр для корневой файловой системы "/"
@@ -94,6 +83,34 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
+     * {@inheritdoc}
+     * @see \dicr\file\AbstractFileStore::init()
+     */
+    public function init()
+    {
+        parent::init();
+
+        if (! isset($this->_path)) {
+            throw new InvalidConfigException('path');
+        }
+
+        $this->writeFlags = (int)$this->writeFlags;
+
+        $this->readMode = trim($this->readMode);
+        if (empty($this->readMode)) {
+            $this->readMode = 'rb';
+        }
+
+        if (! is_resource($this->context)) {
+            $this->context = stream_context_create($this->context);
+        }
+
+        if (! isset($this->perms['dir'], $this->perms['file']) || ! is_array($this->perms)) {
+            throw new InvalidConfigException('perms');
+        }
+    }
+
+    /**
      * Возвращает путь
      *
      * @return string
@@ -107,13 +124,14 @@ class LocalFileStore extends AbstractFileStore
      * Установить корневой путь
      *
      * @param string $path
-     * @throws \dicr\file\StoreException
      * @return $this
+     * @throws \dicr\file\StoreException
      */
     public function setPath(string $path)
     {
         // решаем алиасы
-        $path = \Yii::getAlias($path, true);
+        /** @noinspection CallableParameterUseCaseInTypeContextInspection */
+        $path = Yii::getAlias($path, true);
         if ($path === false) {
             throw new InvalidArgumentException('path');
         }
@@ -125,7 +143,7 @@ class LocalFileStore extends AbstractFileStore
         }
 
         // проверяем что путь директория
-        if ($this->_path !== '/' && !@is_dir($this->_path)) {
+        if ($this->_path !== '/' && ! @is_dir($this->_path)) {
             throw new StoreException('Не является директорией: ' . $this->_path);
         }
 
@@ -137,28 +155,9 @@ class LocalFileStore extends AbstractFileStore
 
     /**
      * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::absolutePath()
-     */
-    public function absolutePath($path)
-    {
-        return $this->buildPath(array_merge([$this->path], $this->filterPath($path)));
-    }
-
-    /**
-     * Возвращает относительный путь по полному.
-     *
-     * @param string $fullPath полныйпуть
-     * @return string|false относительный путь
-     */
-    public function getRelPath(string $fullPath)
-    {
-        return mb_strpos($fullPath, $this->path) === 0 ?
-            mb_substr($fullPath, mb_strlen($this->path)) :
-            false;
-    }
-
-    /**
-     * {@inheritdoc}
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
+     * @throws \yii\base\InvalidConfigException
      * @see \dicr\file\AbstractFileStore::list()
      */
     public function list($path, array $filter = [])
@@ -168,18 +167,18 @@ class LocalFileStore extends AbstractFileStore
         $iterator = null;
         try {
             if (! empty($filter['recursive'])) {
-                $dirIterator = new \RecursiveDirectoryIterator($fullPath, \FilesystemIterator::CURRENT_AS_FILEINFO);
-                $iterator = new \RecursiveIteratorIterator($dirIterator, \RecursiveIteratorIterator::CHILD_FIRST);
+                $dirIterator = new RecursiveDirectoryIterator($fullPath, FilesystemIterator::CURRENT_AS_FILEINFO);
+                $iterator = new RecursiveIteratorIterator($dirIterator, RecursiveIteratorIterator::CHILD_FIRST);
             } else {
-                $iterator = new \DirectoryIterator($fullPath);
+                $iterator = new DirectoryIterator($fullPath);
             }
-        } catch (\Throwable $ex) {
+        } catch (Throwable $ex) {
             throw new StoreException($fullPath, $ex);
         }
 
         $files = [];
         foreach ($iterator as $item) {
-            if (in_array($item->getBaseName(), ['.', '..', ''])) {
+            if (in_array($item->getBasename(), ['.', '..', ''], true)) {
                 continue;
             }
 
@@ -195,7 +194,7 @@ class LocalFileStore extends AbstractFileStore
             }
         }
 
-        usort($files, function ($a, $b) {
+        usort($files, static function($a, $b) {
             return $a->path <=> $b->path;
         });
 
@@ -204,20 +203,23 @@ class LocalFileStore extends AbstractFileStore
 
     /**
      * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::exists()
+     * @throws \dicr\file\StoreException
+     * @see \dicr\file\AbstractFileStore::absolutePath()
      */
-    public function exists($path)
+    public function absolutePath($path)
     {
-        return @file_exists($this->absolutePath($path));
+        return $this->buildPath(array_merge([$this->path], $this->filterPath($path)));
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::isDir()
+     * Возвращает относительный путь по полному.
+     *
+     * @param string $fullPath полныйпуть
+     * @return string|false относительный путь
      */
-    public function isDir($path)
+    public function getRelPath(string $fullPath)
     {
-        return @is_dir($this->absolutePath($path));
+        return mb_strpos($fullPath, $this->path) === 0 ? mb_substr($fullPath, mb_strlen($this->path)) : false;
     }
 
     /**
@@ -246,27 +248,24 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::setPublic()
+     * Возвращает тип доступа по правам
+     *
+     * @param bool $dir - директория или файл
+     * @param int $perms права доступа
+     * @return bool $public
      */
-    public function setPublic($path, bool $public)
+    protected function publicByPerms(bool $dir, int $perms)
     {
-        // фильтруем и проверяем путь
-        $path = $this->filterRootPath($path);
+        return ($this->perms[$dir ? 'dir' : 'file'] & 0007) === ($perms & 0007);
+    }
 
-        // рассчитываем права доступа
-        $perms = $this->permsByPublic($this->isDir($path), $public);
-
-        // абсолютный путь
-        $absPath = $this->absolutePath($path);
-
-        if (@chmod($absPath, $perms) === false) {
-            $this->throwLastError('Смена прав доступа', $absPath);
-        }
-
-        $this->clearStatCache($path);
-
-        return $this;
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\AbstractFileStore::isDir()
+     */
+    public function isDir($path)
+    {
+        return @is_dir($this->absolutePath($path));
     }
 
     /**
@@ -309,60 +308,13 @@ class LocalFileStore extends AbstractFileStore
     {
         $absPath = $this->absolutePath($path);
 
-        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
         $type = @$finfo->file($absPath, null, /** @scrutinizer ignore-type */ $this->context);
         if ($type === false) {
             $this->throwLastError('Получение mime-типа', $absPath);
         }
 
         return $type;
-    }
-
-    /**
-     * Записывает в файл строку, массив или содержимое потока
-     *
-     * @param string|string[] $path
-     * @param string|array|resource $contents
-     * @throws \dicr\file\StoreException
-     * @return int кол-во записанных байт
-     */
-    public function writeStreamOrContents($path, $contents)
-    {
-        // фильтруем и проверяем путь
-        $path = $this->filterRootPath($path);
-
-        // проверяем существование до создания, так как дальше необходимо будет менять права доступа
-        $exists = $this->exists($path);
-
-        // проверяем наличие директории если файл не существует
-        if (!$exists) {
-            $this->checkDir($this->dirname($path));
-        }
-
-        // строим абсолютный путь
-        $absPath = $this->absolutePath($path);
-
-        $bytes = @file_put_contents($absPath, $contents, $this->writeFlags, /** @scrutinizer ignore-type */ $this->context);
-        if ($bytes === false) {
-            $this->throwLastError('Запись файла', $absPath);
-        }
-
-        try {
-            // если файл не существовал, то необходимо установить права доступа
-            if (! $exists) {
-                $this->setPublic($path, $this->public);
-            } else {
-                // если файл существовал, то необходимо сбросить кэш
-                $this->clearStatCache($path);
-            }
-        } catch (\Throwable $ex) {
-            // для удаленных систем не обращаем внимание на исключение при установке прав
-            if (@stream_is_local($absPath)) {
-                throw new StoreException($absPath, $ex);
-            }
-        }
-
-        return $bytes;
     }
 
     /**
@@ -388,6 +340,99 @@ class LocalFileStore extends AbstractFileStore
     public function writeContents($path, string $contents)
     {
         return $this->writeStreamOrContents($path, $contents);
+    }
+
+    /**
+     * Записывает в файл строку, массив или содержимое потока
+     *
+     * @param string|string[] $path
+     * @param string|array|resource $contents
+     * @return int кол-во записанных байт
+     * @throws \dicr\file\StoreException
+     */
+    public function writeStreamOrContents($path, $contents)
+    {
+        // фильтруем и проверяем путь
+        $path = $this->filterRootPath($path);
+
+        // проверяем существование до создания, так как дальше необходимо будет менять права доступа
+        $exists = $this->exists($path);
+
+        // проверяем наличие директории если файл не существует
+        if (! $exists) {
+            $this->checkDir($this->dirname($path));
+        }
+
+        // строим абсолютный путь
+        $absPath = $this->absolutePath($path);
+
+        $bytes =
+            @file_put_contents($absPath, $contents, $this->writeFlags, /** @scrutinizer ignore-type */ $this->context);
+        if ($bytes === false) {
+            $this->throwLastError('Запись файла', $absPath);
+        }
+
+        try {
+            // если файл не существовал, то необходимо установить права доступа
+            if ($exists) {
+                // если файл существовал, то необходимо сбросить кэш
+                $this->clearStatCache($path);
+            } else {
+                $this->setPublic($path, $this->public);
+            }
+        } catch (Throwable $ex) {
+            // для удаленных систем не обращаем внимание на исключение при установке прав
+            if (@stream_is_local($absPath)) {
+                throw new StoreException($absPath, $ex);
+            }
+        }
+
+        return $bytes;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\AbstractFileStore::exists()
+     */
+    public function exists($path)
+    {
+        return @file_exists($this->absolutePath($path));
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\AbstractFileStore::setPublic()
+     */
+    public function setPublic($path, bool $public)
+    {
+        // фильтруем и проверяем путь
+        $path = $this->filterRootPath($path);
+
+        // рассчитываем права доступа
+        $perms = $this->permsByPublic($this->isDir($path), $public);
+
+        // абсолютный путь
+        $absPath = $this->absolutePath($path);
+
+        if (@chmod($absPath, $perms) === false) {
+            $this->throwLastError('Смена прав доступа', $absPath);
+        }
+
+        $this->clearStatCache($path);
+
+        return $this;
+    }
+
+    /**
+     * Возвращает права доступа для заданного типа файла и типа доступа.
+     *
+     * @param bool $dir - директория или файл
+     * @param bool $public - публичный доступ или приватный
+     * @return int права доступа
+     */
+    protected function permsByPublic(bool $dir, bool $public)
+    {
+        return $this->perms[$dir ? 'dir' : 'file'] & ($public ? 0777 : 0700);
     }
 
     /**
@@ -491,7 +536,7 @@ class LocalFileStore extends AbstractFileStore
 
         // проверяем на существование
         if ($this->exists($path)) {
-            if (!$this->isDir($path)) {
+            if (! $this->isDir($path)) {
                 throw new StoreException('Уже существует не директория: ' . $absPath);
             }
 
@@ -507,6 +552,17 @@ class LocalFileStore extends AbstractFileStore
         }
 
         return $this;
+    }
+
+    /**
+     * Конвертирует в строку
+     *
+     * @return string
+     * @throws \dicr\file\StoreException
+     */
+    public function __toString()
+    {
+        return $this->absolutePath('');
     }
 
     /**
@@ -551,39 +607,5 @@ class LocalFileStore extends AbstractFileStore
         $this->clearStatCache($path);
 
         return $this;
-    }
-
-    /**
-     * Конвертирует в строку
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        return $this->absolutePath('');
-    }
-
-    /**
-     * Возвращает права доступа для заданного типа файла и типа доступа.
-     *
-     * @param bool $dir - директория или файл
-     * @param bool $public - публичный доступ или приватный
-     * @return int права доступа
-     */
-    protected function permsByPublic(bool $dir, bool $public)
-    {
-        return $this->perms[$dir ? 'dir' : 'file'] & ($public ? 0777 : 0700);
-    }
-
-    /**
-     * Возвращает тип доступа по правам
-     *
-     * @param bool $dir - директория или файл
-     * @param int $perms права доступа
-     * @return bool $public
-     */
-    protected function publicByPerms(bool $dir, int $perms)
-    {
-        return ($this->perms[$dir ? 'dir' : 'file'] & 0007) == ($perms & 0007);
     }
 }

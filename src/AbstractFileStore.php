@@ -1,19 +1,31 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ *
+ */
+
+declare(strict_types = 1);
+
 namespace dicr\file;
 
+use InvalidArgumentException;
+use Throwable;
+use Yii;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
-use yii\base\NotSupportedException;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
+use function call_user_func;
+use function is_array;
+use function is_callable;
+use function is_string;
 
 /**
  * Abstract Fle Store.
  *
  * @property-read bool $isThumbAvailable
- *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 2019
  */
 abstract class AbstractFileStore extends Component
 {
@@ -34,6 +46,7 @@ abstract class AbstractFileStore extends Component
 
     /**
      * {@inheritdoc}
+     * @throws \yii\base\InvalidConfigException
      * @see \yii\base\BaseObject::init()
      */
     public function init()
@@ -42,7 +55,7 @@ abstract class AbstractFileStore extends Component
 
         // проверяем URL
         if (is_string($this->url)) {
-            $url = \Yii::getAlias($this->url);
+            $url = Yii::getAlias($this->url);
             if ($url === false) {
                 throw new InvalidConfigException('url: ' . $this->url);
             }
@@ -51,7 +64,7 @@ abstract class AbstractFileStore extends Component
         }
 
         // проверяем thumbFileConfig
-        if (!empty($this->thumbFileConfig) && !is_array($this->thumbFileConfig)) {
+        if (! empty($this->thumbFileConfig) && ! is_array($this->thumbFileConfig)) {
             throw new InvalidConfigException('thumbFileConfig');
         }
     }
@@ -59,19 +72,21 @@ abstract class AbstractFileStore extends Component
     /* === Функции для работы с Path ======================================================================== */
 
     /**
-     * Разбивает путь на элементы
+     * Возвращает директорию пути
      *
      * @param string|string[] $path
-     * @return string[]
+     * @return string
+     * @throws \dicr\file\StoreException если путь корневой
      */
-    public function splitPath($path)
+    public function dirname($path)
     {
-        if (! is_array($path)) {
-            $regex = sprintf('~[%s\\\/]+~ui', preg_quote($this->pathSeparator));
-            $path = preg_split($regex, $path, - 1, PREG_SPLIT_NO_EMPTY);
+        $path = $this->filterPath($path);
+        if (empty($path)) {
+            throw new StoreException('корневой каталог');
         }
 
-        return $path;
+        array_pop($path);
+        return $this->buildPath($path);
     }
 
     /**
@@ -79,6 +94,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return string[]
+     * @throws \dicr\file\StoreException
      */
     public function filterPath($path)
     {
@@ -86,7 +102,7 @@ abstract class AbstractFileStore extends Component
 
         $path = $this->splitPath($path);
         foreach ($path as $p) {
-            if ($p == '..') {
+            if ($p === '..') {
                 if (empty($filtered)) {
                     throw new StoreException('invalid path: ' . $this->buildPath($path));
                 }
@@ -101,16 +117,16 @@ abstract class AbstractFileStore extends Component
     }
 
     /**
-     * Фильтрует путь и проверяет на доступ к корневому каталогу.
+     * Разбивает путь на элементы
      *
      * @param string|string[] $path
      * @return string[]
      */
-    protected function filterRootPath($path)
+    public function splitPath($path)
     {
-        $path = $this->filterPath($path);
-        if (empty($path)) {
-            throw new StoreException('Корневой путь');
+        if (! is_array($path)) {
+            $regex = sprintf('~[%s\\\/]+~ui', preg_quote($this->pathSeparator, '~'));
+            $path = preg_split($regex, $path, - 1, PREG_SPLIT_NO_EMPTY);
         }
 
         return $path;
@@ -132,57 +148,12 @@ abstract class AbstractFileStore extends Component
     }
 
     /**
-     * Нормализирует относительный путь
-     *
-     * @param string|string[] $path
-     * @return string
-     */
-    public function normalizePath($path)
-    {
-        return $this->buildPath($this->filterPath($path));
-    }
-
-    /**
-     * Возвращает директорию пути
-     *
-     * @param string|string[] $path
-     * @throws \dicr\file\StoreException если путь корневой
-     * @return string
-     */
-    public function dirname($path)
-    {
-        $path = $this->filterPath($path);
-        if (empty($path)) {
-            throw new StoreException('корневой каталог');
-        }
-
-        array_pop($path);
-        return $this->buildPath($path);
-    }
-
-    /**
-     * Возвращает имя файла из пути.
-     *
-     * @param string|string[] $path
-     * @throws \dicr\file\StoreException если путь корневой
-     * @return string
-     */
-    public function basename($path)
-    {
-        $path = $this->splitPath($path);
-        if (empty($path)) {
-            throw new StoreException('корневой каталог');
-        }
-
-        return (string)array_pop($path);
-    }
-
-    /**
      * Строит дочерний путь.
      *
      * @param string|string[] $parent родительский
      * @param string|string[] $child дочерний
      * @return string
+     * @throws \dicr\file\StoreException
      */
     public function childname($parent, $child)
     {
@@ -190,40 +161,10 @@ abstract class AbstractFileStore extends Component
 
         $child = $this->splitPath($child);
         if (empty($child)) {
-            throw new \InvalidArgumentException('child');
+            throw new InvalidArgumentException('child');
         }
 
         return $this->buildPath($this->filterPath(array_merge($parent, $child)));
-    }
-
-    /**
-     * Возвращает полный путь
-     *
-     * @param string|string[] $path
-     * @return string
-     */
-    abstract public function absolutePath($path);
-
-    /* === Создание файла и листинг директории ========================================== */
-
-    /**
-     * Создает объект файла с заданным путем.
-     *
-     * @param string|string[] $path
-     * @return \dicr\file\StoreFile
-     */
-    public function file($path)
-    {
-        // конфиг файла
-        $fileConfig = (array)($this->fileConfig ?: []);
-
-        // добавляем класс по-умолчанию
-        if (!isset($fileConfig['class'])) {
-            $fileConfig['class'] = StoreFile::class;
-        }
-
-        // создаем файл
-        return \Yii::createObject($fileConfig, [$this, $path]);
     }
 
     /**
@@ -231,6 +172,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return string|null URL файла
+     * @throws \dicr\file\StoreException
      */
     public function url($path)
     {
@@ -247,23 +189,6 @@ abstract class AbstractFileStore extends Component
     }
 
     /**
-     * Возвращает список файлов директории
-     *
-     * @param string|string[] $path
-     * @throws \dicr\file\StoreException
-     * @param array $filter
-     *  - bool|null recursive
-     *  - string|null $dir - true - только директории, false - только файлы
-     *  - string|null $public - true - публичный доступ, false - приватный доступ
-     *  - bool|null $hidden - true - скрытые файлы, false - открытые
-     *  - string|null $pathRegex - регулярное выражение пути
-     *  - string|null $nameRegex - регулярное выражение имени вайла
-     *  - callable|null $filter function(StoreFile $file) : bool филььтр элементов
-     * @return \dicr\file\StoreFile[]
-     */
-    abstract public function list($path, array $filter = []);
-
-    /**
      * Импорт файла в хранилище.
      *
      * @param string|string[]|\dicr\file\AbstractFile $src импортируемый файл
@@ -271,8 +196,9 @@ abstract class AbstractFileStore extends Component
      * @param string|string[] $path относительный путь в хранилище для импорта
      * @param array $options опции
      *  - bool $ifModified - импортировать файл только если время новее или размер отличается (по-умолчанию true)
-     * @throws \dicr\file\StoreException
      * @return $this
+     * @throws \yii\base\InvalidConfigException
+     * @throws \dicr\file\StoreException
      */
     public function import($src, $path, array $options = [])
     {
@@ -284,12 +210,11 @@ abstract class AbstractFileStore extends Component
         // пропускаем существующие файлы более новой версии
         try {
             $ifModified = ArrayHelper::getValue($options, 'ifModified', true);
-            if ($ifModified && $this->exists($path) && $this->size($path) === $src->size && $this->mtime($path) >= $src->mtime) {
+            if ($ifModified && $this->exists($path) && $this->size($path) === $src->size &&
+                $this->mtime($path) >= $src->mtime) {
                 return $this;
             }
-        } catch (NotSupportedException $ex) {
-            // не поддерживаемая операция
-        } catch (\Throwable $ex) {
+        } catch (Throwable $ex) {
             // для удаленых файлов исключения означают неподдерживаемую функцию
             $absPath = $this->absolutePath($path);
             if (stream_is_local($absPath)) {
@@ -309,32 +234,83 @@ abstract class AbstractFileStore extends Component
         return $this;
     }
 
-    /* === Файловые операции ============================================================== */
+    /**
+     * Создает объект файла с заданным путем.
+     *
+     * @param string|string[] $path
+     * @return \dicr\file\StoreFile
+     * @throws \yii\base\InvalidConfigException
+     */
+    public function file($path)
+    {
+        // конфиг файла
+        $fileConfig = $this->fileConfig ?: [];
+
+        // добавляем класс по-умолчанию
+        if (! isset($fileConfig['class'])) {
+            $fileConfig['class'] = StoreFile::class;
+        }
+
+        // создаем файл
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return Yii::createObject($fileConfig, [$this, $path]);
+    }
 
     /**
      * Проверяет существование файла.
      *
      * @param string|string[] $path
-     * @throws \dicr\file\StoreException
      * @return boolean
+     * @throws \dicr\file\StoreException
      */
     abstract public function exists($path);
 
+    /* === Создание файла и листинг директории ========================================== */
+
     /**
-     * Возвращает флаг директории.
+     * Возвращает размер файла.
      *
      * @param string|string[] $path
+     * @return int
      * @throws \dicr\file\StoreException
-     * @return bool
      */
-    abstract public function isDir($path);
+    abstract public function size($path);
+
+    /**
+     * Возвращает время изменения.
+     *
+     * @param string|string[] $path
+     * @return int timestamp
+     * @throws \dicr\file\StoreException
+     */
+    abstract public function mtime($path);
+
+    /**
+     * Возвращает полный путь
+     *
+     * @param string|string[] $path
+     * @return string
+     */
+    abstract public function absolutePath($path);
+
+    /**
+     * Записывает файл из потока.
+     *
+     * @param string|string[] $path
+     * @param resource $stream
+     * @return int кол-во данных
+     * @throws \dicr\file\StoreException
+     */
+    abstract public function writeStream($path, $stream);
+
+    /* === Файловые операции ============================================================== */
 
     /**
      * Возвращает флаг файла.
      *
      * @param string|string[] $path
-     * @throws \dicr\file\StoreException
      * @return bool
+     * @throws \dicr\file\StoreException
      */
     abstract public function isFile($path);
 
@@ -342,8 +318,8 @@ abstract class AbstractFileStore extends Component
      * Возвращает флаг публичности файла.
      *
      * @param string|string[] $path
-     * @throws \dicr\file\StoreException
      * @return bool
+     * @throws \dicr\file\StoreException
      */
     abstract public function isPublic($path);
 
@@ -352,8 +328,8 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @param bool $public
-     * @throws \dicr\file\StoreException
      * @return $this
+     * @throws \dicr\file\StoreException
      */
     abstract public function setPublic($path, bool $public);
 
@@ -362,6 +338,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return bool
+     * @throws \dicr\file\StoreException
      */
     public function isHidden($path)
     {
@@ -370,33 +347,44 @@ abstract class AbstractFileStore extends Component
             return false;
         }
 
-        return mb_substr($this->basename($path), 0, 1) == '.';
+        return mb_strpos($this->basename($path), '.') === 0;
     }
 
     /**
-     * Возвращает размер файла.
+     * Нормализирует относительный путь
      *
      * @param string|string[] $path
+     * @return string
      * @throws \dicr\file\StoreException
-     * @return int
      */
-    abstract public function size($path);
+    public function normalizePath($path)
+    {
+        return $this->buildPath($this->filterPath($path));
+    }
 
     /**
-     * Возвращает время изменения.
+     * Возвращает имя файла из пути.
      *
      * @param string|string[] $path
-     * @throws \dicr\file\StoreException
-     * @return int timestamp
+     * @return string
+     * @throws \dicr\file\StoreException если путь корневой
      */
-    abstract public function mtime($path);
+    public function basename($path)
+    {
+        $path = $this->splitPath($path);
+        if (empty($path)) {
+            throw new StoreException('корневой каталог');
+        }
+
+        return (string)array_pop($path);
+    }
 
     /**
      * Возвращает MIME-тип файла.
      *
      * @param string|string[] $path
-     * @throws \dicr\file\StoreException
      * @return string
+     * @throws \dicr\file\StoreException
      */
     abstract public function mimeType($path);
 
@@ -404,8 +392,8 @@ abstract class AbstractFileStore extends Component
      * Возвращает содержимое файла в строке.
      *
      * @param string|string[] $path
-     * @throws \dicr\file\StoreException
      * @return string
+     * @throws \dicr\file\StoreException
      */
     abstract public function readContents($path);
 
@@ -414,37 +402,18 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @param string $contents содержимое
-     * @throws \dicr\file\StoreException
      * @return int размер записанных даннных
+     * @throws \dicr\file\StoreException
      */
     abstract public function writeContents($path, string $contents);
-
-    /**
-     * Возвращает открытый поток файла.
-     *
-     * @param string|string[] $path
-     * @throws \dicr\file\StoreException
-     * @return resource
-     */
-    abstract public function readStream($path);
-
-    /**
-     * Записывает файл из потока.
-     *
-     * @param string|string[] $path
-     * @param resource $stream
-     * @throws \dicr\file\StoreException
-     * @return int кол-во данных
-     */
-    abstract public function writeStream($path, $stream);
 
     /**
      * Копирует файл.
      *
      * @param string|string[] $path
      * @param string|string[] $newpath
-     * @throws \dicr\file\StoreException
      * @return $this
+     * @throws \dicr\file\StoreException
      */
     public function copy($path, $newpath)
     {
@@ -460,35 +429,35 @@ abstract class AbstractFileStore extends Component
     }
 
     /**
+     * Возвращает открытый поток файла.
+     *
+     * @param string|string[] $path
+     * @return resource
+     * @throws \dicr\file\StoreException
+     */
+    abstract public function readStream($path);
+
+    /**
      * Rename/move file
      *
      * @param string|string[] $path
      * @param string|string[] $newpath
-     * @throws \dicr\file\StoreException
      * @return $this
+     * @throws \dicr\file\StoreException
      */
     abstract public function rename($path, $newpath);
-
-    /**
-     * Создает директорию.
-     *
-     * @param string|string[] $path
-     * @throws \dicr\file\StoreException
-     * @return $this
-     */
-    abstract public function mkdir($path);
 
     /**
      * Проверяет/создает директорию.
      *
      * @param string|string[] $dir
-     * @throws \dicr\file\StoreException
      * @return $this
+     * @throws \dicr\file\StoreException
      */
     public function checkDir($dir)
     {
         $path = $this->filterPath($dir);
-        if (!empty($path)) {
+        if (! empty($path)) {
             if (! $this->exists($path)) {
                 $this->mkdir($path);
             } elseif (! $this->isDir($path)) {
@@ -500,29 +469,29 @@ abstract class AbstractFileStore extends Component
     }
 
     /**
-     * Удаляет файл.
+     * Создает директорию.
      *
      * @param string|string[] $path
-     * @throws \dicr\file\StoreException
      * @return $this
+     * @throws \dicr\file\StoreException
      */
-    abstract protected function unlink($path);
+    abstract public function mkdir($path);
 
     /**
-     * Удаляет директорию.
+     * Возвращает флаг директории.
      *
      * @param string|string[] $path
+     * @return bool
      * @throws \dicr\file\StoreException
-     * @return $this
      */
-    abstract protected function rmdir($path);
+    abstract public function isDir($path);
 
     /**
      * Удаляет рекурсивно директорию/файл.
      *
      * @param string|string[] $path
-     * @throws \dicr\file\StoreException
      * @return $this
+     * @throws \dicr\file\StoreException
      */
     public function delete($path)
     {
@@ -547,6 +516,41 @@ abstract class AbstractFileStore extends Component
     }
 
     /**
+     * Возвращает список файлов директории
+     *
+     * @param string|string[] $path
+     * @param array $filter
+     *  - bool|null recursive
+     *  - string|null $dir - true - только директории, false - только файлы
+     *  - string|null $public - true - публичный доступ, false - приватный доступ
+     *  - bool|null $hidden - true - скрытые файлы, false - открытые
+     *  - string|null $pathRegex - регулярное выражение пути
+     *  - string|null $nameRegex - регулярное выражение имени вайла
+     *  - callable|null $filter function(StoreFile $file) : bool филььтр элементов
+     * @return \dicr\file\StoreFile[]
+     * @throws \dicr\file\StoreException
+     */
+    abstract public function list($path, array $filter = []);
+
+    /**
+     * Удаляет директорию.
+     *
+     * @param string|string[] $path
+     * @return $this
+     * @throws \dicr\file\StoreException
+     */
+    abstract protected function rmdir($path);
+
+    /**
+     * Удаляет файл.
+     *
+     * @param string|string[] $path
+     * @return $this
+     * @throws \dicr\file\StoreException
+     */
+    abstract protected function unlink($path);
+
+    /**
      * Очищает внуренний кэш файлов PHP.
      *
      * @param string|string[] $path относительный путь
@@ -560,13 +564,38 @@ abstract class AbstractFileStore extends Component
     }
 
     /**
-     * Проверяет доступны ли создание ThumbFile.
+     * Создает файл предпросмотра каринки.
      *
-     * @return boolean true, если конфиг настроен
+     * @param string|array|\dicr\file\StoreFile $file
+     * @param array $config
+     * @return \dicr\file\ThumbFile|false превью или false, если thumbFileConfig не настроен
+     * @throws \yii\base\InvalidConfigException
+     * @throws \Exception
+     * @throws \Throwable
+     * @throws \Throwable
      */
-    public function getIsThumbAvailable()
+    public function thumb($file, array $config = [])
     {
-        return !empty($this->thumbFileConfig);
+        // проверяем аргументы
+        if (empty($file)) {
+            throw new InvalidArgumentException('file');
+        }
+
+        if (! ($file instanceof StoreFile)) {
+            $file = $this->file($file);
+        }
+
+        // создаем превью
+        $thumb = $this->createThumb(array_merge($config, [
+            'source' => $file
+        ]));
+
+        // если превью настроено, то обновляем файл
+        if (! empty($thumb) && ! $thumb->isReady) {
+            $thumb->update();
+        }
+
+        return $thumb;
     }
 
     /**
@@ -574,10 +603,11 @@ abstract class AbstractFileStore extends Component
      *
      * @param array $config
      * @return \dicr\file\ThumbFile|false ThumbFile или false если не конфиг не настроен
+     * @throws \yii\base\InvalidConfigException
      */
     protected function createThumb(array $config = [])
     {
-        if (!$this->isThumbAvailable) {
+        if (! $this->isThumbAvailable) {
             return false;
         }
 
@@ -603,37 +633,8 @@ abstract class AbstractFileStore extends Component
             $config['class'] = ThumbFile::class;
         }
 
-        return \Yii::createObject($config);
-    }
-
-
-    /**
-     * Создает файл предпросмотра каринки.
-     *
-     * @param string|array|\dicr\file\StoreFile $file
-     * @param array $config
-     * @return \dicr\file\ThumbFile|false превью или false, если thumbFileConfig не настроен
-     */
-    public function thumb($file, array $config = [])
-    {
-        // проверяем аргументы
-        if (empty($file)) {
-            throw new \InvalidArgumentException('file');
-        } elseif (!($file instanceof StoreFile)) {
-            $file = $this->file($file);
-        }
-
-        // создаем превью
-        $thumb = $this->createThumb(array_merge($config, [
-            'source' => $file
-        ]));
-
-        // если превью настроено, то обновляем файл
-        if (!empty($thumb) && !$thumb->isReady) {
-            $thumb->update();
-        }
-
-        return $thumb;
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return Yii::createObject($config);
     }
 
     /**
@@ -641,6 +642,10 @@ abstract class AbstractFileStore extends Component
      *
      * @param array $config конфиг превью.
      * @return \dicr\file\ThumbFile
+     * @throws \yii\base\InvalidConfigException
+     * @throws \Exception
+     * @throws \Throwable
+     * @throws \Throwable
      */
     public function noimage(array $config = [])
     {
@@ -650,7 +655,7 @@ abstract class AbstractFileStore extends Component
         ]));
 
         // если превью настроено, то обновляем файл
-        if (!empty($thumb) && !$thumb->isReady) {
+        if (! empty($thumb) && ! $thumb->isReady) {
             $thumb->update();
         }
 
@@ -661,13 +666,18 @@ abstract class AbstractFileStore extends Component
      * Очищает превью для заданного файла.
      *
      * @param string|array|\dicr\file\StoreFile $file
+     * @throws \yii\base\InvalidConfigException
+     * @throws \dicr\file\StoreException
+     * @throws \dicr\file\StoreException
      */
     public function clearThumb($file)
     {
         // проверяем аргументы
         if (empty($file)) {
-            throw new \InvalidArgumentException('file');
-        } elseif (!($file instanceof StoreFile)) {
+            throw new InvalidArgumentException('file');
+        }
+
+        if (! ($file instanceof StoreFile)) {
             $file = $this->file($file);
         }
 
@@ -677,9 +687,26 @@ abstract class AbstractFileStore extends Component
         ]);
 
         // если настроен, то очищаем все файлы превью
-        if (!empty($thumb)) {
+        if (! empty($thumb)) {
             $thumb->clear();
         }
+    }
+
+    /**
+     * Фильтрует путь и проверяет на доступ к корневому каталогу.
+     *
+     * @param string|string[] $path
+     * @return string[]
+     * @throws \dicr\file\StoreException
+     */
+    protected function filterRootPath($path)
+    {
+        $path = $this->filterPath($path);
+        if (empty($path)) {
+            throw new StoreException('Корневой путь');
+        }
+
+        return $path;
     }
 
     /**
@@ -693,7 +720,6 @@ abstract class AbstractFileStore extends Component
      *     - string|null $pathRegex - регулярное выражение пути
      *     - string|null $nameRegex - регулярное выражение имени вайла
      *     - callable|null $filter function(StoreFile $file) : bool филььтр элементов
-     * @throws StoreException
      * @return boolean
      */
     protected function fileMatchFilter(StoreFile $file, array $filter)
@@ -718,17 +744,17 @@ abstract class AbstractFileStore extends Component
         // ----- медленные фильтры
 
         // фильтруем по типу
-        if (isset($filter['dir']) && (boolval($file->isDir) != boolval($filter['dir']))) {
+        if (isset($filter['dir']) && ((bool)$file->isDir !== (bool)$filter['dir'])) {
             return false;
         }
 
         // фильтруем по доступности
-        if (isset($filter['public']) && (boolval($file->public) != boolval($filter['public']))) {
+        if (isset($filter['public']) && ((bool)$file->public !== (bool)$filter['public'])) {
             return false;
         }
 
         // фильтруем скрытые
-        if (isset($filter['hidden']) && boolval($file->hidden) != boolval($filter['hidden'])) {
+        if (isset($filter['hidden']) && (bool)$file->hidden !== (bool)$filter['hidden']) {
             return false;
         }
 
@@ -747,11 +773,11 @@ abstract class AbstractFileStore extends Component
         $messages = [];
 
         // добавляем операцию
-        if (!empty($op)) {
+        if (! empty($op)) {
             $messages[] = $op;
         }
 
-        if (!empty($absPath)) {
+        if (! empty($absPath)) {
             $messages[] = $absPath;
         }
 
@@ -759,7 +785,7 @@ abstract class AbstractFileStore extends Component
         $err = @error_get_last();
         /** @scrutinizer ignore-unhandled */
         @error_clear_last();
-        if (!empty($err['message'])) {
+        if (! empty($err['message'])) {
             $messages[] = $err['message'];
         }
 

@@ -92,6 +92,7 @@
 /** картинка */
 .file-input-widget .image {
     display: block;
+    /*noinspection CssBrowserCompatibilityForProperties*/
     object-fit: contain;
 }
 
@@ -105,7 +106,7 @@
     flex: 0 0 0;
     font-size: 1.1rem;
     line-height: 1;
-} 
+}
 
 /** заглушка при отсутствии превью */
 .file-input-widget img:not([src]),
@@ -129,7 +130,7 @@
     line-height: 1.2;
     text-align: center;
     color: hsl(244, 100%, 100%);
-    text-shadow: 1px 1px 2px #000000;
+    text-shadow: 1px 1px 2px #000;
     background-color: hsla(0, 0%, 19%, 0.53);
     padding: 0.125rem 0.3125rem;
 }
@@ -150,7 +151,7 @@
     font-size: 1.5rem;
     line-height: 1;
     text-decoration: none !important;
-    text-shadow: 1px 1px 0px #000;
+    text-shadow: 1px 1px 0 #000;
     border: none;
     filter: drop-shadow(-1px -1px 0px #fff);
 }

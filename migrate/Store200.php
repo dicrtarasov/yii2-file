@@ -1,8 +1,18 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+/** @noinspection PhpUnused */
+
+declare(strict_types = 1);
 namespace dicr\file\migrate;
 
 use dicr\file\AbstractFileStore;
 use dicr\file\StoreFile;
+use InvalidArgumentException;
 use yii\base\BaseObject;
 
 /**
@@ -20,34 +30,17 @@ use yii\base\BaseObject;
 class Store200 extends BaseObject
 {
     /**
-     * Обрабатывает файлы аттрибута.
+     * Выполняет переименовывание файлов.
      *
-     * @param \dicr\file\StoreFile $attrDir
+     * @param \dicr\file\AbstractFileStore $store
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
      */
-    protected static function processAttribute(StoreFile $attrDir)
+    public static function process(AbstractFileStore $store)
     {
-        $parent = $attrDir->parent;
-        if (empty($parent)) {
-            throw new \InvalidArgumentException('attrDir has not parent');
-        }
-
-        foreach ($attrDir->getList(['dir' => false]) as $file) {
-            // разбираем имя файла
-            $matches = null;
-            if (preg_match('~^(\d+)\~(.+)$~ui', $file->name, $matches)) {
-                $pos = (int)$matches[1];
-                $name = $matches[2];
-
-                echo $file->path . "\n";
-
-                // перемещаем файл
-                $file->path = $parent->child(StoreFile::createStorePrefix($attrDir->name, $pos, $name));
-            }
-        }
-
-        // если директория пустая, то удаляем
-        if (empty($attrDir->list)) {
-            $attrDir->delete();
+        // получаем список моделей
+        foreach ($store->list('', ['dir' => true]) as $modelDir) {
+            self::processModel($modelDir);
         }
     }
 
@@ -55,6 +48,8 @@ class Store200 extends BaseObject
      * Обрабатывает модель.
      *
      * @param \dicr\file\StoreFile $modelDir
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
      */
     protected static function processModel(StoreFile $modelDir)
     {
@@ -90,13 +85,36 @@ class Store200 extends BaseObject
     }
 
     /**
-     * Выполняет переименовывание файлов.
+     * Обрабатывает файлы аттрибута.
+     *
+     * @param \dicr\file\StoreFile $attrDir
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
      */
-    public static function process(AbstractFileStore $store)
+    protected static function processAttribute(StoreFile $attrDir)
     {
-        // получаем список моделей
-        foreach ($store->list('', ['dir' => true]) as $modelDir) {
-            self::processModel($modelDir);
+        $parent = $attrDir->parent;
+        if ($parent === null) {
+            throw new InvalidArgumentException('attrDir has not parent');
+        }
+
+        foreach ($attrDir->getList(['dir' => false]) as $file) {
+            // разбираем имя файла
+            $matches = null;
+            if (preg_match('~^(\d+)\~(.+)$~u', $file->name, $matches)) {
+                $pos = (int)$matches[1];
+                $name = $matches[2];
+
+                echo $file->path . "\n";
+
+                // перемещаем файл
+                $file->path = $parent->child(StoreFile::createStorePrefix($attrDir->name, $pos, $name));
+            }
+        }
+
+        // если директория пустая, то удаляем
+        if (empty($attrDir->list)) {
+            $attrDir->delete();
         }
     }
 }

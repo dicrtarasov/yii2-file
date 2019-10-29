@@ -1,6 +1,14 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+declare(strict_types = 1);
 namespace dicr\file;
 
+use Throwable;
 use yii\base\Exception;
 
 /**
@@ -18,9 +26,9 @@ class StoreException extends Exception
      *     если не задано, то берется из error_get_last
      * @param \Throwable $prev
      */
-    public function __construct(string $msg = '', \Throwable $prev = null)
+    public function __construct(string $msg = '', Throwable $prev = null)
     {
-        if ($msg == '') {
+        if ($msg === '') {
             $error = @error_get_last();
             /** @scrutinizer ignore-unhandled */
             @error_clear_last();

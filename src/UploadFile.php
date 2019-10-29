@@ -1,8 +1,19 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+/** @noinspection LongInheritanceChainInspection */
+declare(strict_types = 1);
 namespace dicr\file;
 
+use InvalidArgumentException;
 use yii\base\Exception;
 use yii\helpers\ArrayHelper;
+use function is_array;
+use function is_string;
 
 /**
  * Загруженный файл.
@@ -26,6 +37,9 @@ use yii\helpers\ArrayHelper;
  */
 class UploadFile extends StoreFile
 {
+    /** @var self[] */
+    private static $_instances;
+
     /** @var string наименование файла */
     private $_name;
 
@@ -35,9 +49,6 @@ class UploadFile extends StoreFile
     /** @var int размер файла */
     private $_size;
 
-    /** @var string mime-type */
-    private $_mimeType;
-
     // @formatter:off
     /** @var array [
      *      $formName => [
@@ -45,12 +56,13 @@ class UploadFile extends StoreFile
      *      ]
      *  ] кэш распарсенных объектов */
     // @formatter:on
-    private static $instances;
+    /** @var string mime-type */
+    private $_mimeType;
 
     /**
      * Конструктор
      *
-     * @param string|array $config path или конфиг
+     * @param $pathconfig
      */
     public function __construct($pathconfig)
     {
@@ -68,144 +80,99 @@ class UploadFile extends StoreFile
     }
 
     /**
-     * {@inheritdoc}
-     * @see \yii\base\BaseObject::init()
+     * Возвращает файлы аттрибутов формы загруженные в $_FILES или null.
+     *
+     * @param string $formName имя формы для которой возвращает аттрибуты
+     * @param string $attribute если задан, то возвращает файлы только для аттрибута
+     * @return mixed
+     * @throws \yii\base\Exception
      */
-    public function init()
+    public static function instances(string $formName = '', string $attribute = '')
     {
-        parent::init();
-
-        if (isset($this->_error)) {
-            $this->_error = (int) $this->_error;
+        if (! isset(self::$_instances)) {
+            self::$_instances = self::parseInstances();
         }
 
-        if (isset($this->_size)) {
-            $this->_size = (int) $this->_size;
+        $path = [trim($formName)];
+
+        if ($attribute !== '') {
+            $path[] = $attribute;
         }
+
+        return ArrayHelper::getValue(self::$_instances, $path);
     }
 
     /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFile::getName()
+     * Парсит $_FILES и создает объекты.
+     *
+     * @return array
+     * @throws \yii\base\Exception
      */
-    public function getName(array $options = [])
+    protected static function parseInstances()
     {
-        // если имя файла не задано то берем его из пути
-        if (!isset($this->_name)) {
-            if (!empty($this->_error)) {
-                return null;
+        $instances = [];
+
+        if (! empty($_FILES)) {
+            foreach ($_FILES as $key => $data) {
+                if (static::detectFormData($data)) {
+                    // аттрибуты формы: $key == $formName, $data == аттрибуты в формате формы
+                    $instances[$key] = static::parseFormData($data);
+                } else {
+                    // аттрибут без формы, $formName == '', $key == $attribute, $data == данные в формате одного аттрибуты
+                    $instances[''][$key] = static::parseAttribData($data);
+                }
             }
-
-            $this->_name = parent::getName();
         }
 
-        $name = $this->_name;
-
-        if (!empty($options['removeExt'])) {
-            $name = static::removeExtension($name);
-        }
-
-        return $name;
+        return $instances;
     }
 
     /**
-     * Установить имя файла
+     * Определяет формат данных.
      *
-     * @param string $name
-     * @return $this
+     * @param array $data
+     * @return bool
+     * @throws \yii\base\Exception
      */
-    public function setName(string $name)
+    protected static function detectFormData(array $data)
     {
-        $name = $this->_store->basename($name);
-        if (empty($name)) {
-            throw new \InvalidArgumentException('name');
+
+        // если не установлен name, то ошибка формата данных
+        if (! isset($data['name'])) {
+            throw new Exception('Некорректная структура данных $_FILES: ' . var_export($data, true));
         }
 
-        $this->_name = $name;
-
-        return $this;
-    }
-
-    /**
-     * Возвращает ошибку
-     *
-     * @return int
-     */
-    public function getError()
-    {
-        return $this->_error;
-    }
-
-    /**
-     * Устанавливает ошибку
-     *
-     * @param int $error
-     * @return $this
-     */
-    public function setError(int $error)
-    {
-        $this->_error = $error;
-
-        return $this;
-    }
-
-    /**
-     * {@inheritDoc}
-     * @see \dicr\file\StoreFile::getSize()
-     */
-    public function getSize()
-    {
-        if (!isset($this->_size)) {
-            if (!empty($this->_error)) {
-                return null;
-            }
-
-            $this->_size = parent::getSize();
+        // если name не массив - однозначно не форма
+        if (! is_array($data['name'])) {
+            return false;
         }
 
-        return $this->_size;
-    }
-
-    /**
-     * Усанавливает размер.
-     *
-     * @param int $size
-     * @throws \InvalidArgumentException
-     */
-    public function setSize(int $size)
-    {
-        if ($size < 0) {
-            throw new \InvalidArgumentException('size');
+        // если в name массив массивов - однозначно форма
+        if (is_array(reset($data['name']))) {
+            return true;
         }
 
-        $this->_size = $size;
+        // средний вариант определяем по типу ключей в name.
+        return ! preg_match('~^\d+$~', array_key_first($data['name']));
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFile::getMimeType()
+     * @param array $data
+     * @return array
+     * @throws \yii\base\Exception
      */
-    public function getMimeType()
+    protected static function parseFormData(array $data)
     {
-        if (!isset($this->_mimeType)) {
-            if (!empty($this->_error)) {
-                return null;
-            }
+        $instances = [];
 
-            $this->_mimeType = parent::getMimeType();
+        foreach (array_keys($data['name']) as $attribute) {
+            $instances[$attribute] =
+                static::attributeInstances((array)$data['name'][$attribute], (array)($data['type'][$attribute] ?? []),
+                    (array)($data['size'][$attribute] ?? []), (array)($data['error'][$attribute] ?? []),
+                    (array)($data['tmp_name'][$attribute] ?? []));
         }
 
-        return $this->_mimeType;
-    }
-
-    /**
-     * Устанавливает MIME-тип.
-     *
-     * @param string $type
-     */
-    public function setMimeType(string $type)
-    {
-        $this->_mimeType = $type;
+        return $instances;
     }
 
     /**
@@ -217,6 +184,7 @@ class UploadFile extends StoreFile
      * @param array $errors ошибки
      * @param array $paths пути
      * @return \dicr\file\UploadFile[]
+     * @throws \yii\base\Exception
      */
     protected static function attributeInstances(array $names, array $types, array $sizes, array $errors, array $paths)
     {
@@ -244,6 +212,89 @@ class UploadFile extends StoreFile
         }
 
         return $instances;
+    }
+
+    /**
+     * @param array $data
+     * @return \dicr\file\UploadFile[]
+     * @throws \yii\base\Exception
+     */
+    protected static function parseAttribData(array $data)
+    {
+        return static::attributeInstances((array)($data['name'] ?? []), (array)($data['type'] ?? []),
+            (array)($data['size'] ?? []), (array)($data['error'] ?? []), (array)($data['tmp_name'] ?? []));
+    }
+
+    /**
+     * {@inheritdoc}
+     * @see \yii\base\BaseObject::init()
+     */
+    public function init()
+    {
+        parent::init();
+
+        if (isset($this->_error)) {
+            /** @noinspection UnnecessaryCastingInspection */
+            $this->_error = (int)$this->_error;
+        }
+
+        if (isset($this->_size)) {
+            /** @noinspection UnnecessaryCastingInspection */
+            $this->_size = (int)$this->_size;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * @see \dicr\file\AbstractFile::getName()
+     */
+    public function getName(array $options = [])
+    {
+        // если имя файла не задано то берем его из пути
+        if (! isset($this->_name)) {
+            if (! empty($this->_error)) {
+                return null;
+            }
+
+            $this->_name = parent::getName();
+        }
+
+        $name = $this->_name;
+
+        if (! empty($options['removeExt'])) {
+            $name = static::removeExtension($name);
+        }
+
+        return $name;
+    }
+
+    /**
+     * Установить имя файла
+     *
+     * @param string $name
+     * @return $this
+     * @throws \dicr\file\StoreException
+     */
+    public function setName(string $name)
+    {
+        $name = $this->_store->basename($name);
+        if (empty($name)) {
+            throw new InvalidArgumentException('name');
+        }
+
+        $this->_name = $name;
+
+        return $this;
+    }
+
+    /**
+     * Возвращает ошибку
+     *
+     * @return int
+     */
+    public function getError()
+    {
+        return $this->_error;
     }
 
     // @formatter:off
@@ -297,15 +348,17 @@ class UploadFile extends StoreFile
      * @return \dicr\file\UploadFile[] файлы аттрибута
      */
     // @formatter:on
-    protected static function parseAttribData(array $data)
+    /**
+     * Устанавливает ошибку
+     *
+     * @param int $error
+     * @return $this
+     */
+    public function setError(int $error)
     {
-        return static::attributeInstances(
-            (array) ($data['name'] ?? []),
-            (array) ($data['type'] ?? []),
-            (array) ($data['size'] ?? []),
-            (array) ($data['error'] ?? []),
-            (array) ($data['tmp_name'] ?? [])
-        );
+        $this->_error = $error;
+
+        return $this;
     }
 
     // @formatter:off
@@ -379,21 +432,21 @@ class UploadFile extends StoreFile
      * @return array [$attribute => \dicr\file\UploadFile[]] аттрибуты формы с файлами
      */
     // @formatter:on
-    protected static function parseFormData(array $data)
+    /**
+     * {@inheritDoc}
+     * @see \dicr\file\StoreFile::getSize()
+     */
+    public function getSize()
     {
-        $instances = [];
+        if (! isset($this->_size)) {
+            if (! empty($this->_error)) {
+                return null;
+            }
 
-        foreach (array_keys($data['name']) as $attribute) {
-            $instances[$attribute] = static::attributeInstances(
-                (array) $data['name'][$attribute],
-                (array) ($data['type'][$attribute] ?? []),
-                (array) ($data['size'][$attribute] ?? []),
-                (array) ($data['error'][$attribute] ?? []),
-                (array) ($data['tmp_name'][$attribute] ?? [])
-            );
+            $this->_size = parent::getSize();
         }
 
-        return $instances;
+        return $this->_size;
     }
 
     // @formatter:off
@@ -438,26 +491,19 @@ class UploadFile extends StoreFile
      * @return boolean
      */
     // @formatter:on
-    protected static function detectFormData(array $data)
+    /**
+     * Усанавливает размер.
+     *
+     * @param int $size
+     * @throws \InvalidArgumentException
+     */
+    public function setSize(int $size)
     {
-
-        // если не установлен name, то ошибка формата данных
-        if (! isset($data['name'])) {
-            throw new Exception('Некорректная структура данных $_FILES: ' . var_export($data, true));
+        if ($size < 0) {
+            throw new InvalidArgumentException('size');
         }
 
-        // если name не массив - однозначно не форма
-        if (! is_array($data['name'])) {
-            return false;
-        }
-
-        // если в name массив массивов - однозначно форма
-        if (is_array(reset($data['name']))) {
-            return true;
-        }
-
-        // средний вариант определяем по типу ключей в name.
-        return ! preg_match('~^\d+$~', array_key_first($data['name']));
+        $this->_size = $size;
     }
 
     // @formatter:off
@@ -473,44 +519,30 @@ class UploadFile extends StoreFile
      * </xmp>
      */
     // @formatter:on
-    protected static function parseInstances()
+    /**
+     * {@inheritdoc}
+     * @see \dicr\file\AbstractFile::getMimeType()
+     */
+    public function getMimeType()
     {
-        $instances = [];
-
-        if (! empty($_FILES)) {
-            foreach ($_FILES as $key => $data) {
-                if (static::detectFormData($data)) {
-                    // аттрибуты формы: $key == $formName, $data == аттрибуты в формате формы
-                    $instances[$key] = static::parseFormData($data);
-                } else {
-                    // аттрибут без формы, $formName == '', $key == $attribute, $data == данные в формате одного аттрибуты
-                    $instances[''][$key] = static::parseAttribData($data);
-                }
+        if (! isset($this->_mimeType)) {
+            if (! empty($this->_error)) {
+                return null;
             }
+
+            $this->_mimeType = parent::getMimeType();
         }
 
-        return $instances;
+        return $this->_mimeType;
     }
 
     /**
-     * Возвращает файлы аттрибутов формы загруженные в $_FILES или null.
+     * Устанавливает MIME-тип.
      *
-     * @param string $formName имя формы для которой возвращает аттрибуты
-     * @param string $attribute если задан, то возвращает файлы только для аттрибута
-     * @return mixed
+     * @param string $type
      */
-    public static function instances(string $formName = '', string $attribute = '')
+    public function setMimeType(string $type)
     {
-        if (! isset(self::$instances)) {
-            self::$instances = self::parseInstances();
-        }
-
-        $path = [trim($formName)];
-
-        if ($attribute !== '') {
-            $path[] = $attribute;
-        }
-
-        return ArrayHelper::getValue(self::$instances, $path);
+        $this->_mimeType = $type;
     }
 }

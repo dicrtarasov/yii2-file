@@ -1,11 +1,20 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+declare(strict_types = 1);
 namespace dicr\tests;
 
-use PHPUnit\Framework\TestCase;
 use dicr\file\AbstractFileStore;
 use dicr\file\StoreException;
 use dicr\file\StoreFile;
+use InvalidArgumentException;
+use PHPUnit\Framework\TestCase;
 use Yii;
+use yii\console\Application;
 use yii\di\Container;
 
 /**
@@ -16,17 +25,19 @@ use yii\di\Container;
  */
 abstract class AbstractFileStoreTest extends TestCase
 {
-    /** @var id компонента тестового файлового хранилища */
-    const STORE_ID = 'fileStore';
+    /** @var string id компонента тестового файлового хранилища */
+    public const STORE_ID = 'fileStore';
 
     /**
      * {@inheritdoc}
      *
      * @return \yii\console\Application
+     * @throws \yii\base\InvalidConfigException
+     * @throws \yii\base\InvalidConfigException
      */
     public static function setUpBeforeClass(): void
     {
-        new \yii\console\Application([
+        new Application([
             'id' => 'testapp',
             'basePath' => __DIR__,
             'vendorPath' => VENDOR,
@@ -38,22 +49,16 @@ abstract class AbstractFileStoreTest extends TestCase
      */
     public static function tearDownAfterClass(): void
     {
+        /** @noinspection DisallowWritingIntoStaticPropertiesInspection */
         Yii::$app = null;
+        /** @noinspection DisallowWritingIntoStaticPropertiesInspection */
         Yii::$container = new Container();
     }
 
     /**
-     * Возвращает тестовое хранилище.
-     *
-     * @return \dicr\file\AbstractFileStore
-     */
-    protected static function store()
-    {
-        return \Yii::$app->get(self::STORE_ID);
-    }
-
-    /**
      * Test store configured
+     *
+     * @throws \yii\base\InvalidConfigException
      */
     public function testComponentExists()
     {
@@ -64,35 +69,61 @@ abstract class AbstractFileStoreTest extends TestCase
     }
 
     /**
+     * Возвращает тестовое хранилище.
+     *
+     * @return \dicr\file\AbstractFileStore
+     * @throws \yii\base\InvalidConfigException
+     */
+    protected static function store()
+    {
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return Yii::$app->get(self::STORE_ID);
+    }
+
+    /**
      * Проверка на исключение когда путь выше родительского.
+     *
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
      */
     public function testNormalizeInvalidPath()
     {
         $store = static::store();
 
-        self::expectException(StoreException::class);
+        $this->expectException(StoreException::class);
 
         $store->normalizePath('/././../.');
     }
 
     /**
      * Проверка нормализации путей
+     *
+     * @throws \yii\base\InvalidConfigException
+     * @throws \yii\base\InvalidConfigException
+     * @throws \yii\base\InvalidConfigException
+     * @throws \yii\base\InvalidConfigException
+     * @throws \yii\base\InvalidConfigException
+     * @throws \yii\base\InvalidConfigException
+     * @throws \yii\base\InvalidConfigException
+     * @throws \yii\base\InvalidConfigException
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
      */
     public function testNormalizePath()
     {
         $store = static::store();
 
         $tests = [
-            ''  => '',
+            '' => '',
             '/' => '',
             '/dir/to/file' => 'dir/to/file',
         ];
 
-        foreach ($tests as $quetion => $answer) {
-            self::assertSame($answer, $store->normalizePath($quetion));
+        foreach ($tests as $question => $answer) {
+            self::assertSame($answer, $store->normalizePath($question));
         }
 
-        self::expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $store->file('')->child('')->path;
 
         self::assertEquals('', $store->file('/')->path);
@@ -101,7 +132,7 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertEquals('345', $store->file('')->child('345')->path);
         self::assertEquals('123/345', $store->file('123')->child('345')->path);
 
-        self::assertEquals('d1/d2', $store->file('d1/d2/f1/')->dir);
+        self::assertEquals('d1/d2', $store->file('d1/d2/f1/')->parent->path);
         self::assertEquals('f1.dat', $store->file('/d1/d2/f1.dat/')->name);
 
         $file = $store->file('d1/d2/f1');
@@ -109,6 +140,10 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertEquals('d1/d2/f2', $file->path);
     }
 
+    /**
+     * @throws \yii\base\InvalidConfigException
+     * @throws \dicr\file\StoreException
+     */
     public function testPathRelations()
     {
         $store = static::store();
@@ -125,19 +160,23 @@ abstract class AbstractFileStoreTest extends TestCase
         // basename
         self::assertSame('3', $file->name);
 
-        self::expectException(StoreException::class);
+        $this->expectException(StoreException::class);
         $store->file('')->name;
 
         // child
         self::assertSame('1/2/3/4', $file->child('4'));
     }
 
+    /**
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
+     */
     public function testType()
     {
         $store = static::store();
 
         $file = $store->file('test-dir');
-        if (!$file->exists) {
+        if (! $file->exists) {
             self::assertInstanceOf(StoreFile::class, $file->mkdir());
         }
 
@@ -145,7 +184,7 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertFalse($file->isFile);
 
         $file = $store->file('test-file');
-        if (!$file->exists) {
+        if (! $file->exists) {
             self::assertInstanceOf(StoreFile::class, $file->setContents(''));
         }
 
@@ -157,12 +196,16 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertFalse($store->file(md5(time()))->exists);
     }
 
+    /**
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
+     */
     public function testPublic()
     {
         $store = static::store();
 
         $file = $store->file('test-file');
-        if (!$file->exists) {
+        if (! $file->exists) {
             self::assertInstanceOf(StoreFile::class, $file->setContents(''));
         }
 
@@ -171,13 +214,16 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertInstanceOf(StoreFile::class, $file->setPublic(true));
         self::assertTrue($file->public);
 
-        self::expectException(StoreException::class);
+        $this->expectException(StoreException::class);
         $store->file(md5(time()))->public;
 
-        self::expectException(StoreException::class);
+        $this->expectException(StoreException::class);
         $store->file(md5(time()))->public = true;
     }
 
+    /**
+     * @throws \yii\base\InvalidConfigException
+     */
     public function testHidden()
     {
         $store = static::store();
@@ -190,6 +236,10 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertTrue($store->file('s/.s')->hidden);
     }
 
+    /**
+     * @throws \yii\base\InvalidConfigException
+     * @throws \dicr\file\StoreException
+     */
     public function testSize()
     {
         $store = static::store();
@@ -201,10 +251,14 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertInstanceOf(StoreFile::class, $file->setContents(''));
         self::assertEquals(0, $file->size);
 
-        self::expectException(StoreException::class);
+        $this->expectException(StoreException::class);
         $store->file(md5(time()))->size;
     }
 
+    /**
+     * @throws \yii\base\InvalidConfigException
+     * @throws \dicr\file\StoreException
+     */
     public function testMtime()
     {
         $store = static::store();
@@ -212,10 +266,13 @@ abstract class AbstractFileStoreTest extends TestCase
         $file = $store->file('test-file');
         self::assertGreaterThanOrEqual(time(), $file->setContents('')->mtime);
 
-        self::expectException(StoreException::class);
+        $this->expectException(StoreException::class);
         $store->file(md5(time()))->mtime;
     }
 
+    /**
+     * @throws \yii\base\InvalidConfigException
+     */
     public function testMimeType()
     {
         $store = static::store();
@@ -224,10 +281,14 @@ abstract class AbstractFileStoreTest extends TestCase
         $file->contents = "text file\ntest content\n";
         self::assertContains($file->mimeType, ['text/plain', 'inode/x-empty']);
 
-        self::expectException(StoreException::class);
+        $this->expectException(StoreException::class);
         $store->file(md5(time()))->mimeType;
     }
 
+    /**
+     * @throws \yii\base\InvalidConfigException
+     * @throws \dicr\file\StoreException
+     */
     public function testContents()
     {
         $store = static::store();
@@ -237,19 +298,23 @@ abstract class AbstractFileStoreTest extends TestCase
 
         self::assertSame('12345', $store->file('test-file')->contents);
 
-        self::expectException(StoreException::class);
+        $this->expectException(StoreException::class);
         $store->file(md5(time()))->contents;
 
-        self::expectException(StoreException::class);
+        $this->expectException(StoreException::class);
         $store->file(md5(time()))->contents = 123;
     }
 
+    /**
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
+     */
     public function testStream()
     {
         $store = static::store();
 
-        $stream = fopen('php://temp', 'wt');
-        fputs($stream, 'test');
+        $stream = fopen('php://temp', 'wb');
+        fwrite($stream, 'test');
         rewind($stream);
 
         self::assertInstanceOf(StoreFile::class, $store->file('test-file')->setStream($stream));
@@ -259,19 +324,23 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertIsResource($stream);
         self::assertSame('test', stream_get_contents($stream));
 
-        self::expectException(StoreException::class);
+        $this->expectException(StoreException::class);
         $store->file(md5(time()))->contents;
 
-        self::expectException(StoreException::class);
+        $this->expectException(StoreException::class);
         $store->file(md5(time()))->contents = 123;
     }
 
+    /**
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
+     */
     public function testExistsDelete()
     {
         $store = static::store();
 
         $dir = $store->file('test-dir');
-        if (!$dir->exists) {
+        if (! $dir->exists) {
             self::assertInstanceOf(StoreFile::class, $dir->mkdir());
         }
 
@@ -281,7 +350,7 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertFalse($dir->exists);
 
         $file = $store->file('test-file');
-        if (!$file->exists) {
+        if (! $file->exists) {
             self::assertInstanceOf(StoreFile::class, $file->setContents('123'));
         }
 
@@ -294,22 +363,26 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertInstanceOf(StoreFile::class, $store->file(md5(time()))->delete());
     }
 
+    /**
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
+     */
     public function testFileListChild()
     {
         $store = static::store();
 
-        self::expectException(StoreException::class);
+        $this->expectException(StoreException::class);
         $store->list('123');
 
         $dir = $store->file('test-dir');
         self::assertInstanceOf(StoreFile::class, $dir);
-        if (!$dir->exists) {
+        if (! $dir->exists) {
             self::assertInstanceOf(StoreFile::class, $dir->mkdir());
         }
 
         $file = $store->file('test-file');
         self::assertInstanceOf(StoreFile::class, $file);
-        if (!$file->exists) {
+        if (! $file->exists) {
             self::assertInstanceOf(StoreFile::class, $file->setContents(''));
         }
 
