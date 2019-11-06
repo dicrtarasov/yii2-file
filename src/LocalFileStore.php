@@ -2,7 +2,7 @@
 /**
  * Copyright (c) 2019.
  *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @author Igor (Dicr) Tarasov <develop@dicr.org>
  */
 
 declare(strict_types = 1);
@@ -309,7 +309,7 @@ class LocalFileStore extends AbstractFileStore
         $absPath = $this->absolutePath($path);
 
         $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $type = @$finfo->file($absPath, null, /** @scrutinizer ignore-type */ $this->context);
+        $type = @$finfo->file($absPath, FILEINFO_NONE, /** @scrutinizer ignore-type */ $this->context);
         if ($type === false) {
             $this->throwLastError('Получение mime-типа', $absPath);
         }

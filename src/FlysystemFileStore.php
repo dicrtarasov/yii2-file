@@ -2,7 +2,7 @@
 /**
  * Copyright (c) 2019.
  *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @author Igor (Dicr) Tarasov <develop@dicr.org>
  */
 
 declare(strict_types = 1);
@@ -14,8 +14,10 @@ use League\Flysystem\Filesystem;
 use Throwable;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
+use function call_user_func;
 use function is_array;
 use function is_callable;
+use function is_object;
 use function strlen;
 
 /**
@@ -72,7 +74,7 @@ class FlysystemFileStore extends AbstractFileStore
      */
     public function getAdapter()
     {
-        if (! empty($this->flysystem) && is_callable([$this->flysystem, 'getAdapter'])) {
+        if (is_object($this->flysystem) && method_exists($this->flysystem, 'getAdapter')) {
             return $this->flysystem->getAdapter();
         }
 

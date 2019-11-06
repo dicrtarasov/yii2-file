@@ -2,10 +2,11 @@
 /**
  * Copyright (c) 2019.
  *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @author Igor (Dicr) Tarasov <develop@dicr.org>
  */
 
 /** @noinspection LongInheritanceChainInspection */
+/** @noinspection DuplicatedCode */
 
 declare(strict_types = 1);
 namespace dicr\file;

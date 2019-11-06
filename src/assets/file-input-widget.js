@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov <develop@dicr.org>
+ */
+
 "use strict";
 
 (function ($, URL) {
@@ -69,6 +75,7 @@
                 const url = URL.createObjectURL(file);
 
                 // создаем новый элемент файла
+                // noinspection RequiredAttributes
                 $('<div></div>', {'class': 'file', data: {url: url}}).append(
                     // файл
                     $fileInput,

@@ -2,8 +2,7 @@
 /**
  * Copyright (c) 2019.
  *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
- *
+ * @author Igor (Dicr) Tarasov <develop@dicr.org>
  */
 
 declare(strict_types = 1);
@@ -559,7 +558,7 @@ abstract class AbstractFileStore extends Component
     public function clearStatCache($path)
     {
         /** @scrutinizer ignore-unhandled */
-        @clearstatcache(null, $this->absolutePath($path));
+        @clearstatcache(true, $this->absolutePath($path));
         return $this;
     }
 

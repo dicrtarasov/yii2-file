@@ -1,6 +1,7 @@
 {
     "type": "yii2-extension",
     "name": "dicr/yii2-file",
+    "license": "Apache-2.0",
     "description": "Filesystem components for Yii2",
     "homepage": "https://gitlab.com/dicr/yii2-file",
     "authors": [
@@ -12,11 +13,11 @@
         }
     ],
     "require": {
-        "php": ">=7.1",
+        "php": ">=7.2",
         "ext-fileinfo": "*",
         "ext-imagick": "*",
         "yiisoft/yii2": "~2.0",
-        "yiisoft/yii2-jui": "~2.0", "ext-ftp": "*", "ext-ssh2": "*"
+        "yiisoft/yii2-jui": "~2.0", "ext-ftp": "*", "ext-ssh2": "*", "ext-mbstring": "*"
     },
     "suggest": {
         "ext-ssh2": "for LocalFileStore with ssh2.sftp:// wrapper",

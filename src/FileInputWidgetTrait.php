@@ -2,8 +2,7 @@
 /**
  * Copyright (c) 2019.
  *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
- *
+ * @author Igor (Dicr) Tarasov <develop@dicr.org>
  */
 
 declare(strict_types = 1);
@@ -29,6 +28,7 @@ use function is_array;
  *
  * @property array clientOptions
  * @property \yii\web\View $view
+ * @property \dicr\file\StoreFile[]|null $value файлы
  */
 trait FileInputWidgetTrait
 {
@@ -46,9 +46,6 @@ trait FileInputWidgetTrait
 
     /** @var string|null название поля формы аттрибута */
     public $inputName;
-
-    /** @var \dicr\file\StoreFile[]|null файлы */
-    public $value;
 
     /**
      * {@inheritdoc}
@@ -120,6 +117,7 @@ trait FileInputWidgetTrait
     /**
      * {@inheritdoc}
      * @throws \yii\base\InvalidConfigException
+     * @throws \dicr\file\StoreException
      * @see \yii\base\Widget::render()
      */
     public function run()
@@ -143,12 +141,18 @@ trait FileInputWidgetTrait
             $this->options);
     }
 
+    /**
+     * @param $name
+     * @return mixed
+     */
     abstract protected function registerPlugin($name);
 
     /**
      * Рендерит блок файлов
      *
      * @return string
+     * @throws \dicr\file\StoreException
+     * @throws \dicr\file\StoreException
      */
     protected function renderFiles()
     {

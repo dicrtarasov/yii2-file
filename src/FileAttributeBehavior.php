@@ -2,7 +2,7 @@
 /**
  * Copyright (c) 2019.
  *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @author Igor (Dicr) Tarasov <develop@dicr.org>
  */
 
 declare(strict_types = 1);
@@ -175,14 +175,15 @@ class FileAttributeBehavior extends Behavior
         }
 
         // конвертируем упрощеный формат аттрибутов в полный
-        foreach ($this->attributes as $attribute => $params) {
+        foreach ($this->attributes as $attribute => &$params) {
             if (is_array($params)) {
                 $params['limit'] = (int)($params['limit'] ?? 0);
             } else {
                 $params = ['limit' => (int)$params];
             }
-            $this->attributes[$attribute] = $params;
         }
+
+        unset($params);
 
         parent::init();
     }
@@ -560,7 +561,7 @@ class FileAttributeBehavior extends Behavior
         $oldFiles = $this->listAttributeFiles($attribute);
 
         // импортируем новые и переименовываем старые во временные имена с точкой
-        foreach ($files as $pos => $file) {
+        foreach ($files as $pos => &$file) {
             // некоррекный тип значения
             if (! ($file instanceof StoreFile)) {
                 throw new Exception('Неизвестный тип значения файлового аттрибута ' . $attribute);
@@ -597,8 +598,6 @@ class FileAttributeBehavior extends Behavior
 
                     // переименовываем во временное имя
                     $file->name = StoreFile::createStorePrefix('.' . $attribute, mt_rand(), $file->name);
-                    $files[$pos] = $file;
-
                     continue;
                 }
             }
@@ -606,8 +605,11 @@ class FileAttributeBehavior extends Behavior
             // импорируем файл под временным именем
             $newFile = $modelPath->child(StoreFile::createStorePrefix('.' . $attribute, mt_rand(), $file->name));
             $newFile->import($file);
-            $files[$pos] = $newFile;
+            $file = $newFile;
         }
+
+        // перед тем как использовать ссылку нужно деинициализировать
+        unset($file);
 
         // удаляем оставшиеся старые файлы которых не было в списке для сохранения
         foreach ($oldFiles as $file) {

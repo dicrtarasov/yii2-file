@@ -2,7 +2,7 @@
 /**
  * Copyright (c) 2019.
  *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @author Igor (Dicr) Tarasov <develop@dicr.org>
  */
 
 /** @noinspection LongInheritanceChainInspection */

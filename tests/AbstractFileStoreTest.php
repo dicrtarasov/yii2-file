@@ -2,7 +2,7 @@
 /**
  * Copyright (c) 2019.
  *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @author Igor (Dicr) Tarasov <develop@dicr.org>
  */
 
 declare(strict_types = 1);
@@ -126,18 +126,18 @@ abstract class AbstractFileStoreTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $store->file('')->child('')->path;
 
-        self::assertEquals('', $store->file('/')->path);
-        self::assertEquals('', $store->file('/')->child('/')->path);
-        self::assertEquals('123', $store->file('123')->child('')->path);
-        self::assertEquals('345', $store->file('')->child('345')->path);
-        self::assertEquals('123/345', $store->file('123')->child('345')->path);
+        self::assertSame('', $store->file('/')->path);
+        self::assertSame('', $store->file('/')->child('/')->path);
+        self::assertSame('123', $store->file('123')->child('')->path);
+        self::assertSame('345', $store->file('')->child('345')->path);
+        self::assertSame('123/345', $store->file('123')->child('345')->path);
 
-        self::assertEquals('d1/d2', $store->file('d1/d2/f1/')->parent->path);
-        self::assertEquals('f1.dat', $store->file('/d1/d2/f1.dat/')->name);
+        self::assertSame('d1/d2', $store->file('d1/d2/f1/')->parent->path);
+        self::assertSame('f1.dat', $store->file('/d1/d2/f1.dat/')->name);
 
         $file = $store->file('d1/d2/f1');
         self::assertEquals($file, $file->setName('/f2/'));
-        self::assertEquals('d1/d2/f2', $file->path);
+        self::assertSame('d1/d2/f2', $file->path);
     }
 
     /**
@@ -191,9 +191,9 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertFalse($file->isDir);
         self::assertTrue($file->isFile);
 
-        self::assertFalse($store->file(md5(time()))->isDir);
-        self::assertFalse($store->file(md5(time()))->isDir);
-        self::assertFalse($store->file(md5(time()))->exists);
+        self::assertFalse($store->file(md5((string)time()))->isDir);
+        self::assertFalse($store->file(md5((string)time()))->isDir);
+        self::assertFalse($store->file(md5((string)time()))->exists);
     }
 
     /**
@@ -215,10 +215,10 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertTrue($file->public);
 
         $this->expectException(StoreException::class);
-        $store->file(md5(time()))->public;
+        $store->file(md5((string)time()))->public;
 
         $this->expectException(StoreException::class);
-        $store->file(md5(time()))->public = true;
+        $store->file(md5((string)time()))->public = true;
     }
 
     /**
@@ -247,12 +247,12 @@ abstract class AbstractFileStoreTest extends TestCase
         $file = $store->file('test-file');
 
         self::assertInstanceOf(StoreFile::class, $file->setContents('1234567890'));
-        self::assertEquals(10, $file->size);
+        self::assertSame(10, $file->size);
         self::assertInstanceOf(StoreFile::class, $file->setContents(''));
-        self::assertEquals(0, $file->size);
+        self::assertSame(0, $file->size);
 
         $this->expectException(StoreException::class);
-        $store->file(md5(time()))->size;
+        $store->file(md5((string)time()))->size;
     }
 
     /**
@@ -267,7 +267,7 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertGreaterThanOrEqual(time(), $file->setContents('')->mtime);
 
         $this->expectException(StoreException::class);
-        $store->file(md5(time()))->mtime;
+        $store->file(md5((string)time()))->mtime;
     }
 
     /**
@@ -282,7 +282,7 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertContains($file->mimeType, ['text/plain', 'inode/x-empty']);
 
         $this->expectException(StoreException::class);
-        $store->file(md5(time()))->mimeType;
+        $store->file(md5((string)time()))->mimeType;
     }
 
     /**
@@ -299,10 +299,10 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertSame('12345', $store->file('test-file')->contents);
 
         $this->expectException(StoreException::class);
-        $store->file(md5(time()))->contents;
+        $store->file(md5((string)time()))->contents;
 
         $this->expectException(StoreException::class);
-        $store->file(md5(time()))->contents = 123;
+        $store->file(md5((string)time()))->contents = 123;
     }
 
     /**
@@ -325,10 +325,10 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertSame('test', stream_get_contents($stream));
 
         $this->expectException(StoreException::class);
-        $store->file(md5(time()))->contents;
+        $store->file(md5((string)time()))->contents;
 
         $this->expectException(StoreException::class);
-        $store->file(md5(time()))->contents = 123;
+        $store->file(md5((string)time()))->contents = 123;
     }
 
     /**
@@ -360,7 +360,7 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertInstanceOf(StoreFile::class, $file->delete());
         self::assertFalse($file->exists);
 
-        self::assertInstanceOf(StoreFile::class, $store->file(md5(time()))->delete());
+        self::assertInstanceOf(StoreFile::class, $store->file(md5((string)time()))->delete());
     }
 
     /**

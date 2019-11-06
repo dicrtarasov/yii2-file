@@ -2,7 +2,7 @@
 /**
  * Copyright (c) 2019.
  *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @author Igor (Dicr) Tarasov <develop@dicr.org>
  */
 
 declare(strict_types = 1);
@@ -40,7 +40,7 @@ class LocalFileStoreTest extends AbstractFileStoreTest
     {
         $store = static::store();
 
-        self::assertEquals(__DIR__ . '/files/test', $store->file('test')->absolutePath);
-        self::assertEquals('/test/file', LocalFileStore::root()->file('test/file')->absolutePath);
+        self::assertSame(__DIR__ . '/files/test', $store->file('test')->absolutePath);
+        self::assertSame('/test/file', LocalFileStore::root()->file('test/file')->absolutePath);
     }
 }

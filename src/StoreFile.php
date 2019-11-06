@@ -2,7 +2,7 @@
 /**
  * Copyright (c) 2019.
  *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @author Igor (Dicr) Tarasov <develop@dicr.org>
  */
 
 declare(strict_types = 1);
@@ -468,6 +468,7 @@ class StoreFile extends AbstractFile
      * @param array $config опции ThumbFile
      * @return \dicr\file\ThumbFile|false ThumbFile или false если не настроен
      * @throws \yii\base\InvalidConfigException
+     * @throws \Throwable
      */
     public function thumb(array $config = [])
     {
@@ -478,6 +479,7 @@ class StoreFile extends AbstractFile
      * Очищает все превью файла.
      *
      * @throws \yii\base\InvalidConfigException
+     * @throws \dicr\file\StoreException
      */
     public function clearThumb()
     {

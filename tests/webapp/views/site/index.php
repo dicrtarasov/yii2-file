@@ -2,7 +2,7 @@
 /**
  * Copyright (c) 2019.
  *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @author Igor (Dicr) Tarasov <develop@dicr.org>
  */
 
 /** @noinspection PhpUnhandledExceptionInspection */
@@ -86,7 +86,6 @@ use yii\bootstrap\Html;
     </div>
 
     <?php ActiveForm::end() ?>
-
 
     <h2>Просмотр превью картинок модели</h2>
 
