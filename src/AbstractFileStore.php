@@ -23,8 +23,6 @@ use function is_string;
 
 /**
  * Abstract Fle Store.
- *
- * @property-read bool $isThumbAvailable
  */
 abstract class AbstractFileStore extends Component
 {
@@ -606,10 +604,6 @@ abstract class AbstractFileStore extends Component
      */
     protected function createThumb(array $config = [])
     {
-        if (! $this->isThumbAvailable) {
-            return false;
-        }
-
         // устанавливаем парамеры по-умолчанию
         $config = array_merge([
             'noimage' => true,

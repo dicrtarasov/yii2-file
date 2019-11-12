@@ -26,9 +26,6 @@ use function is_string;
  * Превью файл в кэше.
  *
  * @property-read bool $isReady флаг сущесвования готового превью
- *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 2019
  */
 class ThumbFile extends StoreFile
 {
