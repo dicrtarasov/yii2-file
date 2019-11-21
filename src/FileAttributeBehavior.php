@@ -374,13 +374,13 @@ class FileAttributeBehavior extends Behavior
 
             // для элементов базы данных добавляем id
             if ($this->owner instanceof ActiveRecord) {
-                // если модель базы данных еще не сохранена, то нет пути
-                if ($this->owner->isNewRecord) {
-                    return null;
+                $primaryKey = $this->owner->getPrimaryKey(true);
+                if (empty($primaryKey) || empty(reset($primaryKey))) {
+                    return [];
                 }
 
                 // добавляем ключ
-                $keyName = basename(implode('~', $this->owner->getPrimaryKey(true)));
+                $keyName = basename(implode('~', $primaryKey));
                 if ($keyName !== '') {
                     $relpath[] = $keyName;
                 }
