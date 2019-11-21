@@ -2,7 +2,7 @@
 /**
  * Copyright (c) 2019.
  *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
+ * @author Igor A Tarasov <develop@dicr.org>
  */
 
 /** @noinspection LongInheritanceChainInspection */
@@ -167,7 +167,7 @@ class ThumbFile extends StoreFile
         }
 
         // обновляем путь картинки в кеше
-        $this->_path = $this->createPath();
+        $this->_path = $this->updatePath();
     }
 
     /**
@@ -175,7 +175,7 @@ class ThumbFile extends StoreFile
      *
      * @return string
      */
-    protected function createPath()
+    protected function updatePath()
     {
         return preg_replace('~^(.+)\.[^.]+$~u', sprintf('${1}~%dx%d%s%s.%s', $this->width, $this->height,
             ! $this->isNoimage && ! empty($this->watermark) ? '~w' : '',
@@ -232,7 +232,7 @@ class ThumbFile extends StoreFile
     {
         // если заданы размеры, то делаем масштабирование
         if ($this->width > 0 || $this->height > 0) {
-            $image = $this->getImage();
+            $image = $this->image();
 
             if (! $image->thumbnailImage($this->width, $this->height, $this->width && $this->height,
                 $this->width && $this->height)) {
@@ -248,7 +248,7 @@ class ThumbFile extends StoreFile
      * @throws \ImagickException
      * @throws \Throwable
      */
-    protected function getImage()
+    protected function image()
     {
         if (! isset($this->_image)) {
             // создаем каринку
@@ -266,7 +266,7 @@ class ThumbFile extends StoreFile
                 // читаем каринку noimage
                 $this->_image->readImage($this->noimage);
                 $this->isNoimage = true;
-                $this->_path = $this->createPath();
+                $this->_path = $this->updatePath();
             }
         }
 
@@ -290,7 +290,7 @@ class ThumbFile extends StoreFile
         /** @noinspection BadExceptionsProcessingInspection */
         try {
             // получаем размеры изображения
-            $image = $this->getImage();
+            $image = $this->image();
             $iwidth = (int)$image->getImageWidth();
             $iheight = (int)$image->getImageHeight();
 
@@ -337,7 +337,7 @@ class ThumbFile extends StoreFile
         /** @noinspection BadExceptionsProcessingInspection */
         try {
             // получаем картинку
-            $image = $this->getImage();
+            $image = $this->image();
             $iwidth = $image->getImageWidth();
             $iheight = $image->getImageHeight();
 

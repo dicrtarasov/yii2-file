@@ -1,14 +1,14 @@
 /*
  * Copyright (c) 2019.
  *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
+ * @author Igor A Tarasov <develop@dicr.org>
  */
 
 "use strict";
 
 (function ($, URL) {
 
-    if (typeof ($.fn.fileInputWidget) == 'function') {
+    if (typeof ($.fn.fileInputWidget) === 'function') {
         return;
     }
 
@@ -129,5 +129,5 @@
             // задаем начальные имена
             reindex();
         });
-    }
+    };
 })(jQuery, window.URL);

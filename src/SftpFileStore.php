@@ -2,7 +2,7 @@
 /**
  * Copyright (c) 2019.
  *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
+ * @author Igor A Tarasov <develop@dicr.org>
  */
 
 /** @noinspection LongInheritanceChainInspection */
@@ -85,7 +85,7 @@ class SftpFileStore extends LocalFileStore
                 throw new StoreException('ошибка авторизации по открытому ключу');
             }
         } else {
-            throw new InvalidConfigException('требуется passord или pubkeyfile для авторизации');
+            throw new InvalidConfigException('требуется password или pubkeyfile для авторизации');
         }
 
         $this->sftp = @ssh2_sftp($this->session);

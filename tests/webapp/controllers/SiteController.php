@@ -1,8 +1,8 @@
 <?php
 /**
- * Copyright (c) 2019.
+ * Copyright (c) 2019. 
  *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
+ * @author Igor A Tarasov <develop@dicr.org>
  */
 
 declare(strict_types = 1);

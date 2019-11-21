@@ -2,7 +2,7 @@
 /**
  * Copyright (c) 2019.
  *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
+ * @author Igor A Tarasov <develop@dicr.org>
  */
 
 declare(strict_types = 1);
@@ -607,7 +607,7 @@ abstract class AbstractFileStore extends Component
         // устанавливаем парамеры по-умолчанию
         $config = array_merge([
             'noimage' => true,
-            'watermark' => false, // по-умолчанию не создавать waermark
+            'watermark' => false, // по-умолчанию не создавать watermark
             'disclaimer' => false // по-умолчанию не применять disclaimer
         ], $config);
 

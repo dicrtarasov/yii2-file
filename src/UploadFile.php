@@ -2,7 +2,7 @@
 /**
  * Copyright (c) 2019.
  *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
+ * @author Igor A Tarasov <develop@dicr.org>
  */
 
 /** @noinspection LongInheritanceChainInspection */
@@ -315,7 +315,7 @@ class UploadFile extends StoreFile
      * ];
      * </xmp>
      *
-     * <xmp><input type="file" name="attibute[]"/></xmp>
+     * <xmp><input type="file" name="attribute[]"/></xmp>
      *
      * <xmp>
      * $_FILES = [
@@ -365,7 +365,7 @@ class UploadFile extends StoreFile
     /**
      * Парсит файлы формы, отправленные с именем формы:
      *
-     * <xmp><input type="file" name="formName[attibute]"/></xmp>
+     * <xmp><input type="file" name="formName[attribute]"/></xmp>
      *
      * <xmp>
      * $_FILES = [

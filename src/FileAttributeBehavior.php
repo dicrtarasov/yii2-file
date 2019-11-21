@@ -2,7 +2,7 @@
 /**
  * Copyright (c) 2019.
  *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
+ * @author Igor A Tarasov <develop@dicr.org>
  */
 
 declare(strict_types = 1);
@@ -53,11 +53,11 @@ use function is_array;
 *       - int|null $min - минимальное требуемое кол-во файлов
  *      - int|null $limit - ограничение количества файлов.
  *          - если $limit == 0,
- *              то значение аттрибута - массив файлов \dicr\file\AsbtractFile[] без ограничения на кол-во
+ *              то значение аттрибута - массив файлов \dicr\file\AbstractFile[] без ограничения на кол-во
  *          - если $limit - число,
- *              то значение аттрибута - массив \dicr\file\AsbtractFile[] с ограничением кол-ва файлов limit
+ *              то значение аттрибута - массив \dicr\file\AbstractFile[] с ограничением кол-ва файлов limit
  *          - если $limit == 1,
- *              то значение атрибута - один файл \dicr\file\AsbtractFile
+ *              то значение атрибута - один файл \dicr\file\AbstractFile
 *       - int|null $maxsize - максимальный размер
 *       - string|null $type mime-ип загруженных файлов
  * </xmp>
@@ -144,14 +144,14 @@ class FileAttributeBehavior extends Behavior
     public $store = 'fileStore';
 
     /**
-     * @var array конфигурация аттрибутов [ attibuteName => limit ]
+     * @var array конфигурация аттрибутов [ attributeName => limit ]
      *      Ключ - название аттрибута, limit - ограничение кол-ва файлов.
      *      Если $limit == 1, то аттрибут $model->{attribute} имеет тип File,
      *      если $limit !== 1, $model->{attribute} имеет тип массива File[]
      */
     public $attributes;
 
-    /** @var \dicr\file\StoreFile[][] текущие значения аттрибутов [attibuteName => \dicr\file\StoreFile[]] */
+    /** @var \dicr\file\StoreFile[][] текущие значения аттрибутов [attributeName => \dicr\file\StoreFile[]] */
     private $values = [];
 
     /** @var \dicr\file\StoreFile путь папки модели */

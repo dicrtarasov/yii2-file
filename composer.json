@@ -26,7 +26,7 @@
         "ext-imagick": "for creating thumbnails",
         "league/flysystem": "for FlysystemFileStore",
         "league/flysystem-sftp": "for FlysystemFileStore with SftpAdapter",
-        "league/flysystem-ziparchive": "for FlysytemFileStore with ZipArchive flysystem adapter"
+        "league/flysystem-ziparchive": "for FlysystemFileStore with ZipArchive flysystem adapter"
     },
     "require-dev": {
         "roave/security-advisories": "dev-master",

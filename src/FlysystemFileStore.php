@@ -2,7 +2,7 @@
 /**
  * Copyright (c) 2019.
  *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
+ * @author Igor A Tarasov <develop@dicr.org>
  */
 
 declare(strict_types = 1);
@@ -21,7 +21,7 @@ use function is_object;
 use function strlen;
 
 /**
- * FileStore based on FLYsystem adapters.
+ * FileStore based on Flysystem adapters.
  *
  * @property-read \League\Flysystem\AdapterInterface|null $adapter
  *
@@ -204,7 +204,7 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * Возвращает тип доступа (публичность) по типу Slysystem
+     * Возвращает тип доступа (публичность) по типу Flysystem
      *
      * @param string $visibility \League\Flysystem\AdapterInterface::VISIBILITY_*
      * @return bool флаг public
