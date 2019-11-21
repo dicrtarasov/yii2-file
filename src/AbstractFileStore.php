@@ -611,7 +611,7 @@ abstract class AbstractFileStore extends Component
             'disclaimer' => false // по-умолчанию не применять disclaimer
         ], $config);
 
-        // если значение true, то не перезаписываем конфиг по-умолчанию
+        // удаляем из параметров значения true, чтобы не перезаписывать конфиг по-умолчанию
         foreach (['noimage', 'watermark', 'disclaimer'] as $field) {
             if ($config[$field] === true) {
                 unset($config[$field]);
