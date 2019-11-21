@@ -12,7 +12,6 @@ declare(strict_types = 1);
 namespace dicr\file;
 
 use Imagick;
-use LogicException;
 use RuntimeException;
 use Throwable;
 use Yii;
@@ -33,10 +32,10 @@ class ThumbFile extends StoreFile
     public $source;
 
     /** @var int */
-    public $width;
+    public $width = 0;
 
     /** @var int */
-    public $height;
+    public $height = 0;
 
     /** @var string путь картинки-заглушки или функция, которая возвращает путь */
     public $noimage = __DIR__ . '/res/noimage.png';
@@ -48,7 +47,7 @@ class ThumbFile extends StoreFile
     public $watermarkOpacity = 0.7;
 
     /** @var string|false путь каринки дисклеймера */
-    public $disclaimer;
+    public $disclaimer = false;
 
     /** @var float качество сжаия каринки */
     public $quality = 0.8;
@@ -72,6 +71,13 @@ class ThumbFile extends StoreFile
     {
         $store = Instance::ensure(ArrayHelper::remove($config, 'store'), AbstractFileStore::class);
 
+        // устанавливаем параметры по-умолчанию
+        $config = array_merge([
+            'noimage' => false,
+            'watermark' => false,
+            'disclaimer' => false
+        ], $config);
+
         // удаляем значения true, чтобы не перезаписывали дефолтные значения
         foreach (['noimage', 'watermark', 'disclaimer'] as $field) {
             if (isset($config[$field]) && $config[$field] === true) {
@@ -92,69 +98,55 @@ class ThumbFile extends StoreFile
     {
         parent::init();
 
-        if (isset($this->width)) {
-            $this->width = (int)$this->width;
-            if ($this->width < 0) {
-                throw new InvalidConfigException('width');
-            }
+        $this->width = (int)$this->width;
+        if ($this->width < 0) {
+            throw new InvalidConfigException('width');
         }
 
-        if (isset($this->height)) {
-            $this->height = (int)$this->height;
-            if ($this->height < 0) {
-                throw new InvalidConfigException('height');
-            }
+        $this->height = (int)$this->height;
+        if ($this->height < 0) {
+            throw new InvalidConfigException('height');
         }
 
-        if (isset($this->noimage)) {
-            if (is_string($this->noimage)) {
-                $this->noimage = Yii::getAlias($this->noimage, true);
-                if (! is_file($this->noimage) || ! is_readable($this->noimage)) {
-                    throw new InvalidConfigException('noimage не доступен: ' . $this->noimage);
-                }
-            } elseif ($this->noimage !== false) {
-                throw new InvalidConfigException('noimage');
+        if (is_string($this->noimage)) {
+            $this->noimage = Yii::getAlias($this->noimage, true);
+            if (! is_file($this->noimage) || ! is_readable($this->noimage)) {
+                throw new InvalidConfigException('noimage не доступен: ' . $this->noimage);
             }
+        } elseif ($this->noimage !== false) {
+            throw new InvalidConfigException('noimage');
         }
 
-        if (isset($this->watermark)) {
-            if (is_string($this->watermark)) {
-                $this->watermark = Yii::getAlias($this->watermark);
-                if (! is_file($this->watermark) || ! is_readable($this->watermark)) {
-                    throw new InvalidConfigException('watermark не доступен: ' . $this->watermark);
-                }
-            } elseif ($this->watermark !== false) {
-                throw new InvalidConfigException('watermark');
+        if (is_string($this->watermark)) {
+            $this->watermark = Yii::getAlias($this->watermark);
+            if (! is_file($this->watermark) || ! is_readable($this->watermark)) {
+                throw new InvalidConfigException('watermark не доступен: ' . $this->watermark);
             }
+        } elseif ($this->watermark !== false) {
+            throw new InvalidConfigException('watermark');
         }
 
-        if (isset($this->watermarkOpacity)) {
-            $this->watermarkOpacity = (float)$this->watermarkOpacity;
-            if ($this->watermarkOpacity < 0 || $this->watermarkOpacity > 1) {
-                throw new InvalidConfigException('watermarkOpacity: ' . $this->watermarkOpacity);
-            }
+        $this->watermarkOpacity = (float)$this->watermarkOpacity;
+        if ($this->watermarkOpacity < 0 || $this->watermarkOpacity > 1) {
+            throw new InvalidConfigException('watermarkOpacity: ' . $this->watermarkOpacity);
         }
 
-        if (isset($this->quality)) {
-            $this->quality = (float)$this->quality;
-            if ($this->quality < 0 || $this->quality > 1) {
-                throw new InvalidConfigException('quality: ' . $this->quality);
-            }
+        $this->quality = (float)$this->quality;
+        if ($this->quality < 0 || $this->quality > 1) {
+            throw new InvalidConfigException('quality: ' . $this->quality);
         }
 
-        if (isset($this->disclaimer)) {
-            if (is_string($this->disclaimer)) {
-                $this->disclaimer = Yii::getAlias($this->disclaimer, true);
-                if (! is_file($this->disclaimer) || ! is_readable($this->disclaimer)) {
-                    throw new InvalidConfigException('disclaimer не доступен');
-                }
-            } elseif ($this->disclaimer !== false) {
-                throw new InvalidConfigException('disclaimer: ' . gettype($this->disclaimer));
+        if (is_string($this->disclaimer)) {
+            $this->disclaimer = Yii::getAlias($this->disclaimer, true);
+            if (! is_file($this->disclaimer) || ! is_readable($this->disclaimer)) {
+                throw new InvalidConfigException('disclaimer не доступен');
             }
+        } elseif ($this->disclaimer !== false) {
+            throw new InvalidConfigException('disclaimer: ' . gettype($this->disclaimer));
         }
 
         // проверяем источник
-        if (isset($this->source)) {
+        if (! empty($this->source)) {
             if (! ($this->source instanceof AbstractFile)) {
                 throw new InvalidConfigException('source: ' . gettype($this->source));
             }
@@ -167,7 +159,7 @@ class ThumbFile extends StoreFile
         }
 
         // обновляем путь картинки в кеше
-        $this->_path = $this->updatePath();
+        $this->_path = $this->createPath();
     }
 
     /**
@@ -175,7 +167,7 @@ class ThumbFile extends StoreFile
      *
      * @return string
      */
-    protected function updatePath()
+    protected function createPath()
     {
         return preg_replace('~^(.+)\.[^.]+$~u', sprintf('${1}~%dx%d%s%s.%s', $this->width, $this->height,
             ! $this->isNoimage && ! empty($this->watermark) ? '~w' : '',
@@ -190,10 +182,6 @@ class ThumbFile extends StoreFile
      */
     public function getIsReady()
     {
-        if (empty($this->source)) {
-            throw new LogicException('empty source');
-        }
-
         return $this->exists && $this->mtime >= $this->source->mtime;
     }
 
@@ -231,9 +219,8 @@ class ThumbFile extends StoreFile
     protected function resizeImage()
     {
         // если заданы размеры, то делаем масштабирование
-        if ($this->width > 0 || $this->height > 0) {
+        if (! empty($this->width) || ! empty($this->height)) {
             $image = $this->image();
-
             if (! $image->thumbnailImage($this->width, $this->height, $this->width && $this->height,
                 $this->width && $this->height)) {
                 throw new RuntimeException('error creating thumb');
@@ -266,7 +253,7 @@ class ThumbFile extends StoreFile
                 // читаем каринку noimage
                 $this->_image->readImage($this->noimage);
                 $this->isNoimage = true;
-                $this->_path = $this->updatePath();
+                $this->_path = $this->createPath();
             }
         }
 
@@ -376,25 +363,23 @@ class ThumbFile extends StoreFile
      */
     protected function writeImage()
     {
-        if (empty($this->_image)) {
-            throw new LogicException('empty image');
-        }
+        $image = $this->image();
 
         // очищаем лишнюю информацию
-        $this->_image->stripImage();
+        $image->stripImage();
 
         // формат
-        if ($this->_image->setImageFormat($this->format) === false) {
+        if ($image->setImageFormat($this->format) === false) {
             throw new RuntimeException('Ошибка установки формата картинки: ' . $this->format);
         }
 
         // сжатие
-        if ($this->_image->setImageCompressionQuality((int)round($this->quality * 100)) === false) {
+        if ($image->setImageCompressionQuality((int)round($this->quality * 100)) === false) {
             throw new RuntimeException('Ошибка установки качества изображения: ' . $this->quality);
         }
 
         // сохраняем
-        $this->contents = $this->_image->getImageBlob();
+        $this->contents = $image->getImageBlob();
     }
 
     /**

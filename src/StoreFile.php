@@ -145,6 +145,88 @@ class StoreFile extends AbstractFile
     }
 
     /**
+     * {@inheritDoc}
+     * @throws \dicr\file\StoreException
+     * @see \dicr\file\AbstractFile::normalizePath()
+     */
+    protected function normalizePath($path)
+    {
+        return $this->_store->normalizePath($path);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @see \dicr\file\AbstractFile::getExists()
+     */
+    public function getExists()
+    {
+        return $this->_store->exists($this->_path);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @see \dicr\file\AbstractFile::getIsDir()
+     */
+    public function getIsDir()
+    {
+        return $this->_store->isDir($this->_path);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @see \dicr\file\AbstractFile::getIsFile()
+     */
+    public function getIsFile()
+    {
+        return $this->_store->isFile($this->_path);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @see \dicr\file\AbstractFile::getSize()
+     */
+    public function getSize()
+    {
+        return $this->_store->size($this->_path);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @see \dicr\file\AbstractFile::getMtime()
+     */
+    public function getMtime()
+    {
+        return $this->_store->mtime($this->_path);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @see \dicr\file\AbstractFile::getMimeType()
+     */
+    public function getMimeType()
+    {
+        return $this->_store->mimeType($this->_path);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @see \dicr\file\AbstractFile::getContents()
+     */
+    public function getContents()
+    {
+        return $this->_store->readContents($this->_path);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @see \dicr\file\AbstractFile::getStream()
+     */
+    public function getStream()
+    {
+        return $this->_store->readStream($this->_path);
+    }
+
+    /**
      * Переименовывает файл (только имя), в том же каталоге.
      *
      * @param string $name новое имя
@@ -184,16 +266,6 @@ class StoreFile extends AbstractFile
         }
 
         return $this;
-    }
-
-    /**
-     * {@inheritDoc}
-     * @throws \dicr\file\StoreException
-     * @see \dicr\file\AbstractFile::normalizePath()
-     */
-    protected function normalizePath($path)
-    {
-        return $this->_store->normalizePath($path);
     }
 
     /**
@@ -251,33 +323,6 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFile::getExists()
-     */
-    public function getExists()
-    {
-        return $this->_store->exists($this->_path);
-    }
-
-    /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFile::getIsDir()
-     */
-    public function getIsDir()
-    {
-        return $this->_store->isDir($this->_path);
-    }
-
-    /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFile::getIsFile()
-     */
-    public function getIsFile()
-    {
-        return $this->_store->isFile($this->_path);
-    }
-
-    /**
      * Возвращает флаг скрытого файла
      *
      * @throw \dicr\file\StoreException если не существует
@@ -315,42 +360,6 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFile::getSize()
-     */
-    public function getSize()
-    {
-        return $this->_store->size($this->_path);
-    }
-
-    /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFile::getMtime()
-     */
-    public function getMtime()
-    {
-        return $this->_store->mtime($this->_path);
-    }
-
-    /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFile::getMimeType()
-     */
-    public function getMimeType()
-    {
-        return $this->_store->mimeType($this->_path);
-    }
-
-    /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFile::getContents()
-     */
-    public function getContents()
-    {
-        return $this->_store->readContents($this->_path);
-    }
-
-    /**
      * Записывает содержимое файла из строки
      *
      * @param string $contents
@@ -362,15 +371,6 @@ class StoreFile extends AbstractFile
         $this->_store->writeContents($this->_path, $contents);
 
         return $this;
-    }
-
-    /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFile::getStream()
-     */
-    public function getStream()
-    {
-        return $this->_store->readStream($this->_path);
     }
 
     /**
@@ -466,7 +466,9 @@ class StoreFile extends AbstractFile
      * Создает превью файла.
      *
      * @param array $config опции ThumbFile
-     * @return \dicr\file\ThumbFile|false ThumbFile или false если не настроен
+     * @return \dicr\file\ThumbFile|null|false
+     * - если thumbFileConfig не настроен, то false
+     * - если файл не существует и не насроен noimage, то null
      * @throws \yii\base\InvalidConfigException
      * @throws \Throwable
      */

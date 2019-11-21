@@ -9,6 +9,7 @@ declare(strict_types = 1);
 
 namespace dicr\file;
 
+use dicr\helper\Debug;
 use InvalidArgumentException;
 use Throwable;
 use Yii;
@@ -565,7 +566,9 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|array|\dicr\file\StoreFile $file
      * @param array $config
-     * @return \dicr\file\ThumbFile|false превью или false, если thumbFileConfig не настроен
+     * @return \dicr\file\ThumbFile|null|false превью
+     * - если thumbFileConfig не настроен, то false
+     * - если файл не существует и не задан noimage, то null
      * @throws \yii\base\InvalidConfigException
      * @throws \Exception
      * @throws \Throwable
@@ -587,8 +590,17 @@ abstract class AbstractFileStore extends Component
             'source' => $file
         ]));
 
-        // если превью настроено, то обновляем файл
-        if (! empty($thumb) && ! $thumb->isReady) {
+        if (empty($thumb)) {
+            return false;
+        }
+
+        // если файл не существует и не задан noimage, то возвращаем null
+        if (! $file->exists && empty($thumb->noimage)) {
+            return null;
+        }
+
+        // обновляем/создаем файл превью
+        if (! $thumb->isReady) {
             $thumb->update();
         }
 
@@ -599,14 +611,19 @@ abstract class AbstractFileStore extends Component
      * Создает ThumbFile.
      *
      * @param array $config
-     * @return \dicr\file\ThumbFile|false ThumbFile или false если не конфиг не настроен
+     * @return \dicr\file\ThumbFile|false ThumbFile
      * @throws \yii\base\InvalidConfigException
      */
     protected function createThumb(array $config = [])
     {
+        if (empty($this->thumbFileConfig)) {
+            Yii::warning('конфиг ThumbFile для создания превью не настроен');
+            return false;
+        }
+
         // устанавливаем парамеры по-умолчанию
         $config = array_merge([
-            'noimage' => true,
+            'noimage' => false,
             'watermark' => false, // по-умолчанию не создавать watermark
             'disclaimer' => false // по-умолчанию не применять disclaimer
         ], $config);
