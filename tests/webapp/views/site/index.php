@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright (c) 2019. 
- *
+ * @copyright 2019-2019 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
+ * @license GPL
+ * @version 21.11.19 06:46:40
  */
 
 /** @noinspection PhpUnhandledExceptionInspection */

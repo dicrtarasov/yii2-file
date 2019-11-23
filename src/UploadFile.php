@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright (c) 2019.
- *
+ * @copyright 2019-2019 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
+ * @license GPL
+ * @version 24.11.19 00:29:11
  */
 
 /** @noinspection LongInheritanceChainInspection */
@@ -389,7 +390,7 @@ class UploadFile extends StoreFile
      * ];
      * </xmp>
      *
-     * <xmp><input type="file" name="formName[attibute][]"/></xmp>
+     * <xmp><input type="file" name="formName[attribute][]"/></xmp>
      *
      * <xmp>
      * $_FILES = [

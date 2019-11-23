@@ -1,12 +1,13 @@
 /*
- * Copyright (c) 2019.
- *
+ * @copyright 2019-2019 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
+ * @license GPL
+ * @version 24.11.19 00:29:11
  */
 
-"use strict";
-
 (function ($, URL) {
+
+    "use strict";
 
     if (typeof ($.fn.fileInputWidget) === 'function') {
         return;
