@@ -108,7 +108,7 @@ class Store200 extends BaseObject
                 echo $file->path . "\n";
 
                 // перемещаем файл
-                $file->path = $parent->child(StoreFile::createStorePrefix($attrDir->name, $pos, $name));
+                $file->path = $parent->child(StoreFile::createStorePrefix($attrDir->name, $pos, $name))->path;
             }
         }
 
