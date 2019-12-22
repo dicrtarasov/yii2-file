@@ -8,8 +8,9 @@
 
 /** @noinspection LongInheritanceChainInspection */
 /** @noinspection DuplicatedCode */
+/** @noinspection PhpUsageOfSilenceOperatorInspection */
+declare(strict_types=1);
 
-declare(strict_types = 1);
 namespace dicr\file;
 
 use yii\base\InvalidConfigException;
@@ -68,20 +69,20 @@ class SftpFileStore extends LocalFileStore
         }
 
         $this->session = @ssh2_connect($this->host, $this->port);
-        if (! is_resource($this->session)) {
+        if (!is_resource($this->session)) {
             throw new StoreException('ошибка подключения к серверу', new StoreException());
         }
 
-        if (! isset($this->username)) {
+        if (!isset($this->username)) {
             throw new InvalidConfigException('username');
         }
 
         if (isset($this->password)) {
-            if (! @ssh2_auth_password($this->session, $this->username, $this->password)) {
+            if (!@ssh2_auth_password($this->session, $this->username, $this->password)) {
                 throw new StoreException('ошибка авторизации по логину и паролю');
             }
         } elseif (isset($this->pubkeyfile, $this->privkeyfile)) {
-            if (! @ssh2_auth_pubkey_file($this->session, $this->username, $this->pubkeyfile, $this->privkeyfile,
+            if (!@ssh2_auth_pubkey_file($this->session, $this->username, $this->pubkeyfile, $this->privkeyfile,
                 $this->passphrase)) {
                 throw new StoreException('ошибка авторизации по открытому ключу');
             }
@@ -143,12 +144,12 @@ class SftpFileStore extends LocalFileStore
                 }
             }
         } finally {
-            if (! empty($dir)) {
+            if (!empty($dir)) {
                 closedir($dir);
             }
         }
 
-        usort($files, static function($a, $b) {
+        usort($files, static function ($a, $b) {
             return $a->path <=> $b->path;
         });
 
@@ -186,14 +187,14 @@ class SftpFileStore extends LocalFileStore
         $path = $this->filterRootPath($path);
         $absPath = $this->absolutePath($path);
 
-        if (! $this->exists($path)) {
+        if (!$this->exists($path)) {
             throw new StoreException('not exists: ' . $absPath);
         }
 
         $perms = $this->permsByPublic($this->isDir($path), $public);
         $relativePath = $this->relativePath($path);
 
-        if (! @ssh2_sftp_chmod($this->sftp, $relativePath, $perms)) {
+        if (!@ssh2_sftp_chmod($this->sftp, $relativePath, $perms)) {
             $this->throwLastError('Установка прав на файл', $absPath);
         }
 
@@ -220,7 +221,7 @@ class SftpFileStore extends LocalFileStore
 
         $this->checkDir($this->dirname($newpath));
 
-        if (! @ssh2_sftp_rename($this->sftp, $relPath, $relNew)) {
+        if (!@ssh2_sftp_rename($this->sftp, $relPath, $relNew)) {
             $this->throwLastError('переименование файла', $this->absolutePath($newpath));
         }
 
@@ -243,7 +244,7 @@ class SftpFileStore extends LocalFileStore
 
         $perms = $this->permsByPublic(true, $this->public);
 
-        if (! @ssh2_sftp_mkdir($this->sftp, $this->relativePath($path), $perms, true)) {
+        if (!@ssh2_sftp_mkdir($this->sftp, $this->relativePath($path), $perms, true)) {
             $this->throwLastError('Создание директории', $this->absolutePath($path));
         }
 
@@ -255,7 +256,7 @@ class SftpFileStore extends LocalFileStore
      */
     public function __destruct()
     {
-        if (! empty($this->session)) {
+        if (!empty($this->session)) {
             /** @scrutinizer ignore-unhandled */
             @ssh2_disconnect($this->session);
         }
@@ -269,7 +270,7 @@ class SftpFileStore extends LocalFileStore
     {
         $this->filterRootPath($path);
 
-        if (! @ssh2_sftp_unlink($this->sftp, $this->relativePath($path))) {
+        if (!@ssh2_sftp_unlink($this->sftp, $this->relativePath($path))) {
             $this->throwLastError('Удаление файла', $this->absolutePath($path));
         }
 
@@ -286,7 +287,7 @@ class SftpFileStore extends LocalFileStore
     {
         $this->filterRootPath($path);
 
-        if (! @ssh2_sftp_rmdir($this->sftp, $this->relativePath($path))) {
+        if (!@ssh2_sftp_rmdir($this->sftp, $this->relativePath($path))) {
             $this->throwLastError('Удаление директории', $this->absolutePath($path));
         }
 

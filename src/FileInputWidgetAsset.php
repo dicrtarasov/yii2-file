@@ -8,7 +8,8 @@
 
 /** @noinspection ClassOverridesFieldOfSuperClassInspection */
 
-declare(strict_types = 1);
+declare(strict_types=1);
+
 namespace dicr\file;
 
 use yii\jui\JuiAsset;

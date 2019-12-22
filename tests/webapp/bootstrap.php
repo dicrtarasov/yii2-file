@@ -8,7 +8,7 @@
 
 /** @noinspection PhpUnhandledExceptionInspection */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 use app\models\TestModel;
 use dicr\file\LocalFileStore;
@@ -17,17 +17,17 @@ use yii\db\Schema;
 use yii\debug\Module;
 use yii\web\Application;
 
-error_reporting(- 1);
+error_reporting(-1);
 ini_set('display_errors', 1);
 
 //define('YII_ENABLE_ERROR_HANDLER', false);
 define('YII_DEBUG', true);
 
-if (! isset($_SERVER['SCRIPT_NAME'])) {
+if (!isset($_SERVER['SCRIPT_NAME'])) {
     $_SERVER['SCRIPT_NAME'] = __FILE__;
 }
 
-if (! isset($_SERVER['SCRIPT_FILENAME'])) {
+if (!isset($_SERVER['SCRIPT_FILENAME'])) {
     $_SERVER['SCRIPT_FILENAME'] = __FILE__;
 }
 

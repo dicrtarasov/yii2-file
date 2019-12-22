@@ -6,7 +6,8 @@
  * @version 24.11.19 00:29:11
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
+
 namespace dicr\tests;
 
 use dicr\file\FlysystemFileStore;
@@ -31,7 +32,7 @@ class FlysystemFileStoreTest extends AbstractFileStoreTest
 
         Yii::$app->set(self::STORE_ID, [
             'class' => FlysystemFileStore::class,
-            'flysystem' => static function() {
+            'flysystem' => static function () {
                 $adapter = new Local(__DIR__ . '/files', LOCK_EX, Local::SKIP_LINKS);
 
                 return new Filesystem($adapter);

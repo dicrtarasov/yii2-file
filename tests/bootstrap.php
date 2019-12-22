@@ -6,9 +6,9 @@
  * @version 24.11.19 00:29:11
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
-error_reporting(- 1);
+error_reporting(-1);
 ini_set('display_errors', '1');
 
 define('YII_ENABLE_ERROR_HANDLER', false);

@@ -6,7 +6,8 @@
  * @version 24.11.19 00:29:11
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
+
 namespace dicr\tests;
 
 use dicr\file\AbstractFileStore;
@@ -178,7 +179,7 @@ abstract class AbstractFileStoreTest extends TestCase
         $store = static::store();
 
         $file = $store->file('test-dir');
-        if (! $file->exists) {
+        if (!$file->exists) {
             self::assertInstanceOf(StoreFile::class, $file->mkdir());
         }
 
@@ -186,7 +187,7 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertFalse($file->isFile);
 
         $file = $store->file('test-file');
-        if (! $file->exists) {
+        if (!$file->exists) {
             self::assertInstanceOf(StoreFile::class, $file->setContents(''));
         }
 
@@ -207,7 +208,7 @@ abstract class AbstractFileStoreTest extends TestCase
         $store = static::store();
 
         $file = $store->file('test-file');
-        if (! $file->exists) {
+        if (!$file->exists) {
             self::assertInstanceOf(StoreFile::class, $file->setContents(''));
         }
 
@@ -342,7 +343,7 @@ abstract class AbstractFileStoreTest extends TestCase
         $store = static::store();
 
         $dir = $store->file('test-dir');
-        if (! $dir->exists) {
+        if (!$dir->exists) {
             self::assertInstanceOf(StoreFile::class, $dir->mkdir());
         }
 
@@ -352,7 +353,7 @@ abstract class AbstractFileStoreTest extends TestCase
         self::assertFalse($dir->exists);
 
         $file = $store->file('test-file');
-        if (! $file->exists) {
+        if (!$file->exists) {
             self::assertInstanceOf(StoreFile::class, $file->setContents('123'));
         }
 
@@ -378,13 +379,13 @@ abstract class AbstractFileStoreTest extends TestCase
 
         $dir = $store->file('test-dir');
         self::assertInstanceOf(StoreFile::class, $dir);
-        if (! $dir->exists) {
+        if (!$dir->exists) {
             self::assertInstanceOf(StoreFile::class, $dir->mkdir());
         }
 
         $file = $store->file('test-file');
         self::assertInstanceOf(StoreFile::class, $file);
-        if (! $file->exists) {
+        if (!$file->exists) {
             self::assertInstanceOf(StoreFile::class, $file->setContents(''));
         }
 

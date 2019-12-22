@@ -6,7 +6,7 @@
  * @version 24.11.19 00:29:11
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 defined('REMOTE_FILE_HOST') || define('REMOTE_FILE_HOST', 'hosting.dicr.org');
 defined('REMOTE_FILE_LOGIN') || define('REMOTE_FILE_LOGIN', 'test');

@@ -6,7 +6,9 @@
  * @version 24.11.19 00:29:11
  */
 
-declare(strict_types = 1);
+/** @noinspection PhpUsageOfSilenceOperatorInspection */
+declare(strict_types=1);
+
 namespace dicr\file;
 
 use InvalidArgumentException;
@@ -105,6 +107,7 @@ class StoreFile extends AbstractFile
      * Возвращает хранилище
      *
      * @return AbstractFileStore
+     * @noinspection PhpUnused
      */
     public function getStore()
     {
@@ -117,6 +120,7 @@ class StoreFile extends AbstractFile
      * @return static|null
      * @throws StoreException
      * @throws InvalidConfigException
+     * @noinspection PhpUnused
      */
     public function getParent()
     {
@@ -136,11 +140,11 @@ class StoreFile extends AbstractFile
     {
         $name = $this->_store->basename($this->_path);
 
-        if (! empty($options['removePrefix'])) {
+        if (!empty($options['removePrefix'])) {
             $name = static::removeStorePrefix($name);
         }
 
-        if (! empty($options['removeExt'])) {
+        if (!empty($options['removeExt'])) {
             $name = static::removeExtension($name);
         }
 
@@ -261,7 +265,7 @@ class StoreFile extends AbstractFile
     {
         $path = $this->normalizePath($path);
 
-        if (! empty($this->_path) && $path !== $this->_path) {
+        if (!empty($this->_path) && $path !== $this->_path) {
             $this->_store->rename($this->_path, $path);
             $this->_path = $path;
             $this->_absolutePath = null;
@@ -275,10 +279,11 @@ class StoreFile extends AbstractFile
      * Возвращает абсолютный путь.
      *
      * @return string
+     * @noinspection PhpUnused
      */
     public function getAbsolutePath()
     {
-        if (! isset($this->_absolutePath)) {
+        if (!isset($this->_absolutePath)) {
             $this->_absolutePath = $this->_store->absolutePath($this->_path);
         }
 
@@ -293,7 +298,7 @@ class StoreFile extends AbstractFile
      */
     public function getUrl()
     {
-        if (! isset($this->_absoluteUrl)) {
+        if (!isset($this->_absoluteUrl)) {
             $this->_absoluteUrl = $this->_store->url($this->_path);
         }
 
@@ -331,6 +336,7 @@ class StoreFile extends AbstractFile
      * @throw \dicr\file\StoreException если не существует
      * @return bool
      * @throws StoreException
+     * @noinspection PhpUnused
      */
     public function getHidden()
     {
@@ -342,6 +348,7 @@ class StoreFile extends AbstractFile
      *
      * @return bool
      * @throws StoreException не существует
+     * @noinspection PhpUnused
      */
     public function getPublic()
     {
@@ -385,7 +392,7 @@ class StoreFile extends AbstractFile
      */
     public function setStream($stream)
     {
-        if (! @is_resource($stream)) {
+        if (!@is_resource($stream)) {
             throw new InvalidArgumentException('stream');
         }
 
@@ -427,6 +434,7 @@ class StoreFile extends AbstractFile
      *
      * @return $this
      * @throws StoreException
+     * @noinspection PhpUnused
      */
     public function checkDir()
     {
@@ -485,6 +493,7 @@ class StoreFile extends AbstractFile
      *
      * @throws InvalidConfigException
      * @throws StoreException
+     * @noinspection PhpUnused
      */
     public function clearThumb()
     {

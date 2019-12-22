@@ -6,7 +6,8 @@
  * @version 24.11.19 00:29:11
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
+
 namespace dicr\file;
 
 use yii\base\InvalidConfigException;
@@ -61,35 +62,35 @@ trait FileInputWidgetTrait
     {
         parent::init();
 
-        if (! isset($this->model)) {
+        if (!isset($this->model)) {
             throw new InvalidConfigException('model');
         }
 
-        if (! isset($this->attribute)) {
+        if (!isset($this->attribute)) {
             throw new InvalidConfigException('attribute');
         }
 
-        if (! in_array($this->layout, ['images', 'files'])) {
+        if (!in_array($this->layout, ['images', 'files'])) {
             throw new InvalidConfigException('layout');
         }
 
-        if (! isset($this->removeExt)) {
+        if (!isset($this->removeExt)) {
             $this->removeExt = $this->layout === 'files';
         }
 
         // получаем название поля ввода файлов
-        if (! isset($this->inputName)) {
+        if (!isset($this->inputName)) {
             $this->inputName = Html::getInputName($this->model, $this->attribute);
         }
 
         // получаем файлы
-        if (! isset($this->value)) {
+        if (!isset($this->value)) {
             $this->value = Html::getAttributeValue($this->model, $this->attribute);
         }
 
         if (empty($this->value)) {
             $this->value = [];
-        } elseif (! is_array($this->value)) {
+        } elseif (!is_array($this->value)) {
             $this->value = [$this->value]; // нельзя применять (array) потому как File::toArray
         } elseif ($this->limit > 0) {
             ksort($this->value);

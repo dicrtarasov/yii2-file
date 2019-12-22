@@ -1,58 +1,58 @@
 {
-    "type": "yii2-extension",
-    "name": "dicr/yii2-file",
-    "license": "Apache-2.0",
-    "description": "Filesystem components for Yii2",
-    "homepage": "https://gitlab.com/dicr/yii2-file",
-    "keywords": [
-        "yii2 dicr filestore"
-    ],
-    "authors": [
-        {
-            "name": "Igor Tarasov",
-            "email": "develop@dicr.org",
-            "homepage": "http://dicr.org",
-            "role": "developer"
-        }
-    ],
-    "require": {
-        "php": ">=7.2",
-        "ext-fileinfo": "*",
-        "ext-ftp": "*",
-        "ext-mbstring": "*",
-        "yiisoft/yii2": "~2.0",
-        "yiisoft/yii2-jui": "~2.0"
-    },
-    "suggest": {
-        "ext-ssh2": "for LocalFileStore with ssh2.sftp:// wrapper",
-        "ext-ftp": "for LocalFileStore with ftp:// wrapper",
-        "ext-zip": "for LocalFileStore with zip://wrapper",
-        "ext-imagick": "for creating thumbnails",
-        "league/flysystem": "for FlysystemFileStore",
-        "league/flysystem-sftp": "for FlysystemFileStore with SftpAdapter",
-        "league/flysystem-ziparchive": "for FlysystemFileStore with ZipArchive flysystem adapter"
-    },
-    "require-dev": {
-        "roave/security-advisories": "dev-master",
-        "phpunit/phpunit": "~8.4",
-        "yiisoft/yii2-debug": "~2.1",
-        "league/flysystem": "~1.0",
-        "league/flysystem-sftp": "~1.0",
-        "yiisoft/yii2-bootstrap": "~2.0"
-    },
-    "repositories": [
-        {
-            "type": "composer",
-            "url": "https://asset-packagist.org"
-        }
-    ],
-    "autoload": {
-        "psr-4": {
-            "dicr\\file\\": "src/",
-            "dicr\\file\\migrate\\": "migrate/"
-        }
-    },
-    "support": {
-        "source": "https://gitlab.com/dicr/yii2-file.git"
+  "type": "yii2-extension",
+  "name": "dicr/yii2-file",
+  "license": "Apache-2.0",
+  "description": "Filesystem components for Yii2",
+  "homepage": "https://gitlab.com/dicr/yii2-file",
+  "keywords": [
+    "yii2 dicr filestore"
+  ],
+  "authors": [
+    {
+      "name": "Igor Tarasov",
+      "email": "develop@dicr.org",
+      "homepage": "http://dicr.org",
+      "role": "developer"
     }
+  ],
+  "require": {
+    "php": ">=7.2",
+    "ext-fileinfo": "*",
+    "ext-ftp": "*",
+    "ext-mbstring": "*",
+    "yiisoft/yii2": "~2.0",
+    "yiisoft/yii2-jui": "~2.0"
+  },
+  "suggest": {
+    "ext-ssh2": "for LocalFileStore with ssh2.sftp:// wrapper",
+    "ext-ftp": "for LocalFileStore with ftp:// wrapper",
+    "ext-zip": "for LocalFileStore with zip://wrapper",
+    "ext-imagick": "for creating thumbnails",
+    "league/flysystem": "for FlysystemFileStore",
+    "league/flysystem-sftp": "for FlysystemFileStore with SftpAdapter",
+    "league/flysystem-ziparchive": "for FlysystemFileStore with ZipArchive flysystem adapter"
+  },
+  "require-dev": {
+    "roave/security-advisories": "dev-master",
+    "phpunit/phpunit": "~8.4",
+    "yiisoft/yii2-debug": "~2.1",
+    "league/flysystem": "~1.0",
+    "league/flysystem-sftp": "~1.0",
+    "yiisoft/yii2-bootstrap": "~2.0"
+  },
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://asset-packagist.org"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "dicr\\file\\": "src/",
+      "dicr\\file\\migrate\\": "migrate/"
+    }
+  },
+  "support": {
+    "source": "https://gitlab.com/dicr/yii2-file.git"
+  }
 }

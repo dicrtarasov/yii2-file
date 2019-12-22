@@ -6,7 +6,9 @@
  * @version 24.11.19 00:29:11
  */
 
-declare(strict_types = 1);
+/** @noinspection PhpUsageOfSilenceOperatorInspection */
+declare(strict_types=1);
+
 namespace dicr\file;
 
 use Throwable;

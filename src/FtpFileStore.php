@@ -8,8 +8,9 @@
 
 /** @noinspection LongInheritanceChainInspection */
 /** @noinspection DuplicatedCode */
+/** @noinspection PhpUsageOfSilenceOperatorInspection */
+declare(strict_types=1);
 
-declare(strict_types = 1);
 namespace dicr\file;
 
 use yii\base\InvalidConfigException;
@@ -66,21 +67,21 @@ class FtpFileStore extends LocalFileStore
         }
 
         $this->connection = @ftp_connect($this->host, $this->port, $this->timeout);
-        if (! is_resource($this->connection)) {
+        if (!is_resource($this->connection)) {
             throw new StoreException('ошибка подключения к серверу', new StoreException(''));
         }
 
-        if (! isset($this->username)) {
+        if (!isset($this->username)) {
             throw new InvalidConfigException('username');
         }
 
-        if (! @ftp_login($this->connection, $this->username, $this->password)) {
+        if (!@ftp_login($this->connection, $this->username, $this->password)) {
             throw new StoreException('ошибка авторизации');
         }
 
         // Allow overwriting of already existing files on remote server
         /** @noinspection OffsetOperationsInspection */
-        if (! isset($this->context['ftp']['overwrite'])) {
+        if (!isset($this->context['ftp']['overwrite'])) {
             /** @noinspection OffsetOperationsInspection */
             $this->context['ftp']['overwrite'] = true;
         }
@@ -109,7 +110,7 @@ class FtpFileStore extends LocalFileStore
         $path = $this->filterPath($path);
 
         // для FTP нужно проверять существование директории, иначе всегда возвращает пустой список
-        if (! $this->exists($path) || ! $this->isDir($path)) {
+        if (!$this->exists($path) || !$this->isDir($path)) {
             throw new StoreException('not a directory: ' . $this->normalizePath($path));
         }
 
@@ -138,12 +139,12 @@ class FtpFileStore extends LocalFileStore
                 }
             }
         } finally {
-            if (! empty($dir)) {
+            if (!empty($dir)) {
                 closedir($dir);
             }
         }
 
-        usort($files, static function($a, $b) {
+        usort($files, static function ($a, $b) {
             return $a->path <=> $b->path;
         });
 
@@ -157,7 +158,7 @@ class FtpFileStore extends LocalFileStore
     public function absolutePath($path)
     {
         return 'ftp://' . $this->username . ':' . $this->password . '@' . $this->host . ':' . $this->port .
-               $this->relativePath($path);
+            $this->relativePath($path);
     }
 
     /**
@@ -218,7 +219,7 @@ class FtpFileStore extends LocalFileStore
 
         $this->checkDir($this->dirname($newpath));
 
-        if (! @ftp_rename($this->connection, $relPath, $relNew)) {
+        if (!@ftp_rename($this->connection, $relPath, $relNew)) {
             $this->throwLastError('Переименование файла', $this->absolutePath($newpath));
         }
 
@@ -239,7 +240,7 @@ class FtpFileStore extends LocalFileStore
             throw new StoreException('уже существует: ' . $this->absolutePath($path));
         }
 
-        if (! @ftp_mkdir($this->connection, $this->relativePath($path))) {
+        if (!@ftp_mkdir($this->connection, $this->relativePath($path))) {
             $this->throwLastError('Создание директории', $this->absolutePath($path));
         }
 
@@ -257,7 +258,7 @@ class FtpFileStore extends LocalFileStore
         $path = $this->filterRootPath($path);
         $perms = $this->permsByPublic($this->isDir($path), $public);
 
-        if (! @ftp_chmod($this->connection, $perms, $this->relativePath($path))) {
+        if (!@ftp_chmod($this->connection, $perms, $this->relativePath($path))) {
             $this->throwLastError('Установка прав доступа', $this->absolutePath($path));
         }
 
@@ -271,7 +272,7 @@ class FtpFileStore extends LocalFileStore
      */
     public function __destruct()
     {
-        if (! empty($this->connection)) {
+        if (!empty($this->connection)) {
             /** @scrutinizer ignore-unhandled */
             @ftp_close($this->connection);
         }
@@ -285,7 +286,7 @@ class FtpFileStore extends LocalFileStore
     {
         $this->filterRootPath($path);
 
-        if (! @ftp_delete($this->connection, $this->relativePath($path))) {
+        if (!@ftp_delete($this->connection, $this->relativePath($path))) {
             $this->throwLastError('Удаление файла', $this->absolutePath($path));
         }
 
@@ -302,7 +303,7 @@ class FtpFileStore extends LocalFileStore
     {
         $this->filterRootPath($path);
 
-        if (! @ftp_rmdir($this->connection, $this->relativePath($path))) {
+        if (!@ftp_rmdir($this->connection, $this->relativePath($path))) {
             $this->throwLastError('Удаление директории', $this->absolutePath($path));
         }
 

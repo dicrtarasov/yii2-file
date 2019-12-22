@@ -7,7 +7,8 @@
  */
 
 /** @noinspection LongInheritanceChainInspection */
-declare(strict_types = 1);
+declare(strict_types=1);
+
 namespace dicr\file;
 
 use InvalidArgumentException;
@@ -90,7 +91,7 @@ class UploadFile extends StoreFile
      */
     public static function instances(string $formName = '', string $attribute = '')
     {
-        if (! isset(self::$_instances)) {
+        if (!isset(self::$_instances)) {
             self::$_instances = self::parseInstances();
         }
 
@@ -113,7 +114,7 @@ class UploadFile extends StoreFile
     {
         $instances = [];
 
-        if (! empty($_FILES)) {
+        if (!empty($_FILES)) {
             foreach ($_FILES as $key => $data) {
                 if (static::detectFormData($data)) {
                     // аттрибуты формы: $key == $formName, $data == аттрибуты в формате формы
@@ -139,12 +140,12 @@ class UploadFile extends StoreFile
     {
 
         // если не установлен name, то ошибка формата данных
-        if (! isset($data['name'])) {
+        if (!isset($data['name'])) {
             throw new Exception('Некорректная структура данных $_FILES: ' . var_export($data, true));
         }
 
         // если name не массив - однозначно не форма
-        if (! is_array($data['name'])) {
+        if (!is_array($data['name'])) {
             return false;
         }
 
@@ -154,7 +155,7 @@ class UploadFile extends StoreFile
         }
 
         // средний вариант определяем по типу ключей в name.
-        return ! preg_match('~^\d+$~', array_key_first($data['name']));
+        return !preg_match('~^\d+$~', array_key_first($data['name']));
     }
 
     /**
@@ -252,8 +253,8 @@ class UploadFile extends StoreFile
     public function getName(array $options = [])
     {
         // если имя файла не задано то берем его из пути
-        if (! isset($this->_name)) {
-            if (! empty($this->_error)) {
+        if (!isset($this->_name)) {
+            if (!empty($this->_error)) {
                 return null;
             }
 
@@ -262,7 +263,7 @@ class UploadFile extends StoreFile
 
         $name = $this->_name;
 
-        if (! empty($options['removeExt'])) {
+        if (!empty($options['removeExt'])) {
             $name = static::removeExtension($name);
         }
 
@@ -292,6 +293,7 @@ class UploadFile extends StoreFile
      * Возвращает ошибку
      *
      * @return int
+     * @noinspection PhpUnused
      */
     public function getError()
     {
@@ -354,6 +356,7 @@ class UploadFile extends StoreFile
      *
      * @param int $error
      * @return $this
+     * @noinspection PhpUnused
      */
     public function setError(int $error)
     {
@@ -439,8 +442,8 @@ class UploadFile extends StoreFile
      */
     public function getSize()
     {
-        if (! isset($this->_size)) {
-            if (! empty($this->_error)) {
+        if (!isset($this->_size)) {
+            if (!empty($this->_error)) {
                 return null;
             }
 
@@ -488,8 +491,8 @@ class UploadFile extends StoreFile
      * </xmp>
      *
      * @param array $data
-     * @throws Exception
      * @return bool
+     * @throws Exception
      */
     // @formatter:on
     /**
@@ -497,6 +500,7 @@ class UploadFile extends StoreFile
      *
      * @param int $size
      * @throws InvalidArgumentException
+     * @noinspection PhpUnused
      */
     public function setSize(int $size)
     {
@@ -526,8 +530,8 @@ class UploadFile extends StoreFile
      */
     public function getMimeType()
     {
-        if (! isset($this->_mimeType)) {
-            if (! empty($this->_error)) {
+        if (!isset($this->_mimeType)) {
+            if (!empty($this->_error)) {
                 return null;
             }
 
@@ -541,6 +545,7 @@ class UploadFile extends StoreFile
      * Устанавливает MIME-тип.
      *
      * @param string $type
+     * @noinspection PhpUnused
      */
     public function setMimeType(string $type)
     {

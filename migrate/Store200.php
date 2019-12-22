@@ -8,7 +8,8 @@
 
 /** @noinspection PhpUnused */
 
-declare(strict_types = 1);
+declare(strict_types=1);
+
 namespace dicr\file\migrate;
 
 use dicr\file\AbstractFileStore;

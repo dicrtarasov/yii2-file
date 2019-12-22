@@ -6,7 +6,7 @@
  * @version 21.11.19 06:46:40
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 /** @noinspection UsingInclusionReturnValueInspection */
 $app = require(__DIR__ . '/bootstrap.php');

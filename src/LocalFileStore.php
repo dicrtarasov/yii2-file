@@ -6,7 +6,9 @@
  * @version 24.11.19 00:29:11
  */
 
-declare(strict_types = 1);
+/** @noinspection PhpUsageOfSilenceOperatorInspection */
+declare(strict_types=1);
+
 namespace dicr\file;
 
 use DirectoryIterator;
@@ -73,7 +75,7 @@ class LocalFileStore extends AbstractFileStore
      */
     public static function root()
     {
-        if (! isset(self::$_rootInstance)) {
+        if (!isset(self::$_rootInstance)) {
             self::$_rootInstance = new static([
                 'path' => '/',
                 'writeFlags' => LOCK_EX
@@ -91,7 +93,7 @@ class LocalFileStore extends AbstractFileStore
     {
         parent::init();
 
-        if (! isset($this->_path)) {
+        if (!isset($this->_path)) {
             throw new InvalidConfigException('path');
         }
 
@@ -102,11 +104,11 @@ class LocalFileStore extends AbstractFileStore
             $this->readMode = 'rb';
         }
 
-        if (! is_resource($this->context)) {
+        if (!is_resource($this->context)) {
             $this->context = stream_context_create($this->context);
         }
 
-        if (! isset($this->perms['dir'], $this->perms['file']) || ! is_array($this->perms)) {
+        if (!isset($this->perms['dir'], $this->perms['file']) || !is_array($this->perms)) {
             throw new InvalidConfigException('perms');
         }
     }
@@ -132,7 +134,7 @@ class LocalFileStore extends AbstractFileStore
     {
         // решаем алиасы
         /** @noinspection CallableParameterUseCaseInTypeContextInspection */
-        $path = Yii::getAlias($path, true);
+        $path = Yii::getAlias($path);
         if ($path === false) {
             throw new InvalidArgumentException('path');
         }
@@ -144,7 +146,7 @@ class LocalFileStore extends AbstractFileStore
         }
 
         // проверяем что путь директория
-        if ($this->_path !== '/' && ! @is_dir($this->_path)) {
+        if ($this->_path !== '/' && !@is_dir($this->_path)) {
             throw new StoreException('Не является директорией: ' . $this->_path);
         }
 
@@ -167,7 +169,7 @@ class LocalFileStore extends AbstractFileStore
 
         $iterator = null;
         try {
-            if (! empty($filter['recursive'])) {
+            if (!empty($filter['recursive'])) {
                 $dirIterator = new RecursiveDirectoryIterator($fullPath, FilesystemIterator::CURRENT_AS_FILEINFO);
                 $iterator = new RecursiveIteratorIterator($dirIterator, RecursiveIteratorIterator::CHILD_FIRST);
             } else {
@@ -195,7 +197,7 @@ class LocalFileStore extends AbstractFileStore
             }
         }
 
-        usort($files, static function($a, $b) {
+        usort($files, static function ($a, $b) {
             return $a->path <=> $b->path;
         });
 
@@ -360,7 +362,7 @@ class LocalFileStore extends AbstractFileStore
         $exists = $this->exists($path);
 
         // проверяем наличие директории если файл не существует
-        if (! $exists) {
+        if (!$exists) {
             $this->checkDir($this->dirname($path));
         }
 
@@ -537,7 +539,7 @@ class LocalFileStore extends AbstractFileStore
 
         // проверяем на существование
         if ($this->exists($path)) {
-            if (! $this->isDir($path)) {
+            if (!$this->isDir($path)) {
                 throw new StoreException('Уже существует не директория: ' . $absPath);
             }
 

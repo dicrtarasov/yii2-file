@@ -6,7 +6,8 @@
  * @version 24.11.19 00:29:11
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
+
 namespace dicr\file;
 
 use Exception;
@@ -45,12 +46,12 @@ class FlysystemFileStore extends AbstractFileStore
             $this->flysystem = call_user_func(/** @scrutinizer ignore-type */ $this->flysystem, $this);
         }
 
-        if (! ($this->flysystem instanceof Filesystem)) {
+        if (!($this->flysystem instanceof Filesystem)) {
             throw new InvalidConfigException('flysystem');
         }
 
         $config = $this->flysystem->getConfig();
-        if (! $config->has('visibility')) {
+        if (!$config->has('visibility')) {
             $config->set('visibility', self::access2visibility($this->public));
         }
 
@@ -72,6 +73,7 @@ class FlysystemFileStore extends AbstractFileStore
      * Возвращает адаптер
      *
      * @return AdapterInterface|NULL
+     * @noinspection PhpUnused
      */
     public function getAdapter()
     {
@@ -91,7 +93,7 @@ class FlysystemFileStore extends AbstractFileStore
     {
         $path = $this->normalizePath($path);
 
-        if (! $this->exists($path)) {
+        if (!$this->exists($path)) {
             return [];
         }
 
@@ -113,7 +115,7 @@ class FlysystemFileStore extends AbstractFileStore
         }
 
         // сортируем
-        usort($files, static function($a, $b) {
+        usort($files, static function ($a, $b) {
             return $a->path <=> $b->path;
         });
 
@@ -134,7 +136,7 @@ class FlysystemFileStore extends AbstractFileStore
             throw new StoreException($path, $ex);
         }
 
-        return ! empty($ret);
+        return !empty($ret);
     }
 
     /**

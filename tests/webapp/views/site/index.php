@@ -8,7 +8,7 @@
 
 /** @noinspection PhpUnhandledExceptionInspection */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 use app\models\TestModel;
 use app\widgets\FileInputWidget;
@@ -66,25 +66,25 @@ use yii\web\View;
         ]
     ]) ?>
 
-    <?=$form->field($model, 'icon')->widget(FileInputWidget::class, [
+    <?= $form->field($model, 'icon')->widget(FileInputWidget::class, [
         'layout' => 'images',
         'limit' => 1,
         'accept' => 'image/*',
-    ])?>
+    ]) ?>
 
-    <?=$form->field($model, 'pics')->widget(FileInputWidget::class, [
+    <?= $form->field($model, 'pics')->widget(FileInputWidget::class, [
         'layout' => 'images'
-    ])?>
+    ]) ?>
 
-    <?=$form->field($model, 'docs')->widget(FileInputWidget::class, [
+    <?= $form->field($model, 'docs')->widget(FileInputWidget::class, [
         'layout' => 'files'
-    ])?>
+    ]) ?>
 
     <div class="form-group">
         <div class="col-sm-10 col-sm-offset-1">
-            <?=Html::submitButton('Сохранить', [
+            <?= Html::submitButton('Сохранить', [
                 'class' => 'btn btn-primary'
-            ])?>
+            ]) ?>
         </div>
     </div>
 
@@ -92,22 +92,22 @@ use yii\web\View;
 
     <h2>Просмотр превью картинок модели</h2>
 
-    <?php if (! empty($model->icon) && is_a($model->icon, StoreFile::class)) { ?>
+    <?php if (!empty($model->icon) && is_a($model->icon, StoreFile::class)) { ?>
         <div style="margin-bottom: 30px;">
-            <?=Html::img($model->icon->thumb([
+            <?= Html::img($model->icon->thumb([
                 'width' => 50,
                 'height' => 50
-            ])->url)?>
+            ])->url) ?>
         </div>
     <?php } ?>
 
-    <?php if (! empty($model->pics)) { ?>
+    <?php if (!empty($model->pics)) { ?>
         <div style="margin-bottom: 60px;">
             <?php foreach ($model->pics as $pic) { ?><?php if (is_a($pic, StoreFile::class)) { ?>
-                <?=Html::img($pic->thumb([
+                <?= Html::img($pic->thumb([
                     'width' => 50,
                     'height' => 50
-                ])->url)?><?php } ?><?php } ?>
+                ])->url) ?><?php } ?><?php } ?>
         </div>
     <?php } ?>
 </div>

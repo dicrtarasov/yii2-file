@@ -7,7 +7,7 @@
  */
 
 /** @noinspection LongInheritanceChainInspection */
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace app\widgets;
 
