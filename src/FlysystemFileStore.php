@@ -24,7 +24,7 @@ use function strlen;
 /**
  * FileStore based on Flysystem adapters.
  *
- * @property-read \League\Flysystem\AdapterInterface|null $adapter
+ * @property-read AdapterInterface|null $adapter
  *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
@@ -32,7 +32,7 @@ use function strlen;
  */
 class FlysystemFileStore extends AbstractFileStore
 {
-    /** @var \League\Flysystem\Filesystem|callable */
+    /** @var Filesystem|callable */
     public $flysystem;
 
     /**
@@ -71,7 +71,7 @@ class FlysystemFileStore extends AbstractFileStore
     /**
      * Возвращает адаптер
      *
-     * @return \League\Flysystem\AdapterInterface|NULL
+     * @return AdapterInterface|NULL
      */
     public function getAdapter()
     {
@@ -84,7 +84,7 @@ class FlysystemFileStore extends AbstractFileStore
 
     /**
      * {@inheritdoc}
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      * @see \dicr\file\AbstractFileStore::list()
      */
     public function list($path, array $options = [])
@@ -151,7 +151,7 @@ class FlysystemFileStore extends AbstractFileStore
      *
      * @param string|array $path
      * @return string dir|file
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function getType($path)
     {
@@ -395,7 +395,7 @@ class FlysystemFileStore extends AbstractFileStore
 
     /**
      * {@inheritdoc}
-     * @throws \yii\base\NotSupportedException
+     * @throws NotSupportedException
      * @see \dicr\file\AbstractFileStore::copy()
      */
     public function copy($path, $newpath)
@@ -424,8 +424,8 @@ class FlysystemFileStore extends AbstractFileStore
 
     /**
      * {@inheritdoc}
-     * @throws \yii\base\NotSupportedException
-     * @throws \dicr\file\StoreException
+     * @throws NotSupportedException
+     * @throws StoreException
      * @see \dicr\file\AbstractFileStore::absolutePath()
      */
     public function absolutePath($path)

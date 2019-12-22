@@ -86,7 +86,7 @@ class UploadFile extends StoreFile
      * @param string $formName имя формы для которой возвращает аттрибуты
      * @param string $attribute если задан, то возвращает файлы только для аттрибута
      * @return mixed
-     * @throws \yii\base\Exception
+     * @throws Exception
      */
     public static function instances(string $formName = '', string $attribute = '')
     {
@@ -107,7 +107,7 @@ class UploadFile extends StoreFile
      * Парсит $_FILES и создает объекты.
      *
      * @return array
-     * @throws \yii\base\Exception
+     * @throws Exception
      */
     protected static function parseInstances()
     {
@@ -133,7 +133,7 @@ class UploadFile extends StoreFile
      *
      * @param array $data
      * @return bool
-     * @throws \yii\base\Exception
+     * @throws Exception
      */
     protected static function detectFormData(array $data)
     {
@@ -160,7 +160,7 @@ class UploadFile extends StoreFile
     /**
      * @param array $data
      * @return array
-     * @throws \yii\base\Exception
+     * @throws Exception
      */
     protected static function parseFormData(array $data)
     {
@@ -184,8 +184,8 @@ class UploadFile extends StoreFile
      * @param array $sizes размеры
      * @param array $errors ошибки
      * @param array $paths пути
-     * @return \dicr\file\UploadFile[]
-     * @throws \yii\base\Exception
+     * @return UploadFile[]
+     * @throws Exception
      */
     protected static function attributeInstances(array $names, array $types, array $sizes, array $errors, array $paths)
     {
@@ -217,8 +217,8 @@ class UploadFile extends StoreFile
 
     /**
      * @param array $data
-     * @return \dicr\file\UploadFile[]
-     * @throws \yii\base\Exception
+     * @return UploadFile[]
+     * @throws Exception
      */
     protected static function parseAttribData(array $data)
     {
@@ -274,7 +274,7 @@ class UploadFile extends StoreFile
      *
      * @param string $name
      * @return $this
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function setName(string $name)
     {
@@ -346,7 +346,7 @@ class UploadFile extends StoreFile
      * </xmp>
      *
      * @param array $data данные аттрибута
-     * @return \dicr\file\UploadFile[] файлы аттрибута
+     * @return UploadFile[] файлы аттрибута
      */
     // @formatter:on
     /**
@@ -489,14 +489,14 @@ class UploadFile extends StoreFile
      *
      * @param array $data
      * @throws Exception
-     * @return boolean
+     * @return bool
      */
     // @formatter:on
     /**
      * Усанавливает размер.
      *
      * @param int $size
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function setSize(int $size)
     {

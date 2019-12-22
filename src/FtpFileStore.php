@@ -50,7 +50,7 @@ class FtpFileStore extends LocalFileStore
 
     /**
      * {@inheritdoc}
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      * @see \dicr\file\LocalFileStore::init()
      */
     public function init()
@@ -165,7 +165,7 @@ class FtpFileStore extends LocalFileStore
      *
      * @param string|array $path
      * @return string
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function relativePath($path)
     {

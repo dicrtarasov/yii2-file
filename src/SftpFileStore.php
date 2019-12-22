@@ -52,7 +52,7 @@ class SftpFileStore extends LocalFileStore
 
     /**
      * {@inheritdoc}
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      * @see \dicr\file\LocalFileStore::init()
      */
     public function init()
@@ -111,7 +111,7 @@ class SftpFileStore extends LocalFileStore
 
     /**
      * {@inheritDoc}
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      * @see \dicr\file\LocalFileStore::list()
      */
     public function list($path, array $filter = [])
@@ -169,8 +169,8 @@ class SftpFileStore extends LocalFileStore
      *
      * @param string|array $path
      * @return string
-     * @throws \dicr\file\StoreException
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
+     * @throws StoreException
      */
     public function relativePath($path)
     {

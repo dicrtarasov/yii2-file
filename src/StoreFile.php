@@ -10,15 +10,17 @@ declare(strict_types = 1);
 namespace dicr\file;
 
 use InvalidArgumentException;
+use Throwable;
+use yii\base\InvalidConfigException;
 use function is_resource;
 
 /**
  * Файл хранилища файлов.
  * Все операции выполняются через перенаправления к AbstractStore.
  *
- * @property-read \dicr\file\AbstractFileStore $store хранилище
+ * @property-read AbstractFileStore $store хранилище
  * @property string $path относительный путь (rw)
- * @property-read \dicr\file\StoreFile|null $parent родительский каталог (dirname)
+ * @property-read StoreFile|null $parent родительский каталог (dirname)
  * @property string $name имя файла (basename)
  * @property-read string $absolutePath абсолютный путь
  * @property-read string|null $url абсолютный URL
@@ -26,7 +28,7 @@ use function is_resource;
  * @property-read bool $hidden скрытый
  * @property string $contents содержимое в виде строки (rw)
  * @property resource $stream содержимое в виде потока (rw)
- * @property-read \dicr\file\StoreFile[] $list
+ * @property-read StoreFile[] $list
  *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
@@ -36,7 +38,7 @@ class StoreFile extends AbstractFile
     // регулярное выражение имени файла со служебным префиксом
     protected const STORE_PREFIX_REGEX = '~^\.?([^\~]+)\~(\d+)\~(.+)$~u';
 
-    /** @var \dicr\file\AbstractFileStore */
+    /** @var AbstractFileStore */
     protected $_store;
 
     /** @var string кэш абсолютного пути */
@@ -102,7 +104,7 @@ class StoreFile extends AbstractFile
     /**
      * Возвращает хранилище
      *
-     * @return \dicr\file\AbstractFileStore
+     * @return AbstractFileStore
      */
     public function getStore()
     {
@@ -113,8 +115,8 @@ class StoreFile extends AbstractFile
      * Возвращает родительскую директорию.
      *
      * @return static|null
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\InvalidConfigException
+     * @throws StoreException
+     * @throws InvalidConfigException
      */
     public function getParent()
     {
@@ -127,7 +129,7 @@ class StoreFile extends AbstractFile
 
     /**
      * {@inheritDoc}
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      * @see \dicr\file\AbstractFile::getName()
      */
     public function getName(array $options = [])
@@ -147,7 +149,7 @@ class StoreFile extends AbstractFile
 
     /**
      * {@inheritDoc}
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      * @see \dicr\file\AbstractFile::normalizePath()
      */
     protected function normalizePath($path)
@@ -232,7 +234,7 @@ class StoreFile extends AbstractFile
      *
      * @param string $name новое имя
      * @return $this
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function setName(string $name)
     {
@@ -253,7 +255,7 @@ class StoreFile extends AbstractFile
      *
      * @param string|string[] $path new path
      * @return $this
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function setPath($path)
     {
@@ -287,7 +289,7 @@ class StoreFile extends AbstractFile
      * Возвращает url.
      *
      * @return string|null
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function getUrl()
     {
@@ -303,8 +305,8 @@ class StoreFile extends AbstractFile
      *
      * @param string|string[] $path
      * @return static
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\InvalidConfigException
+     * @throws StoreException
+     * @throws InvalidConfigException
      */
     public function child($path)
     {
@@ -316,7 +318,7 @@ class StoreFile extends AbstractFile
      *
      * @param array $options опции и фильтры {@link AbstractFileStore::list}
      * @return static[]
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function getList(array $options = [])
     {
@@ -328,7 +330,7 @@ class StoreFile extends AbstractFile
      *
      * @throw \dicr\file\StoreException если не существует
      * @return bool
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function getHidden()
     {
@@ -339,7 +341,7 @@ class StoreFile extends AbstractFile
      * Возвращает флаг публичного доступа
      *
      * @return bool
-     * @throws \dicr\file\StoreException не существует
+     * @throws StoreException не существует
      */
     public function getPublic()
     {
@@ -351,7 +353,7 @@ class StoreFile extends AbstractFile
      *
      * @param bool $public
      * @return $this
-     * @throws \dicr\file\StoreException не существует
+     * @throws StoreException не существует
      */
     public function setPublic(bool $public)
     {
@@ -365,7 +367,7 @@ class StoreFile extends AbstractFile
      *
      * @param string $contents
      * @return $this
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function setContents(string $contents)
     {
@@ -379,7 +381,7 @@ class StoreFile extends AbstractFile
      *
      * @param resource $stream
      * @return $this
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function setStream($stream)
     {
@@ -397,8 +399,8 @@ class StoreFile extends AbstractFile
      *
      * @param $path
      * @return static новый файл
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\InvalidConfigException
+     * @throws StoreException
+     * @throws InvalidConfigException
      */
     public function copy($path)
     {
@@ -411,7 +413,7 @@ class StoreFile extends AbstractFile
      * Создает директорию.
      *
      * @return $this
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function mkdir()
     {
@@ -424,7 +426,7 @@ class StoreFile extends AbstractFile
      * Проверяет создает родительскую директорию.
      *
      * @return $this
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function checkDir()
     {
@@ -436,12 +438,12 @@ class StoreFile extends AbstractFile
     /**
      * Импорт файла в хранилище
      *
-     * @param string|string[]|\dicr\file\AbstractFile $src импорируемый файл
+     * @param string|string[]|AbstractFile $src импорируемый файл
      * @param array $options опции
      *  - bool $ifModified - импортировать файл только если время новее или размер отличается (по-умолчанию true)
      * @return $this
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\InvalidConfigException
+     * @throws StoreException
+     * @throws InvalidConfigException
      * @see AbstractFileStore::import()
      */
     public function import($src, array $options = [])
@@ -454,7 +456,7 @@ class StoreFile extends AbstractFile
      * Удаляет файл
      *
      * @return $this
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function delete()
     {
@@ -467,11 +469,11 @@ class StoreFile extends AbstractFile
      * Создает превью файла.
      *
      * @param array $config опции ThumbFile
-     * @return \dicr\file\ThumbFile|null|false
+     * @return ThumbFile|null|false
      * - если thumbFileConfig не настроен, то false
      * - если файл не существует и не насроен noimage, то null
-     * @throws \yii\base\InvalidConfigException
-     * @throws \Throwable
+     * @throws InvalidConfigException
+     * @throws Throwable
      */
     public function thumb(array $config = [])
     {
@@ -481,8 +483,8 @@ class StoreFile extends AbstractFile
     /**
      * Очищает все превью файла.
      *
-     * @throws \yii\base\InvalidConfigException
-     * @throws \dicr\file\StoreException
+     * @throws InvalidConfigException
+     * @throws StoreException
      */
     public function clearThumb()
     {

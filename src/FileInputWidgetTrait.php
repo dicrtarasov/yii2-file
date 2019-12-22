@@ -12,6 +12,7 @@ namespace dicr\file;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
+use yii\web\View;
 use function array_slice;
 use function count;
 use function in_array;
@@ -28,8 +29,8 @@ use function is_array;
  * }
  *
  * @property array clientOptions
- * @property \yii\web\View $view
- * @property \dicr\file\StoreFile[]|null $value файлы
+ * @property View $view
+ * @property StoreFile[]|null $value файлы
  */
 trait FileInputWidgetTrait
 {
@@ -50,10 +51,10 @@ trait FileInputWidgetTrait
 
     /**
      * {@inheritdoc}
-     * @throws \yii\base\InvalidConfigException
-     * @throws \yii\base\InvalidConfigException
-     * @throws \yii\base\InvalidConfigException
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
+     * @throws InvalidConfigException
+     * @throws InvalidConfigException
+     * @throws InvalidConfigException
      * @see \yii\widgets\InputWidget::init()
      */
     public function init()
@@ -117,8 +118,8 @@ trait FileInputWidgetTrait
 
     /**
      * {@inheritdoc}
-     * @throws \yii\base\InvalidConfigException
-     * @throws \dicr\file\StoreException
+     * @throws InvalidConfigException
+     * @throws StoreException
      * @see \yii\base\Widget::render()
      */
     public function run()
@@ -152,8 +153,8 @@ trait FileInputWidgetTrait
      * Рендерит блок файлов
      *
      * @return string
-     * @throws \dicr\file\StoreException
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
+     * @throws StoreException
      */
     protected function renderFiles()
     {
@@ -172,10 +173,10 @@ trait FileInputWidgetTrait
      * Рендерит файл
      *
      * @param int $pos
-     * @param \dicr\file\StoreFile $file
+     * @param StoreFile $file
      * @return string
-     * @throws \dicr\file\StoreException
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
+     * @throws StoreException
      */
     protected function renderFileBlock(int $pos, StoreFile $file)
     {
@@ -218,10 +219,10 @@ trait FileInputWidgetTrait
     /**
      * Рендерит картинку
      *
-     * @param \dicr\file\StoreFile $file
+     * @param StoreFile $file
      * @return string
-     * @throws \dicr\file\StoreException
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
+     * @throws StoreException
      */
     protected function renderImage(StoreFile $file)
     {

@@ -126,7 +126,7 @@ class LocalFileStore extends AbstractFileStore
      *
      * @param string $path
      * @return $this
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function setPath(string $path)
     {
@@ -156,9 +156,9 @@ class LocalFileStore extends AbstractFileStore
 
     /**
      * {@inheritdoc}
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\InvalidConfigException
-     * @throws \yii\base\InvalidConfigException
+     * @throws StoreException
+     * @throws InvalidConfigException
+     * @throws InvalidConfigException
      * @see \dicr\file\AbstractFileStore::list()
      */
     public function list($path, array $filter = [])
@@ -204,7 +204,7 @@ class LocalFileStore extends AbstractFileStore
 
     /**
      * {@inheritdoc}
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      * @see \dicr\file\AbstractFileStore::absolutePath()
      */
     public function absolutePath($path)
@@ -349,7 +349,7 @@ class LocalFileStore extends AbstractFileStore
      * @param string|string[] $path
      * @param string|array|resource $contents
      * @return int кол-во записанных байт
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function writeStreamOrContents($path, $contents)
     {
@@ -559,7 +559,7 @@ class LocalFileStore extends AbstractFileStore
      * Конвертирует в строку
      *
      * @return string
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function __toString()
     {

@@ -25,7 +25,7 @@ class StoreException extends Exception
      *
      * @param string|null $msg
      *     если не задано, то берется из error_get_last
-     * @param \Throwable $prev
+     * @param Throwable $prev
      */
     public function __construct(string $msg = '', Throwable $prev = null)
     {

@@ -137,12 +137,12 @@ use function is_array;
  * <?php } ?>
  * </xmp>
  *
- * @property \dicr\file\StoreFile $fileModelPath путь папки модели
+ * @property StoreFile $fileModelPath путь папки модели
  */
 // @formatter:on
 class FileAttributeBehavior extends Behavior
 {
-    /** @var \dicr\file\AbstractFileStore|string|array хранилище файлов */
+    /** @var AbstractFileStore|string|array хранилище файлов */
     public $store = 'fileStore';
 
     /**
@@ -153,15 +153,15 @@ class FileAttributeBehavior extends Behavior
      */
     public $attributes;
 
-    /** @var \dicr\file\StoreFile[][] текущие значения аттрибутов [attributeName => \dicr\file\StoreFile[]] */
+    /** @var StoreFile[] текущие значения аттрибутов [attributeName => \dicr\file\StoreFile[]] */
     private $values = [];
 
-    /** @var \dicr\file\StoreFile путь папки модели */
+    /** @var StoreFile путь папки модели */
     private $_modelPath;
 
     /**
      * {@inheritdoc}
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      * @see \yii\base\BaseObject::init()
      */
     public function init()
@@ -219,7 +219,7 @@ class FileAttributeBehavior extends Behavior
 
     /**
      * {@inheritdoc}
-     * @throws \yii\base\Exception
+     * @throws Exception
      * @see \yii\base\BaseObject::__get()
      */
     public function __get($name)
@@ -233,7 +233,7 @@ class FileAttributeBehavior extends Behavior
 
     /**
      * {@inheritdoc}
-     * @throws \yii\base\Exception
+     * @throws Exception
      * @see \yii\base\BaseObject::__set()
      */
     public function __set($name, $value)
@@ -288,7 +288,7 @@ class FileAttributeBehavior extends Behavior
      * Проверяет существование файлового атрибута
      *
      * @param string $attribute
-     * @return boolean
+     * @return bool
      */
     public function hasFileAttribute(string $attribute)
     {
@@ -300,8 +300,8 @@ class FileAttributeBehavior extends Behavior
      *
      * @param string $attribute
      * @param bool $refresh
-     * @return null|\dicr\file\StoreFile|\dicr\file\StoreFile[]
-     * @throws \yii\base\Exception
+     * @return null|StoreFile|StoreFile[]
+     * @throws Exception
      */
     public function getFileAttribute(string $attribute, bool $refresh = false)
     {
@@ -338,9 +338,9 @@ class FileAttributeBehavior extends Behavior
      * Получает список файлов аттрибута модели.
      *
      * @param string $attribute аттрибут
-     * @return \dicr\file\StoreFile[] файлы
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\InvalidConfigException
+     * @return StoreFile[] файлы
+     * @throws StoreException
+     * @throws InvalidConfigException
      */
     protected function listAttributeFiles(string $attribute)
     {
@@ -371,8 +371,8 @@ class FileAttributeBehavior extends Behavior
      * Путь модели в хранилище строится из:
      * {formName}/{primaryKeys}
      *
-     * @return \dicr\file\StoreFile|null
-     * @throws \yii\base\InvalidConfigException
+     * @return StoreFile|null
+     * @throws InvalidConfigException
      */
     public function getFileModelPath()
     {
@@ -426,9 +426,9 @@ class FileAttributeBehavior extends Behavior
      * Устанавливает значение файлового аттрибута
      *
      * @param string $attribute
-     * @param null|\dicr\file\StoreFile|\dicr\file\StoreFile[] $files
+     * @param null|StoreFile|StoreFile[] $files
      * @return static
-     * @throws \yii\base\Exception
+     * @throws Exception
      */
     public function setFileAttribute(string $attribute, $files)
     {
@@ -479,8 +479,8 @@ class FileAttributeBehavior extends Behavior
      * Удаляет папку модели.
      * (нужен для обработчика событий модели).
      *
-     * @return \dicr\file\StoreFile путь удаленной директории модели
-     * @throws \dicr\file\StoreException
+     * @return StoreFile путь удаленной директории модели
+     * @throws StoreException
      */
     public function deleteFileModelPath()
     {
@@ -496,9 +496,9 @@ class FileAttributeBehavior extends Behavior
      * Загружает файловые аттрибуты из $_POST и $FILES
      *
      * @param string $formName имя формы модели
-     * @return boolean true если данные некоторых атрибутов были загружены
-     * @throws \yii\base\Exception
-     * @throws \yii\base\InvalidConfigException
+     * @return bool true если данные некоторых атрибутов были загружены
+     * @throws Exception
+     * @throws InvalidConfigException
      */
     public function loadFileAttributes(string $formName = null)
     {
@@ -517,8 +517,8 @@ class FileAttributeBehavior extends Behavior
      * @param string $attribute имя загружаемого файлового аттрибута
      * @param string|null $formName имя формы модели
      * @return bool true если значение было загружено (присутствуют отправленные данные)
-     * @throws \yii\base\Exception
-     * @throws \yii\base\InvalidConfigException
+     * @throws Exception
+     * @throws InvalidConfigException
      */
     public function loadFileAttribute(string $attribute, string $formName = null)
     {
@@ -577,9 +577,9 @@ class FileAttributeBehavior extends Behavior
      * Проводит валидацию файловых аттрибутов.
      * Добавляет ошибки модели по addError.
      *
-     * @return boolean true, если все проверки успешны
-     * @throws \yii\base\Exception
-     * @throws \yii\base\InvalidConfigException
+     * @return bool true, если все проверки успешны
+     * @throws Exception
+     * @throws InvalidConfigException
      */
     public function validateFileAttributes()
     {
@@ -603,8 +603,8 @@ class FileAttributeBehavior extends Behavior
      *
      * @param string $attribute
      * @return bool|null результаты проверки или null, если атрибут не инициализирован
-     * @throws \yii\base\Exception
-     * @throws \yii\base\InvalidConfigException
+     * @throws Exception
+     * @throws InvalidConfigException
      */
     public function validateFileAttribute(string $attribute)
     {
@@ -689,9 +689,9 @@ class FileAttributeBehavior extends Behavior
      * Выполняет импорт загруженных файлов и удаление старых
      *
      * @return bool резульаты сохранения
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\Exception
-     * @throws \yii\base\InvalidConfigException
+     * @throws StoreException
+     * @throws Exception
+     * @throws InvalidConfigException
      */
     public function saveFileAttributes()
     {
@@ -715,9 +715,9 @@ class FileAttributeBehavior extends Behavior
      *
      * @param string $attribute
      * @return bool|null результат сохранения или null, если аттрибут не инициализирован
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\Exception
-     * @throws \yii\base\InvalidConfigException
+     * @throws StoreException
+     * @throws Exception
+     * @throws InvalidConfigException
      */
     public function saveFileAttribute(string $attribute)
     {
@@ -813,8 +813,8 @@ class FileAttributeBehavior extends Behavior
     /**
      * Находит позицию файла в списке файлов по имени.
      *
-     * @param \dicr\file\StoreFile $file
-     * @param \dicr\file\StoreFile[] $files
+     * @param StoreFile $file
+     * @param StoreFile[] $files
      * @return int|null
      */
     protected static function searchFileByName(StoreFile $file, array $files)
@@ -834,9 +834,9 @@ class FileAttributeBehavior extends Behavior
      * Удаляет все файлы всех аттритутов
      *
      * @return true
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\Exception
-     * @throws \yii\base\InvalidConfigException
+     * @throws StoreException
+     * @throws Exception
+     * @throws InvalidConfigException
      */
     public function deleteFileAttributes()
     {
@@ -852,9 +852,9 @@ class FileAttributeBehavior extends Behavior
      *
      * @param string $attribute
      * @return true
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\Exception
-     * @throws \yii\base\InvalidConfigException
+     * @throws StoreException
+     * @throws Exception
+     * @throws InvalidConfigException
      */
     public function deleteFileAttribute(string $attribute)
     {

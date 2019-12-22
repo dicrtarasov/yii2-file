@@ -11,6 +11,7 @@ namespace dicr\tests;
 
 use dicr\file\LocalFileStore;
 use Yii;
+use yii\base\InvalidConfigException;
 
 /**
  * LocalStore Test
@@ -22,7 +23,7 @@ class LocalFileStoreTest extends AbstractFileStoreTest
 {
     /**
      * {@inheritdoc}
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public static function setUpBeforeClass(): void
     {
@@ -35,7 +36,7 @@ class LocalFileStoreTest extends AbstractFileStoreTest
     }
 
     /**
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public function testAbsolutePath()
     {

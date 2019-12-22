@@ -12,14 +12,15 @@ declare(strict_types = 1);
 namespace app\models;
 
 use dicr\file\FileAttributeBehavior;
+use dicr\file\StoreFile;
 use yii\db\ActiveRecord;
 
 /**
  * Test model
  *
  * @property int $id
- * @property \dicr\file\StoreFile $icon
- * @property \dicr\file\StoreFile[] $pics
+ * @property StoreFile $icon
+ * @property StoreFile[] $pics
  * @method loadFileAttributes()
  *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>

@@ -11,6 +11,7 @@ namespace dicr\tests;
 
 use dicr\file\SftpFileStore;
 use Yii;
+use yii\base\InvalidConfigException;
 
 /**
  * LocalStore Test
@@ -22,7 +23,7 @@ class SftpFileStoreTest extends AbstractFileStoreTest
 {
     /**
      * {@inheritdoc}
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public static function setUpBeforeClass(): void
     {

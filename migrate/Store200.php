@@ -12,9 +12,11 @@ declare(strict_types = 1);
 namespace dicr\file\migrate;
 
 use dicr\file\AbstractFileStore;
+use dicr\file\StoreException;
 use dicr\file\StoreFile;
 use InvalidArgumentException;
 use yii\base\BaseObject;
+use yii\base\InvalidConfigException;
 
 /**
  * Обновление схемы хранилища.
@@ -33,9 +35,9 @@ class Store200 extends BaseObject
     /**
      * Выполняет переименовывание файлов.
      *
-     * @param \dicr\file\AbstractFileStore $store
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\InvalidConfigException
+     * @param AbstractFileStore $store
+     * @throws StoreException
+     * @throws InvalidConfigException
      */
     public static function process(AbstractFileStore $store)
     {
@@ -48,9 +50,9 @@ class Store200 extends BaseObject
     /**
      * Обрабатывает модель.
      *
-     * @param \dicr\file\StoreFile $modelDir
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\InvalidConfigException
+     * @param StoreFile $modelDir
+     * @throws StoreException
+     * @throws InvalidConfigException
      */
     protected static function processModel(StoreFile $modelDir)
     {
@@ -88,9 +90,9 @@ class Store200 extends BaseObject
     /**
      * Обрабатывает файлы аттрибута.
      *
-     * @param \dicr\file\StoreFile $attrDir
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\InvalidConfigException
+     * @param StoreFile $attrDir
+     * @throws StoreException
+     * @throws InvalidConfigException
      */
     protected static function processAttribute(StoreFile $attrDir)
     {

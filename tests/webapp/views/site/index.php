@@ -10,16 +10,18 @@
 
 declare(strict_types = 1);
 
+use app\models\TestModel;
 use app\widgets\FileInputWidget;
 use dicr\file\StoreFile;
 use yii\bootstrap\ActiveForm;
 use yii\bootstrap\Html;
+use yii\web\View;
 
 /**
  * Test View
  *
- * @var \yii\web\View $this
- * @var \app\models\TestModel $model
+ * @var View $this
+ * @var TestModel $model
  */
 ?>
 

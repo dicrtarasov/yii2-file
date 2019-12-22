@@ -109,7 +109,7 @@ abstract class AbstractFile extends BaseObject
     /**
      * Возвращает признак директории.
      *
-     * @return boolean
+     * @return bool
      * @throws StoreException
      */
     abstract public function getIsDir();
@@ -117,7 +117,7 @@ abstract class AbstractFile extends BaseObject
     /**
      * Возвращает признак файла.
      *
-     * @return boolean
+     * @return bool
      * @throws StoreException
      */
     abstract public function getIsFile();
@@ -126,7 +126,7 @@ abstract class AbstractFile extends BaseObject
      * Возвращает размер.
      *
      * @return int размер в байтах
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     abstract public function getSize();
 
@@ -150,7 +150,7 @@ abstract class AbstractFile extends BaseObject
      * Сравнивает Mime-тип файла.
      *
      * @param string $type mime-тип с импользованием шаблонов (image/png, text/*)
-     * @return boolean
+     * @return bool
      */
     public function matchMimeType(string $type)
     {
@@ -162,7 +162,7 @@ abstract class AbstractFile extends BaseObject
      * Возвращает содержимое файла.
      *
      * @return string
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     abstract public function getContents();
 

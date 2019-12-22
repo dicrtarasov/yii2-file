@@ -12,7 +12,9 @@
 declare(strict_types = 1);
 namespace dicr\file;
 
+use Exception;
 use Imagick;
+use ImagickException;
 use RuntimeException;
 use Throwable;
 use Yii;
@@ -29,7 +31,7 @@ use function is_string;
  */
 class ThumbFile extends StoreFile
 {
-    /** @var \dicr\file\AbstractFile исходный файл */
+    /** @var AbstractFile исходный файл */
     public $source;
 
     /** @var int */
@@ -59,14 +61,14 @@ class ThumbFile extends StoreFile
     /** @var bool файл является заглушкой noimage */
     public $isNoimage = false;
 
-    /** @var \Imagick сырое изображение */
+    /** @var Imagick сырое изображение */
     protected $_image;
 
     /**
      * Конструктор.
      *
      * @param array $config конфиг
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public function __construct(array $config = [])
     {
@@ -92,7 +94,7 @@ class ThumbFile extends StoreFile
 
     /**
      * {@inheritDoc}
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      * @see \yii\base\BaseObject::init()
      */
     public function init()
@@ -179,7 +181,7 @@ class ThumbFile extends StoreFile
     /**
      * Проверяет актуальность превью.
      *
-     * @return boolean true если существует и дата изменения не раньше чем у исходного
+     * @return bool true если существует и дата изменения не раньше чем у исходного
      */
     public function getIsReady()
     {
@@ -189,8 +191,8 @@ class ThumbFile extends StoreFile
     /**
      * Обновляет превью.
      *
-     * @throws \Exception
-     * @throws \Throwable
+     * @throws Exception
+     * @throws Throwable
      */
     public function update()
     {
@@ -214,8 +216,8 @@ class ThumbFile extends StoreFile
     /**
      * Масштабирует картинку.
      *
-     * @throws \ImagickException
-     * @throws \Throwable
+     * @throws ImagickException
+     * @throws Throwable
      */
     protected function resizeImage()
     {
@@ -232,9 +234,9 @@ class ThumbFile extends StoreFile
     /**
      * Возвращает каринку.
      *
-     * @return \Imagick
-     * @throws \ImagickException
-     * @throws \Throwable
+     * @return Imagick
+     * @throws ImagickException
+     * @throws Throwable
      */
     protected function image()
     {
@@ -264,8 +266,8 @@ class ThumbFile extends StoreFile
     /**
      * Накладывает водяной знак.
      *
-     * @throws \ImagickException
-     * @throws \Throwable
+     * @throws ImagickException
+     * @throws Throwable
      */
     protected function watermarkImage()
     {
@@ -312,8 +314,8 @@ class ThumbFile extends StoreFile
     /**
      * Накладывает пометку о возрастных ограничениях.
      *
-     * @throws \ImagickException
-     * @throws \Throwable
+     * @throws ImagickException
+     * @throws Throwable
      */
     protected function placeDisclaimer()
     {
@@ -362,8 +364,8 @@ class ThumbFile extends StoreFile
     /**
      * Сохраняет картинку превью.
      *
-     * @throws \ImagickException
-     * @throws \Throwable
+     * @throws ImagickException
+     * @throws Throwable
      */
     protected function writeImage()
     {
@@ -389,8 +391,8 @@ class ThumbFile extends StoreFile
     /**
      * Удаляет все превью для заданного файла.
      *
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\InvalidConfigException
+     * @throws StoreException
+     * @throws InvalidConfigException
      */
     public function clear()
     {

@@ -15,6 +15,7 @@ use dicr\file\StoreFile;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Yii;
+use yii\base\InvalidConfigException;
 use yii\console\Application;
 use yii\di\Container;
 
@@ -32,9 +33,9 @@ abstract class AbstractFileStoreTest extends TestCase
     /**
      * {@inheritdoc}
      *
-     * @return \yii\console\Application
-     * @throws \yii\base\InvalidConfigException
-     * @throws \yii\base\InvalidConfigException
+     * @return Application
+     * @throws InvalidConfigException
+     * @throws InvalidConfigException
      */
     public static function setUpBeforeClass(): void
     {
@@ -59,7 +60,7 @@ abstract class AbstractFileStoreTest extends TestCase
     /**
      * Test store configured
      *
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public function testComponentExists()
     {
@@ -72,8 +73,8 @@ abstract class AbstractFileStoreTest extends TestCase
     /**
      * Возвращает тестовое хранилище.
      *
-     * @return \dicr\file\AbstractFileStore
-     * @throws \yii\base\InvalidConfigException
+     * @return AbstractFileStore
+     * @throws InvalidConfigException
      */
     protected static function store()
     {
@@ -84,8 +85,8 @@ abstract class AbstractFileStoreTest extends TestCase
     /**
      * Проверка на исключение когда путь выше родительского.
      *
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\InvalidConfigException
+     * @throws StoreException
+     * @throws InvalidConfigException
      */
     public function testNormalizeInvalidPath()
     {
@@ -99,16 +100,16 @@ abstract class AbstractFileStoreTest extends TestCase
     /**
      * Проверка нормализации путей
      *
-     * @throws \yii\base\InvalidConfigException
-     * @throws \yii\base\InvalidConfigException
-     * @throws \yii\base\InvalidConfigException
-     * @throws \yii\base\InvalidConfigException
-     * @throws \yii\base\InvalidConfigException
-     * @throws \yii\base\InvalidConfigException
-     * @throws \yii\base\InvalidConfigException
-     * @throws \yii\base\InvalidConfigException
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
+     * @throws InvalidConfigException
+     * @throws InvalidConfigException
+     * @throws InvalidConfigException
+     * @throws InvalidConfigException
+     * @throws InvalidConfigException
+     * @throws InvalidConfigException
+     * @throws InvalidConfigException
+     * @throws StoreException
+     * @throws InvalidConfigException
      */
     public function testNormalizePath()
     {
@@ -142,8 +143,8 @@ abstract class AbstractFileStoreTest extends TestCase
     }
 
     /**
-     * @throws \yii\base\InvalidConfigException
-     * @throws \dicr\file\StoreException
+     * @throws InvalidConfigException
+     * @throws StoreException
      */
     public function testPathRelations()
     {
@@ -169,8 +170,8 @@ abstract class AbstractFileStoreTest extends TestCase
     }
 
     /**
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\InvalidConfigException
+     * @throws StoreException
+     * @throws InvalidConfigException
      */
     public function testType()
     {
@@ -198,8 +199,8 @@ abstract class AbstractFileStoreTest extends TestCase
     }
 
     /**
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\InvalidConfigException
+     * @throws StoreException
+     * @throws InvalidConfigException
      */
     public function testPublic()
     {
@@ -223,7 +224,7 @@ abstract class AbstractFileStoreTest extends TestCase
     }
 
     /**
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public function testHidden()
     {
@@ -238,8 +239,8 @@ abstract class AbstractFileStoreTest extends TestCase
     }
 
     /**
-     * @throws \yii\base\InvalidConfigException
-     * @throws \dicr\file\StoreException
+     * @throws InvalidConfigException
+     * @throws StoreException
      */
     public function testSize()
     {
@@ -257,8 +258,8 @@ abstract class AbstractFileStoreTest extends TestCase
     }
 
     /**
-     * @throws \yii\base\InvalidConfigException
-     * @throws \dicr\file\StoreException
+     * @throws InvalidConfigException
+     * @throws StoreException
      */
     public function testMtime()
     {
@@ -272,7 +273,7 @@ abstract class AbstractFileStoreTest extends TestCase
     }
 
     /**
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public function testMimeType()
     {
@@ -287,8 +288,8 @@ abstract class AbstractFileStoreTest extends TestCase
     }
 
     /**
-     * @throws \yii\base\InvalidConfigException
-     * @throws \dicr\file\StoreException
+     * @throws InvalidConfigException
+     * @throws StoreException
      */
     public function testContents()
     {
@@ -307,8 +308,8 @@ abstract class AbstractFileStoreTest extends TestCase
     }
 
     /**
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\InvalidConfigException
+     * @throws StoreException
+     * @throws InvalidConfigException
      */
     public function testStream()
     {
@@ -333,8 +334,8 @@ abstract class AbstractFileStoreTest extends TestCase
     }
 
     /**
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\InvalidConfigException
+     * @throws StoreException
+     * @throws InvalidConfigException
      */
     public function testExistsDelete()
     {
@@ -365,8 +366,8 @@ abstract class AbstractFileStoreTest extends TestCase
     }
 
     /**
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\InvalidConfigException
+     * @throws StoreException
+     * @throws InvalidConfigException
      */
     public function testFileListChild()
     {

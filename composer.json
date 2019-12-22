@@ -4,6 +4,9 @@
     "license": "Apache-2.0",
     "description": "Filesystem components for Yii2",
     "homepage": "https://gitlab.com/dicr/yii2-file",
+    "keywords": [
+        "yii2 dicr filestore"
+    ],
     "authors": [
         {
             "name": "Igor Tarasov",
@@ -42,9 +45,6 @@
             "type": "composer",
             "url": "https://asset-packagist.org"
         }
-    ],
-    "keywords": [
-        "yii2 dicr filestore"
     ],
     "autoload": {
         "psr-4": {
