@@ -32,7 +32,7 @@
       "version": "3.4.1",
       "source": {
         "type": "git",
-        "url": "https://github.com/jquery/jquery-dist.git",
+        "url": "git@github.com:jquery/jquery-dist.git",
         "reference": "15bc73803f76bc53b654b9fdbbbc096f56d7c03d"
       },
       "dist": {
@@ -83,16 +83,16 @@
     },
     {
       "name": "bower-asset/yii2-pjax",
-      "version": "v2.0.7",
+      "version": "2.0.7.1",
       "source": {
         "type": "git",
-        "url": "https://github.com/yiisoft/jquery-pjax.git",
-        "reference": "885fc8c2d36c93a801b6af0ee8ad55d79df97cb1"
+        "url": "git@github.com:yiisoft/jquery-pjax.git",
+        "reference": "aef7b953107264f00234902a3880eb50dafc48be"
       },
       "dist": {
         "type": "zip",
-        "url": "https://api.github.com/repos/yiisoft/jquery-pjax/zipball/885fc8c2d36c93a801b6af0ee8ad55d79df97cb1",
-        "reference": "885fc8c2d36c93a801b6af0ee8ad55d79df97cb1"
+        "url": "https://api.github.com/repos/yiisoft/jquery-pjax/zipball/aef7b953107264f00234902a3880eb50dafc48be",
+        "reference": "aef7b953107264f00234902a3880eb50dafc48be"
       },
       "require": {
         "bower-asset/jquery": ">=1.8"
@@ -1070,16 +1070,16 @@
     },
     {
       "name": "phpspec/prophecy",
-      "version": "1.10.0",
+      "version": "1.10.1",
       "source": {
         "type": "git",
         "url": "https://github.com/phpspec/prophecy.git",
-        "reference": "d638ebbb58daba25a6a0dc7969e1358a0e3c6682"
+        "reference": "cbe1df668b3fe136bcc909126a0f529a78d4cbbc"
       },
       "dist": {
         "type": "zip",
-        "url": "https://api.github.com/repos/phpspec/prophecy/zipball/d638ebbb58daba25a6a0dc7969e1358a0e3c6682",
-        "reference": "d638ebbb58daba25a6a0dc7969e1358a0e3c6682",
+        "url": "https://api.github.com/repos/phpspec/prophecy/zipball/cbe1df668b3fe136bcc909126a0f529a78d4cbbc",
+        "reference": "cbe1df668b3fe136bcc909126a0f529a78d4cbbc",
         "shasum": ""
       },
       "require": {
@@ -1129,7 +1129,7 @@
         "spy",
         "stub"
       ],
-      "time": "2019-12-17T16:54:23+00:00"
+      "time": "2019-12-22T21:05:45+00:00"
     },
     {
       "name": "phpunit/php-code-coverage",
@@ -1385,16 +1385,16 @@
     },
     {
       "name": "phpunit/phpunit",
-      "version": "8.5.0",
+      "version": "8.5.1",
       "source": {
         "type": "git",
         "url": "https://github.com/sebastianbergmann/phpunit.git",
-        "reference": "3ee1c1fd6fc264480c25b6fb8285edefe1702dab"
+        "reference": "7870c78da3c5e4883eaef36ae47853ebb3cb86f2"
       },
       "dist": {
         "type": "zip",
-        "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/3ee1c1fd6fc264480c25b6fb8285edefe1702dab",
-        "reference": "3ee1c1fd6fc264480c25b6fb8285edefe1702dab",
+        "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/7870c78da3c5e4883eaef36ae47853ebb3cb86f2",
+        "reference": "7870c78da3c5e4883eaef36ae47853ebb3cb86f2",
         "shasum": ""
       },
       "require": {
@@ -1464,7 +1464,7 @@
         "testing",
         "xunit"
       ],
-      "time": "2019-12-06T05:41:38+00:00"
+      "time": "2019-12-25T14:49:39+00:00"
     },
     {
       "name": "roave/security-advisories",
@@ -1472,12 +1472,12 @@
       "source": {
         "type": "git",
         "url": "https://github.com/Roave/SecurityAdvisories.git",
-        "reference": "181dd66fd666ed397991ded7b725fe90a8a00413"
+        "reference": "44a677c8e06241a66409ae6e4820dc166fc09ab2"
       },
       "dist": {
         "type": "zip",
-        "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/181dd66fd666ed397991ded7b725fe90a8a00413",
-        "reference": "181dd66fd666ed397991ded7b725fe90a8a00413",
+        "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/44a677c8e06241a66409ae6e4820dc166fc09ab2",
+        "reference": "44a677c8e06241a66409ae6e4820dc166fc09ab2",
         "shasum": ""
       },
       "conflict": {
@@ -1568,7 +1568,7 @@
         "pusher/pusher-php-server": "<2.2.1",
         "robrichards/xmlseclibs": ">=1,<3.0.4",
         "sabre/dav": ">=1.6,<1.6.99|>=1.7,<1.7.11|>=1.8,<1.8.9",
-        "scheb/two-factor-bundle": "<3.26|>=4,<4.11",
+        "scheb/two-factor-bundle": ">=0,<3.26|>=4,<4.11",
         "sensiolabs/connect": "<4.2.3",
         "serluck/phpwhois": "<=4.2.6",
         "shopware/shopware": "<5.3.7",
@@ -1683,7 +1683,7 @@
         }
       ],
       "description": "Prevents installation of composer packages with known security vulnerabilities: no API, simply require it",
-      "time": "2019-12-21T14:43:42+00:00"
+      "time": "2019-12-26T14:16:40+00:00"
     },
     {
       "name": "sebastian/code-unit-reverse-lookup",

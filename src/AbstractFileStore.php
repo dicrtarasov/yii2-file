@@ -3,7 +3,7 @@
  * @copyright 2019-2019 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.11.19 00:29:11
+ * @version 27.12.19 11:55:38
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -664,7 +664,8 @@ abstract class AbstractFileStore extends Component
     {
         // создаем превью для пустого файла
         $thumb = $this->createThumb(array_merge($config, [
-            'source' => null
+            'source' => null,
+            'noimage' => true
         ]));
 
         // если превью настроено, то обновляем файл
