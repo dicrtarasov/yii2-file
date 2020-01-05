@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2019 Dicr http://dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.11.19 00:29:11
+ * @version 06.01.20 00:41:29
  */
 
 declare(strict_types=1);
@@ -29,7 +29,7 @@ use function is_array;
 /**
  * Файловые аттрибуты модели.
  *
- * <xmp>
+ * ```php
  * class TestModel extends Model {
  *  public function behaviors() {
  *      return [
@@ -46,13 +46,12 @@ use function is_array;
  *      ]
  *  }
  * }
- * </xmp>
+ * ```
  *
- * <xmp>
  * attributes - массив обрабатываемых аттрибутов.
  *  Ключ - название аттрибута,
  *  Значение - массив параметров атрибута:
- *       - int|null $min - минимальное требуемое кол-во файлов
+ *      - int|null $min - минимальное требуемое кол-во файлов
  *      - int|null $limit - ограничение количества файлов.
  *          - если $limit == 0,
  *              то значение аттрибута - массив файлов \dicr\file\AbstractFile[] без ограничения на кол-во
@@ -60,9 +59,8 @@ use function is_array;
  *              то значение аттрибута - массив \dicr\file\AbstractFile[] с ограничением кол-ва файлов limit
  *          - если $limit == 1,
  *              то значение атрибута - один файл \dicr\file\AbstractFile
- *       - int|null $maxsize - максимальный размер
- *       - string|null $type mime-ип загруженных файлов
- * </xmp>
+ *      - int|null $maxsize - максимальный размер
+ *      - string|null $type mime-ип загруженных файлов
  *
  * Если значение не массив, то оно принимается в качестве limit.
  *
@@ -75,31 +73,35 @@ use function is_array;
  *
  * Для установки значений нужно либо присвоить новые значени типа UploadFile:
  *
- * <xmp>
+ * ```php
  * $model->icon = new UploadFile('/tmp/new_file.jpg');
- * </xmp>
  *
- * <xmp>
  * $model->pics = [
  *    new UploadFile('/tmp/pic1.jpg'),
  *    new UploadFIle('/tmp/pic2.jpg')
  * ];
- * </xmp>
+ * ```
  *
  * Для установки значений из загруженных файлах в POST $_FILES нужно вызвать loadAttributes():
  *
+ * ```php
  * $model->loadAttributes();
+ * ```
  *
  * По событию afterValidate выполняется проверка файловых аттрибутов на допустимые значения.
  *
  * Для сохранения значений файловых аттрибутов модели behavior реализует метод saveFileAttributes():
  *
+ * ```php
  * $model->saveFileAttributes();
+ * ```
  *
  * Если модель типа ActiveRecord, то данный behavior перехватывает событие onSave и вызывает
  * saveAttributes автоматически при сохранении модели:
  *
+ * ```php
  * $model->save();
+ * ```
  *
  * При сохранении аттрибута все новые файлы UploadFiles импортируются в хранилище файлов
  * модели и заменяются значениями типа File. Все существующие файлы в хранилище модели, которых
@@ -107,7 +109,7 @@ use function is_array;
  *
  * Типичный сценарий обработки запроса POST модели с файловыми аттрибутами:
  *
- * <xmp>
+ * ```php
  * if (\Yii::$app->request->isPost
  *      && $model->load(\Yii::$app->request->post())
  *      && $model->loadFileAttributes()
@@ -119,25 +121,24 @@ use function is_array;
  *          $model->saveFileAttributes();
  *      }
  * }
- * </xmp>
+ * ```
  *
  * Для вывода картинок можно использовать такой сценарий. Если загрузка файлов не удалась
  * или validate модели содержит ошибки и модель не сохранена, то UploadFiles не импортировались,
  * а значит из нужно пропустить при выводе модели:
  *
- * <xmp>
- * <?=$model->icon instanceof StoreFile ? Html::img($model->icon->url) : ''?>
- * </xmp>
+ * ```php
+ * echo $model->icon instanceof StoreFile ? Html::img($model->icon->url) : '';
  *
- * <xmp>
- * <?php foreach ($model->pics as $pic) {?>
- *      <?php if ($pic instanceof StoreFile) {?>
- *          <?=Html::img($pic->url)?>
- *      <?php }?>
- * <?php } ?>
- * </xmp>
+ * foreach ($model->pics as $pic) {
+ *     if ($pic instanceof StoreFile) {
+ *         echo Html::img($pic->url);
+ *     }
+ * }
+ * ```
  *
  * @property StoreFile $fileModelPath путь папки модели
+ * @property string $fileAttribute
  * @property-read Model $owner
  */
 // @formatter:on

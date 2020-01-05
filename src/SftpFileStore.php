@@ -1,14 +1,14 @@
 <?php
 /**
- * @copyright 2019-2019 Dicr http://dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.11.19 00:29:11
+ * @version 06.01.20 00:47:00
  */
 
 /** @noinspection LongInheritanceChainInspection */
-/** @noinspection DuplicatedCode */
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
+/** @noinspection PhpComposerExtensionStubsInspection */
 declare(strict_types=1);
 
 namespace dicr\file;

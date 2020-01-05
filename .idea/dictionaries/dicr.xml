@@ -1,13 +1,25 @@
 <component name="ProjectDictionaryState">
   <dictionary name="dicr">
     <words>
+      <w>addinput</w>
+      <w>childname</w>
       <w>fileinfo</w>
       <w>filestore</w>
+      <w>finfo</w>
       <w>flysystem</w>
+      <w>fopen</w>
       <w>mbstring</w>
+      <w>newpath</w>
       <w>noimage</w>
+      <w>pathconfig</w>
+      <w>privkeyfile</w>
+      <w>pubkeyfile</w>
+      <w>relpath</w>
       <w>roave</w>
       <w>tarasov</w>
+      <w>testapp</w>
+      <w>uism</w>
+      <w>webroot</w>
       <w>yiisoft</w>
       <w>ziparchive</w>
     </words>
