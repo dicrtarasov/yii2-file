@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2019 Dicr http://dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 27.12.19 11:55:38
+ * @version 06.01.20 00:32:18
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -632,6 +632,7 @@ abstract class AbstractFileStore extends Component
 
         // удаляем из параметров значения true, чтобы не перезаписывать конфиг по-умолчанию
         foreach (['noimage', 'watermark', 'disclaimer'] as $field) {
+            $config[$field] = (bool)$config[$field];
             if ($config[$field] === true) {
                 unset($config[$field]);
             }

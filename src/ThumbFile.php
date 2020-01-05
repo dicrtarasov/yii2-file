@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2019 Dicr http://dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.11.19 00:29:11
+ * @version 06.01.20 00:35:08
  */
 
 /** @noinspection LongInheritanceChainInspection */
@@ -115,7 +115,7 @@ class ThumbFile extends StoreFile
         if (is_string($this->noimage)) {
             $this->noimage = Yii::getAlias($this->noimage);
             if (!is_file($this->noimage) || !is_readable($this->noimage)) {
-                throw new InvalidConfigException('noimage не доступен: ' . $this->noimage);
+                throw new InvalidConfigException('noimage недоступен: ' . $this->noimage);
             }
         } elseif ($this->noimage !== false) {
             throw new InvalidConfigException('noimage');
@@ -124,7 +124,7 @@ class ThumbFile extends StoreFile
         if (is_string($this->watermark)) {
             $this->watermark = Yii::getAlias($this->watermark);
             if (!is_file($this->watermark) || !is_readable($this->watermark)) {
-                throw new InvalidConfigException('watermark не доступен: ' . $this->watermark);
+                throw new InvalidConfigException('watermark недоступен: ' . $this->watermark);
             }
         } elseif ($this->watermark !== false) {
             throw new InvalidConfigException('watermark');
@@ -143,7 +143,7 @@ class ThumbFile extends StoreFile
         if (is_string($this->disclaimer)) {
             $this->disclaimer = Yii::getAlias($this->disclaimer);
             if (!is_file($this->disclaimer) || !is_readable($this->disclaimer)) {
-                throw new InvalidConfigException('disclaimer не доступен');
+                throw new InvalidConfigException('disclaimer недоступен');
             }
         } elseif ($this->disclaimer !== false) {
             throw new InvalidConfigException('disclaimer: ' . gettype($this->disclaimer));
@@ -423,5 +423,14 @@ class ThumbFile extends StoreFile
             $this->_image->destroy();
             $this->_image = null;
         }
+    }
+
+    /**
+     * @inheritDoc
+     * @return string url
+     */
+    public function __toString()
+    {
+        return (string)$this->url;
     }
 }
