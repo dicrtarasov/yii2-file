@@ -1,0 +1,142 @@
+/*
+ * @copyright 2019-2020 Dicr http://dicr.org
+ * @author Igor A Tarasov <develop@dicr.org>
+ * @license GPL
+ * @version 24.02.20 02:23:50
+ */
+
+@charset "UTF-8";
+.file-input-widget {
+  display: flex;
+  align-items: stretch;
+  margin: 0 -0.5rem; }
+  .file-input-widget.form-control {
+    display: flex;
+    width: auto;
+    height: auto;
+    background: none;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    outline: none; }
+  .file-input-widget .file {
+    flex: 0 0 0;
+    border-radius: 0.3rem;
+    cursor: move !important; }
+    .file-input-widget .file .download {
+      display: block; }
+      .file-input-widget .file .download .image {
+        display: block;
+        object-fit: contain; }
+    .file-input-widget .file .name {
+      display: block;
+      overflow-wrap: break-word; }
+    .file-input-widget .file .del {
+      padding: 0;
+      color: red;
+      font-weight: bold;
+      font-size: 1.5rem;
+      line-height: 1;
+      text-decoration: none !important;
+      text-shadow: 1px 1px 0 #000;
+      border: none;
+      filter: drop-shadow(-1px -1px 0px #fff); }
+  .file-input-widget .add {
+    flex: 0 0 0;
+    display: flex;
+    align-items: center;
+    margin: 0.25rem 0.5rem 0.8rem 0.5rem;
+    cursor: pointer; }
+    .file-input-widget .add input {
+      display: none !important; }
+    .file-input-widget .add .fa {
+      font-size: 2.0rem; }
+  .file-input-widget.layout-images {
+    flex-flow: row wrap; }
+    .file-input-widget.layout-images .file {
+      display: block;
+      position: relative;
+      text-align: center;
+      background-color: #f2f2f2;
+      padding: 0;
+      border: 1px solid white;
+      box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.4);
+      margin: 0 0.5rem 1rem 0.5rem; }
+      .file-input-widget.layout-images .file:hover {
+        filter: brightness(1.1); }
+      .file-input-widget.layout-images .file .download {
+        cursor: move;
+        border-radius: inherit; }
+        .file-input-widget.layout-images .file .download:after {
+          content: "";
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          right: 0; }
+        .file-input-widget.layout-images .file .download .image {
+          width: 6rem;
+          height: 6rem;
+          border-radius: inherit;
+          margin: 0 auto; }
+      .file-input-widget.layout-images .file .name {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        font-size: 10px;
+        line-height: 1.2;
+        text-align: center;
+        color: white;
+        text-shadow: 1px 1px 2px #000;
+        background-color: rgba(48, 48, 48, 0.53);
+        padding: 0.125rem 0.3125rem; }
+      .file-input-widget.layout-images .file .del {
+        display: none;
+        position: absolute;
+        top: 0;
+        right: 0.2rem; }
+      .file-input-widget.layout-images .file:hover .del {
+        display: block; }
+    .file-input-widget.layout-images .add {
+      align-self: center; }
+  .file-input-widget.layout-files {
+    flex-flow: column nowrap; }
+    .file-input-widget.layout-files .file {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: flex-start;
+      align-items: center;
+      background: #fafafa;
+      border: 1px solid #e6e6e6;
+      margin: 0.25rem 0.5rem 0.25rem 0.5rem; }
+      .file-input-widget.layout-files .file:hover {
+        filter: brightness(0.95); }
+      .file-input-widget.layout-files .file .download {
+        flex: 0 0 0;
+        margin: 0.25rem 0.5rem;
+        color: inherit;
+        opacity: 0.75; }
+        .file-input-widget.layout-files .file .download .image {
+          flex: 0 0 0;
+          font-size: 1.1rem;
+          line-height: 1; }
+      .file-input-widget.layout-files .file .name {
+        flex: 1 1 auto;
+        margin: 0.3rem 0.5rem;
+        pointer-events: none;
+        color: inherit;
+        text-decoration: none !important; }
+      .file-input-widget.layout-files .file .del {
+        flex: 0 0 auto;
+        padding: 0 0.25em; }
+    .file-input-widget.layout-files .add {
+      align-self: flex-start; }
+      .file-input-widget.layout-files .add:after {
+        content: "Добавить";
+        margin-left: 0.8rem; }
+  .file-input-widget img:not([src]), .file-input-widget img[src=""] {
+    background: url("file.svg") no-repeat center center;
+    background-size: contain; }
+
+/*# sourceMappingURL=file-input-widget.css.map */
