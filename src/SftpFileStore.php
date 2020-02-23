@@ -3,10 +3,9 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 06.01.20 00:47:00
+ * @version 24.02.20 00:57:46
  */
 
-/** @noinspection LongInheritanceChainInspection */
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
 /** @noinspection PhpComposerExtensionStubsInspection */
 declare(strict_types=1);
@@ -19,8 +18,7 @@ use function is_resource;
 /**
  * Файловая система SFTP
  *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 2019
+ * @noinspection LongInheritanceChainInspection
  */
 class SftpFileStore extends LocalFileStore
 {

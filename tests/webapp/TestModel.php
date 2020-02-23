@@ -1,16 +1,16 @@
 <?php
 /**
- * @copyright 2019-2019 Dicr http://dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 21.11.19 06:46:40
+ * @version 24.02.20 01:12:20
  */
 
 /** @noinspection LongInheritanceChainInspection */
 
 declare(strict_types=1);
 
-namespace app\models;
+namespace dicr\tests\webapp;
 
 use dicr\file\FileAttributeBehavior;
 use dicr\file\StoreFile;
@@ -23,9 +23,6 @@ use yii\db\ActiveRecord;
  * @property StoreFile $icon
  * @property StoreFile[] $pics
  * @method loadFileAttributes()
- *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 2019
  */
 class TestModel extends ActiveRecord
 {

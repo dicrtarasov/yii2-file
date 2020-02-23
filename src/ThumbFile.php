@@ -3,10 +3,9 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 06.01.20 00:35:08
+ * @version 24.02.20 00:58:21
  */
 
-/** @noinspection LongInheritanceChainInspection */
 /** @noinspection SpellCheckingInspection */
 
 declare(strict_types=1);
@@ -29,6 +28,7 @@ use function is_string;
  * Превью файл в кэше.
  *
  * @property-read bool $isReady флаг сущесвования готового превью
+ * @noinspection LongInheritanceChainInspection
  */
 class ThumbFile extends StoreFile
 {
@@ -42,7 +42,7 @@ class ThumbFile extends StoreFile
     public $height = 0;
 
     /** @var string путь картинки-заглушки или функция, которая возвращает путь */
-    public $noimage = __DIR__ . '/res/noimage.png';
+    public $noimage = '@dicr/file/assets/noimage.png';
 
     /** @var string callable путь картинки водяного знака */
     public $watermark = false;

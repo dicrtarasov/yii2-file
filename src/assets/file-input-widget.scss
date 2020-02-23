@@ -1,0 +1,210 @@
+// @copyright 2019-2020 Dicr http://dicr.org
+// @author Igor A Tarasov <develop@dicr.org>
+// @license GPL
+// @version 24.02.20 01:37:51
+
+.file-input-widget {
+    display: flex;
+    align-items: stretch;
+    margin: 0 -0.5rem;
+
+    // Очищаем стандартные стили .form-control от bootstrap
+    &.form-control {
+        display: flex;
+        width: auto;
+        height: auto;
+        background: none;
+        padding: 0;
+        border: none;
+        box-shadow: none;
+        outline: none;
+    }
+
+    // элемент файла
+    .file {
+        flex: 0 0 0;
+        border-radius: 0.3rem;
+        cursor: move !important;
+
+        // ссылка на картинку со скачиванием
+        .download {
+            display: block;
+
+            // картинка
+            .image {
+                display: block;
+                // noinspection CssBrowserCompatibilityForProperties
+                object-fit: contain;
+            }
+
+        }
+
+        // имя файла
+        .name {
+            display: block;
+            overflow-wrap: break-word;
+        }
+
+        // кнопка удаления
+        .del {
+            padding: 0;
+            color: red;
+            font-weight: bold;
+            font-size: 1.5rem;
+            line-height: 1;
+            text-decoration: none !important;
+            text-shadow: 1px 1px 0 #000;
+            border: none;
+            filter: drop-shadow(-1px -1px 0px #fff);
+        }
+    }
+
+    // кнопка добавления
+    .add {
+        flex: 0 0 0;
+        display: flex;
+        align-items: center;
+        margin: 0.25rem 0.5rem 0.8rem 0.5rem;
+        cursor: pointer;
+
+        // поля ввода
+        input {
+            display: none !important;
+        }
+
+        .fa {
+            font-size: 2.0rem;
+        }
+    }
+
+    &.layout-images {
+        flex-flow: row wrap;
+
+        .file {
+            display: block;
+            position: relative;
+            text-align: center;
+            background-color: hsl(0, 0%, 95%);
+            padding: 0;
+            border: 1px solid hsl(0, 0%, 100%);
+            box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.4);
+            margin: 0 0.5rem 1rem 0.5rem;
+
+            &:hover {
+                filter: brightness(1.1);
+            }
+
+            .download {
+                cursor: move;
+                border-radius: inherit;
+
+                &:after {
+                    content: "";
+                    position: absolute;
+                    top: 0;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                }
+
+                .image {
+                    width: 6rem;
+                    height: 6rem;
+                    border-radius: inherit;
+                    margin: 0 auto;
+                }
+            }
+
+            .name {
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                font-size: 10px;
+                line-height: 1.2;
+                text-align: center;
+                color: hsl(244, 100%, 100%);
+                text-shadow: 1px 1px 2px #000;
+                background-color: hsla(0, 0%, 19%, 0.53);
+                padding: 0.125rem 0.3125rem;
+            }
+
+            .del {
+                display: none;
+                position: absolute;
+                top: 0;
+                right: 0.2rem;
+            }
+
+            &:hover .del {
+                display: block;
+            }
+        }
+
+        .add {
+            align-self: center;
+        }
+    }
+
+    &.layout-files {
+        flex-flow: column nowrap;
+
+        .file {
+            display: flex;
+            flex-flow: row nowrap;
+            justify-content: flex-start;
+            align-items: center;
+            background: hsl(0, 0%, 98%);
+            border: 1px solid hsl(0, 0%, 90%);
+            margin: 0.25rem 0.5rem 0.25rem 0.5rem;
+
+            &:hover {
+                filter: brightness(0.95);
+            }
+
+            .download {
+                flex: 0 0 0;
+                margin: 0.25rem 0.5rem;
+                color: inherit;
+                opacity: 0.75;
+
+                .image {
+                    flex: 0 0 0;
+                    font-size: 1.1rem;
+                    line-height: 1;
+                }
+            }
+
+            .name {
+                flex: 1 1 auto;
+                margin: 0.3rem 0.5rem;
+                pointer-events: none;
+                color: inherit;
+                text-decoration: none !important;
+            }
+
+            .del {
+                flex: 0 0 auto;
+                padding: 0 0.25em;
+            }
+        }
+
+        .add {
+            align-self: flex-start;
+
+            &:after {
+                content: "Добавить";
+                margin-left: 0.8rem;
+            }
+        }
+    }
+
+    // заглушка при отсутствии превью
+    img:not([src]), img[src=""] {
+        background: url("file.svg") no-repeat center center;
+        background-size: contain;
+    }
+}
+
+
+

@@ -1,24 +1,22 @@
 <?php
 /**
- * @copyright 2019-2019 Dicr http://dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 21.11.19 06:46:40
+ * @version 24.02.20 01:12:49
  */
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
-namespace app\controllers;
+namespace dicr\tests\webapp;
 
-use app\models\TestModel;
 use Yii;
 use yii\web\Controller;
 
 /**
  * Default test Controller
  *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 2019
+ * @noinspection PhpUnused
  */
 class SiteController extends Controller
 {
@@ -40,6 +38,7 @@ class SiteController extends Controller
 
             if ($model->validate()) {
                 $model->save();
+
                 return $this->redirect(['index'], 303);
             }
         }

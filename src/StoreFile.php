@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2019 Dicr http://dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.11.19 00:29:11
+ * @version 24.02.20 00:58:04
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -31,9 +31,6 @@ use function is_resource;
  * @property string $contents содержимое в виде строки (rw)
  * @property resource $stream содержимое в виде потока (rw)
  * @property-read StoreFile[] $list
- *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 2019
  */
 class StoreFile extends AbstractFile
 {

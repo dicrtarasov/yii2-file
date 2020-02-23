@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2019 Dicr http://dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.11.19 00:29:11
+ * @version 24.02.20 00:56:40
  */
 
 declare(strict_types=1);
@@ -26,9 +26,6 @@ use function strlen;
  * FileStore based on Flysystem adapters.
  *
  * @property-read AdapterInterface|null $adapter
- *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 2019
  * @see http://flysystem.thephpleague.com/docs/
  */
 class FlysystemFileStore extends AbstractFileStore

@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2019 Dicr http://dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.11.19 00:29:11
+ * @version 24.02.20 00:57:58
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -16,9 +16,6 @@ use yii\base\Exception;
 
 /**
  * Ошибка хранилища файлов.
- *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 180624
  */
 class StoreException extends Exception
 {

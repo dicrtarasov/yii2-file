@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2019 Dicr http://dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.11.19 00:29:11
+ * @version 24.02.20 01:49:57
  */
 
 declare(strict_types=1);
@@ -16,9 +16,6 @@ use yii\base\InvalidConfigException;
 
 /**
  * LocalStore Test
- *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 2019
  */
 class LocalFileStoreTest extends AbstractFileStoreTest
 {

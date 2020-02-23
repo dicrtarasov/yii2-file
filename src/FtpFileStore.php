@@ -3,10 +3,9 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 06.01.20 00:47:00
+ * @version 24.02.20 00:57:05
  */
 
-/** @noinspection LongInheritanceChainInspection */
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
 declare(strict_types=1);
 
@@ -20,13 +19,12 @@ use function is_resource;
  *
  * Жуткая, медленная и не все операции поддерживает.
  *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 2019
  * @see http://php.net/manual/en/context.ftp.php
  * @see http://php.net/manual/ru/wrappers.ftp.php
  * @see http://php.net/manual/ru/ref.ftp.php
  * @todo isPublic not supported
  * @todo mimeType not supported
+ * @noinspection LongInheritanceChainInspection
  */
 class FtpFileStore extends LocalFileStore
 {
