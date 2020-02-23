@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 03:21:25
+ * @version 24.02.20 04:38:34
  */
 
 declare(strict_types = 1);
@@ -18,11 +18,13 @@ use yii\widgets\InputWidget;
 use function array_slice;
 use function count;
 use function get_class;
-use function implode;
 use function in_array;
 use function is_array;
 use function is_numeric;
 use function ksort;
+use function mt_rand;
+use function ob_get_clean;
+use function ob_start;
 use function preg_match;
 
 /**
@@ -65,8 +67,8 @@ class FileInputWidget extends InputWidget
     /** @var array опции плагина */
     public $clientOptions = [];
 
-    /** @var array обработчики событий плагина */
-    public $clientEvents = [];
+    /** @var int уникальный идентификатор */
+    private $uniqueClass;
 
     /**
      * {@inheritdoc}
@@ -128,20 +130,19 @@ class FileInputWidget extends InputWidget
             $this->value = array_slice($this->value, 0, $this->limit, true);
         }
 
-        // добавляем id в опции
-        if (! isset($this->options['id'])) {
-            $this->options['id'] = $this->getId();
-        }
-
         // добавляем enctype форме
         $this->field->form->options['enctype'] = 'multipart/form-data';
 
         // отключаем валидацию на стороне клиента
         $this->field->enableClientValidation = false;
 
-        // добавляем нужные классы
-        Html::addCssClass($this->options, 'file-input-widget');
+        // добавляем рабочие классы
+        Html::addCssClass($this->options, ['file-input-widget']);
         Html::addCssClass($this->options, 'layout-' . $this->layout);
+
+        // добавляем класс с уникальным идентификатором, так как id занято служебными скриптами activeForm.js
+        $this->uniqueClass = 'widget-file-input-' . mt_rand();
+        Html::addCssClass($this->options, $this->uniqueClass);
 
         // добавляем опции клиенту
         $this->clientOptions = ArrayHelper::merge([
@@ -168,10 +169,9 @@ class FileInputWidget extends InputWidget
         $this->view->registerAssetBundle(FileInputWidgetAsset::class);
 
         // регистрируем плагин
-        $this->registerPlugin('fileInputWidget');
-
-        // регистрируем обработчики событий
-        $this->registerClientEvents();
+        $this->view->registerJs(
+            '$(".' . $this->uniqueClass . '").fileInputWidget(' . Json::encode($this->clientOptions) . ');'
+        );
 
         return Html::tag('section', // для того чтобы имя аттрибута было в $_POST[formName][attribute] как делает Yii
             // если дальше отсутствуют input с таким же именем которые перезапишут это поле
@@ -305,39 +305,5 @@ class FileInputWidget extends InputWidget
                     'display' => $this->limit > 0 && count($this->value) >= $this->limit ? 'none' : 'flex'
                 ]
             ]);
-    }
-
-    /**
-     * Registers a specific Bootstrap plugin and the related events
-     *
-     * @param string $name the name of the Bootstrap plugin
-     */
-    protected function registerPlugin($name)
-    {
-        $view = $this->getView();
-        $id = $this->options['id'];
-
-        if ($this->clientOptions !== false) {
-            $options = empty($this->clientOptions) ? '' : Json::htmlEncode($this->clientOptions);
-            $js = "jQuery('#$id').$name($options);";
-            $view->registerJs($js);
-        }
-
-        $this->registerClientEvents();
-    }
-
-    /**
-     * Registers JS event handlers that are listed in [[clientEvents]].
-     */
-    protected function registerClientEvents()
-    {
-        if (! empty($this->clientEvents)) {
-            $id = $this->options['id'];
-            $js = [];
-            foreach ($this->clientEvents as $event => $handler) {
-                $js[] = "jQuery('#$id').on('$event', $handler);";
-            }
-            $this->getView()->registerJs(implode("\n", $js));
-        }
     }
 }

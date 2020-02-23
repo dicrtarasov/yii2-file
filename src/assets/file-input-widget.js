@@ -2,14 +2,14 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 03:23:18
+ * @version 24.02.20 04:37:15
  */
 
 (function ($, URL) {
 
     "use strict";
 
-    if (typeof ($.fn.fileInputWidget) === 'function') {
+    if (typeof $.fn.fileInputWidget === 'function') {
         return;
     }
 
