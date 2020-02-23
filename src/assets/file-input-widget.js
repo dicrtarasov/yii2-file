@@ -1,8 +1,8 @@
 /*
- * @copyright 2019-2019 Dicr http://dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.11.19 00:29:11
+ * @version 24.02.20 03:23:18
  */
 
 (function ($, URL) {
@@ -19,7 +19,8 @@
             limit: 0,
             accept: null,
             removeExt: false,
-            inputName: null
+            inputName: null,
+            messages: {}
         }, options);
 
         if (!options.inputName) {
@@ -89,15 +90,15 @@
                     ),
 
                     // имя файла
-                    options.layout !== 'images' ? $('<a></a>', {
+                    options.layout === 'images' ? '' : $('<a></a>', {
                         'class': 'name',
                         href: url,
                         download: file.name,
                         text: file.name
-                    }) : '',
+                    }),
 
                     // кнопка удаления
-                    $('<button class="del btn btn-link text-danger" title="Удалить">&times;</button>')
+                    $(`<button class="del btn btn-link text-danger" title="${options.messages['Удалить'] || 'Удалить'}">&times;</button>`)
                 ).insertBefore($btnAdd);
 
                 // переиндексируем имена

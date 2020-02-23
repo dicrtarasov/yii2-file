@@ -3,6 +3,11 @@
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
  * @version 24.02.20 01:15:59
+ */ /**
+ * @copyright 2019-2020 Dicr http://dicr.org
+ * @author Igor A Tarasov <develop@dicr.org>
+ * @license GPL
+ * @version 24.02.20 03:15:11
  */ /** @noinspection PhpUnhandledExceptionInspection */
 /** @noinspection UsingInclusionReturnValueInspection */
 declare(strict_types = 1);
@@ -27,6 +32,7 @@ $app = new Application([
     'id' => 'testapp',
     'basePath' => __DIR__,
     'vendorPath' => VENDOR,
+    'language' => 'ua',
     'aliases' => [
         '@dicr/file' => dirname(__DIR__, 2) . '/src',
         '@dicr/tests' => dirname(__DIR__),

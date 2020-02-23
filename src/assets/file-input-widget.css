@@ -2,10 +2,9 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 02:23:50
+ * @version 24.02.20 03:24:30
  */
 
-@charset "UTF-8";
 .file-input-widget {
   display: flex;
   align-items: stretch;
@@ -47,8 +46,6 @@
     align-items: center;
     margin: 0.25rem 0.5rem 0.8rem 0.5rem;
     cursor: pointer; }
-    .file-input-widget .add input {
-      display: none !important; }
     .file-input-widget .add .fa {
       font-size: 2.0rem; }
   .file-input-widget.layout-images {
@@ -133,10 +130,12 @@
     .file-input-widget.layout-files .add {
       align-self: flex-start; }
       .file-input-widget.layout-files .add:after {
-        content: "Добавить";
+        content: attr(title);
         margin-left: 0.8rem; }
   .file-input-widget img:not([src]), .file-input-widget img[src=""] {
     background: url("file.svg") no-repeat center center;
     background-size: contain; }
+  .file-input-widget [type="file"] {
+    display: none !important; }
 
 /*# sourceMappingURL=file-input-widget.css.map */

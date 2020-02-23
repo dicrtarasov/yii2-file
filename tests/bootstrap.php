@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2019 Dicr http://dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.11.19 00:29:11
+ * @version 24.02.20 03:11:49
  */
 
 declare(strict_types=1);
@@ -23,4 +23,5 @@ Yii::setAlias('@dicr/tests', __DIR__);
 Yii::setAlias('@dicr/file', dirname(__DIR__) . '/src');
 
 require(__DIR__ . '/config.remote.php');
+
 

@@ -3,13 +3,14 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 01:12:49
+ * @version 24.02.20 03:08:40
  */
 
 declare(strict_types = 1);
 
 namespace dicr\tests\webapp;
 
+use dicr\file\T;
 use Yii;
 use yii\web\Controller;
 
@@ -46,5 +47,12 @@ class SiteController extends Controller
         return $this->render('index', [
             'model' => $model
         ]);
+    }
+
+    public function actionTest()
+    {
+        Yii::$app->language = 'ua';
+
+        echo T::t('Добавить');
     }
 }

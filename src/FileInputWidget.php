@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 01:44:34
+ * @version 24.02.20 03:21:25
  */
 
 declare(strict_types = 1);
@@ -149,7 +149,10 @@ class FileInputWidget extends InputWidget
             'limit' => $this->limit,
             'accept' => $this->accept,
             'removeExt' => $this->removeExt,
-            'inputName' => $this->inputName
+            'inputName' => $this->inputName,
+            'messages' => [
+                'Удалить' => T::t('Удалить')
+            ]
         ], $this->clientOptions);
     }
 
@@ -239,7 +242,7 @@ class FileInputWidget extends InputWidget
         // кнопка удаления файла
         echo Html::button('&times;', [
             'class' => 'del btn btn-link text-danger',
-            'title' => 'Удалить'
+            'title' => T::t('Удалить')
         ]);
 
         echo Html::endTag('div');
@@ -297,7 +300,7 @@ class FileInputWidget extends InputWidget
 
             [
                 'class' => 'add',
-                'title' => 'Добавить файл',
+                'title' => T::t('Добавить файл'),
                 'style' => [
                     'display' => $this->limit > 0 && count($this->value) >= $this->limit ? 'none' : 'flex'
                 ]
@@ -325,8 +328,6 @@ class FileInputWidget extends InputWidget
 
     /**
      * Registers JS event handlers that are listed in [[clientEvents]].
-     *
-     * @since 2.0.2
      */
     protected function registerClientEvents()
     {
