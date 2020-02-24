@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 06.01.20 00:41:29
+ * @version 24.02.20 06:30:18
  */
 
 declare(strict_types=1);
@@ -510,7 +510,9 @@ class FileAttributeBehavior extends Behavior
         $ret = false;
 
         foreach (array_keys($this->attributes) as $attribute) {
-            $ret = $this->loadFileAttribute($attribute, $formName) || $ret;
+            if ($this->loadFileAttribute($attribute, $formName)) {
+                $ret = true;
+            }
         }
 
         return $ret;
@@ -592,11 +594,8 @@ class FileAttributeBehavior extends Behavior
         $ret = true;
 
         foreach (array_keys($this->attributes) as $attribute) {
-            $res = $this->validateFileAttribute($attribute);
-
-            // пропускаем null когда аттрибут не проходил проверку потому что не инициализирован
-            if ($res !== null) {
-                $ret = $ret && $res;
+            if ($this->validateFileAttribute($attribute) === false) {
+                $ret = false;
             }
         }
 
@@ -662,29 +661,21 @@ class FileAttributeBehavior extends Behavior
 
         // проверяем на пустое значение
         if (empty($file)) {
-            /** @scrutinizer ignore-call */
             $this->owner->addError($attribute, 'Пустое значение файла');
         } elseif (!($file instanceof StoreFile)) {
-            /** @scrutinizer ignore-call */
             $this->owner->addError($attribute, 'Некоррекный тип значения: ' . gettype($file));
         } elseif (!$file->exists) {
-            /** @scrutinizer ignore-call */
             $this->owner->addError($attribute, 'Загружаемый файл не существует: ' . $file->path);
         } elseif ($file->size <= 0) {
-            /** @scrutinizer ignore-call */
             $this->owner->addError($attribute, 'Пустой размер файла: ' . $file->name);
         } elseif (isset($params['maxsize']) && $file->size > $params['maxsize']) {
-            /** @scrutinizer ignore-call */
             $this->owner->addError($attribute, 'Размер не более ' . Yii::$app->formatter->asSize($params['maxsize']));
         } elseif (isset($params['type']) && !$file->matchMimeType($params['type'])) {
-            /** @scrutinizer ignore-call */
             $this->owner->addError($attribute, 'Неверный тип файла: ' . $file->mimeType);
         } elseif ($file instanceof UploadFile) {
             if (!empty($file->error)) {
-                /** @scrutinizer ignore-call */
                 $this->owner->addError($attribute, 'Ошибка загрузки файла');
             } elseif (empty($file->name)) {
-                /** @scrutinizer ignore-call */
                 $this->owner->addError($attribute, 'Не задано имя загруаемого файла: ' . $file->path);
             }
         }
@@ -705,10 +696,7 @@ class FileAttributeBehavior extends Behavior
         $ret = true;
 
         foreach (array_keys($this->attributes) as $attribute) {
-            $res = $this->saveFileAttribute($attribute);
-
-            // пропускаем если атрибут не инициализирован
-            if ($res === false) {
+            if ($this->saveFileAttribute($attribute) === false) {
                 $ret = false;
             }
         }
