@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 04:38:34
+ * @version 24.02.20 05:25:13
  */
 
 declare(strict_types = 1);
@@ -17,7 +17,7 @@ use yii\helpers\Json;
 use yii\widgets\InputWidget;
 use function array_slice;
 use function count;
-use function get_class;
+use function gettype;
 use function in_array;
 use function is_array;
 use function is_numeric;
@@ -104,6 +104,12 @@ class FileInputWidget extends InputWidget
             $this->inputName = $this->hasModel() ? Html::getInputName($this->model, $this->attribute) : $this->name;
         }
 
+        // корректируем поле ввода, убирая "[]" в конце
+        $matches = null;
+        if (preg_match('~^(.+)\[\]$~u', $this->inputName, $matches)) {
+            $this->inputName = $matches[1];
+        }
+
         // получаем файлы
         if (! isset($this->value)) {
             $this->value = $this->hasModel() ? Html::getAttributeValue($this->model, $this->attribute) : [];
@@ -118,7 +124,7 @@ class FileInputWidget extends InputWidget
         // проверяем все значения на StoreFile
         foreach ($this->value as $file) {
             if (! ($file instanceof StoreFile)) {
-                throw new InvalidConfigException('value file: ' . get_class($file));
+                throw new InvalidConfigException('value file: ' . gettype($file));
             }
         }
 
