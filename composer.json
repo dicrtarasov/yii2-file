@@ -34,7 +34,7 @@
         "ext-imagick": "*",
         "ext-mbstring": "*",
         "yiisoft/yii2": "~2.0.32",
-        "dicr/yii2-asset": "1.5.0"
+        "dicr/yii2-asset": "~1.5.0"
     },
     "require-dev": {
         "roave/security-advisories": "dev-master",
