@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 20:37:31
+ * @version 04.04.20 21:06:48
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -43,7 +43,7 @@ abstract class AbstractFileStore extends Component
     /** @var string path separator */
     public $pathSeparator = DIRECTORY_SEPARATOR;
 
-    /** @var array конфиг файлов превью картинок ThumbFile */
+    /** @var array|null конфиг файлов превью картинок ThumbFile */
     public $thumbFileConfig;
 
     /**
@@ -131,7 +131,7 @@ abstract class AbstractFileStore extends Component
             $path = (array)preg_split($regex, $path, - 1, PREG_SPLIT_NO_EMPTY);
         }
 
-        return $path;
+        return (array)$path;
     }
 
     /**
