@@ -2,18 +2,25 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 04:37:15
+ * @version 04.04.20 20:12:29
  */
 
-(function ($, URL) {
-
+(function (window, $) {
     "use strict";
 
+    // noinspection JSUnresolvedVariable
     if (typeof $.fn.fileInputWidget === 'function') {
         return;
     }
 
+    /**
+     * Плагин jQuery
+     *
+     * @param {object} options
+     * @returns {jQuery}
+     */
     $.fn.fileInputWidget = function (options) {
+        // noinspection AssignmentToFunctionParameterJS,JSUnusedGlobalSymbols
         options = $.extend({}, {
             layout: 'images',
             limit: 0,
@@ -23,6 +30,7 @@
             messages: {}
         }, options);
 
+        // noinspection JSUnresolvedVariable
         if (!options.inputName) {
             throw 'требуется имя поля inputName';
         }
@@ -40,23 +48,26 @@
             /**
              * Переиндексация имен полей формы
              */
-            function reindex() {
+            function reindex()
+            {
                 // элементы файлов
                 const $files = $('.file', $widget);
 
-                // обхдим все элементы
+                // обходим все элементы
                 $files.each(function (pos, $item) {
                     // устанавливаем имя ввода файла с индексом
+                    // noinspection JSUnresolvedVariable
                     $('input', $item).attr('name', options.inputName + '[' + pos + ']');
                 });
 
                 // отображаем/скрываем кнопку при достижении лимита
+                // noinspection JSUnresolvedVariable
                 $btnAdd.css('display', !options.limit || options.limit < 1 || $files.length < options.limit ? 'flex' : 'none');
             }
 
             // добавление файла
             $btnAdd.on('change', '[type="file"]', function () {
-
+                // noinspection JSUnresolvedVariable
                 if (this.files.length < 1) {
                     return;
                 }
@@ -71,18 +82,19 @@
                 $(this).val('');
 
                 // получаем файл
+                // noinspection JSUnresolvedVariable
                 const file = $fileInput[0].files[0];
 
                 // получаем URL картинки
-                const url = URL.createObjectURL(file);
+                const url = window.URL.createObjectURL(file);
 
                 // создаем новый элемент файла
-                // noinspection RequiredAttributes
+                // noinspection RequiredAttributes,JSUnresolvedVariable,JSUnusedGlobalSymbols
                 $('<div></div>', {'class': 'file', data: {url: url}}).append(
                     // файл
                     $fileInput,
 
-                    // каринка
+                    // картинка
                     $('<a></a>', {'class': 'download', href: url, download: file.name}).append(
                         options.layout === 'images' ?
                             $('<img/>', {'class': 'image', src: file.type.match(/^image/) ? url : null, alt: ''}) :
@@ -112,7 +124,7 @@
                 // освобождаем ресурс URL
                 const url = $file.data('url');
                 if (url) {
-                    URL.revokeObjectURL(url);
+                    window.URL.revokeObjectURL(url);
                 }
 
                 // удаляем элемент
@@ -123,6 +135,7 @@
             });
 
             // сортировка файлов
+            // noinspection JSUnresolvedFunction,JSUnusedGlobalSymbols
             $widget.sortable({
                 items: '.file',
                 update: reindex
@@ -132,4 +145,4 @@
             reindex();
         });
     };
-})(jQuery, window.URL);
+})(window, jQuery);

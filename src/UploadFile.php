@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 17:15:46
+ * @version 04.04.20 20:10:40
  */
 
 declare(strict_types = 1);
@@ -23,7 +23,7 @@ use function is_string;
  * отдельное от path имя файла name. Также добавляет возможность
  * установить error, size, и mimeType
  *
- * Файл необхоимо импортировать в директорию модели при ее сохранении.
+ * Файл необходимо импортировать в директорию модели при ее сохранении.
  *
  * В зависимости от присутствия названия формы и множественности аттрибута,
  * php формирует разную структуру $_FILES.
@@ -121,14 +121,15 @@ class UploadFile extends StoreFile
     protected static function parseInstances()
     {
         $instances = [];
+
         if (! empty($_FILES)) {
             foreach ($_FILES as $key => $data) {
-                if (static::detectFormData($data)) {
+                if (static::isComplexFormData($data)) {
                     // аттрибуты формы: $key == $formName, $data == аттрибуты в формате формы
                     $instances[$key] = static::parseFormData($data);
                 } else {
                     // аттрибут без формы, $formName == '', $key == $attribute, $data == данные в формате одного аттрибуты
-                    $instances[''][$key] = static::parseAttribData($data);
+                    $instances[''][$key] = static::parseSimpleData($data);
                 }
             }
         }
@@ -137,13 +138,15 @@ class UploadFile extends StoreFile
     }
 
     /**
-     * Определяет формат данных.
+     * Определяет формат данных (с названием формы или простой).
+     *
+     * Формат $_FILES зависит от того есть ли название формы или нет.
      *
      * @param array $data
      * @return bool true если данные формы
      * @throws Exception
      */
-    protected static function detectFormData(array $data)
+    protected static function isComplexFormData(array $data)
     {
         // если не установлен name, то ошибка формата данных
         if (! isset($data['name'])) {
@@ -165,8 +168,134 @@ class UploadFile extends StoreFile
     }
 
     /**
-     * @param array $data
-     * @return \dicr\file\UploadFile[][]
+     * Парсит файлы аттрибута, отправленные без имени формы:
+     *
+     * ```
+     * Единственное:
+     * <input type="file" name="attribute"/>
+     *
+     * $_FILES = [
+     *   'attribute' => [
+     *      'name' => 'test.php',
+     *      'type' => 'application/x-php',
+     *      'tmp_name' => '/tmp/phpqmYDrQ',
+     *      'error' => 0,
+     *      'size' => 41
+     *   ]
+     * ]
+     *
+     * Множественное:
+     * <input type="file" name="attribute[]"/>
+     *
+     * $_FILES = [
+     *   'attribute' => [
+     *      'name' => [
+     *          0 => '2018-04-23-195938.jpg',
+     *          1 => 'test.php'
+     *      ],
+     *      'type' => [
+     *          0 => 'image/jpeg',
+     *          1 => 'application/x-php'
+     *      ],
+     *      'tmp_name' => [
+     *          0 => '/tmp/phpQ2c8T7',
+     *          1 => '/tmp/phpEarnq1'
+     *      ],
+     *      'error' => [
+     *          0 => 0,
+     *          1 => 0
+     *      ],
+     *      'size' => [
+     *          0 => 166980,
+     *          1 => 41
+     *      ]
+     *   ]
+     * ]
+     * ```
+     *
+     * @param array $data данные аттрибута
+     * @return \dicr\file\UploadFile[] файлы аттрибута
+     * @throws \yii\base\Exception
+     */
+    protected static function parseSimpleData(array $data)
+    {
+        return static::instancesFromData(
+            (array)($data['name'] ?? []),
+            (array)($data['type'] ?? []),
+            (array)($data['size'] ?? []),
+            (array)($data['error'] ?? []),
+            (array)($data['tmp_name'] ?? [])
+        );
+    }
+
+    /**
+     * Парсит файлы формы, отправленные с именем формы:
+     *
+     * ```
+     * Единственное:
+     * <input type="file" name="formName[attribute]"/>
+     *
+     * $_FILES = [
+     *   'formName' => [
+     *      'name' => [
+     *          'attribute' => 'test.php'
+     *      ],
+     *      'type' => [
+     *          'attribute' => 'application/x-php'
+     *      ],
+     *      'tmp_name' => [
+     *          'attribute' => '/tmp/phpQ2c8T7'
+     *      ],
+     *      'error' => [
+     *          'attribute' => 0
+     *      ],
+     *      'size' => [
+     *          'attribute' => 41
+     *      ]
+     *   ]
+     * ]
+     *
+     * Множественное:
+     * <input type="file" name="formName[attribute][]"/>
+     *
+     * $_FILES = [
+     *   'formName' => [
+     *      'name' => [
+     *          'attribute' => [
+     *              0 => '2018-04-23-195938.jpg',
+     *              1 => 'test.php'
+     *          ]
+     *      ],
+     *      'type' => [
+     *          'attribute' => [
+     *              0 => 'image/jpeg',
+     *              1 => 'application/x-php'
+     *          ]
+     *      ],
+     *      'tmp_name' => [
+     *          'attribute' => [
+     *              0 => '/tmp/phpqZNTne',
+     *              1 => '/tmp/phpvK409l'
+     *          ],
+     *      ],
+     *      'error' => [
+     *          'attribute' => [
+     *              0 => 0,
+     *              1 => 0
+     *          ]
+     *      ],
+     *      'size' => [
+     *          'attribute' => [
+     *              0 => 166980,
+     *              1 => 41
+     *          ]
+     *      ]
+     *   ]
+     * ]
+     * ```
+     *
+     * @param array $data array данные аттрибутов формы
+     * @return \dicr\file\UploadFile[][] [$attribute => \dicr\file\UploadFile[]] аттрибуты формы с файлами
      * @throws Exception
      */
     protected static function parseFormData(array $data)
@@ -174,7 +303,7 @@ class UploadFile extends StoreFile
         $instances = [];
 
         foreach (array_keys($data['name']) as $attribute) {
-            $instances[$attribute] = static::attributeInstances(
+            $instances[$attribute] = static::instancesFromData(
                 (array)$data['name'][$attribute],
                 (array)($data['type'][$attribute] ?? []),
                 (array)($data['size'][$attribute] ?? []),
@@ -197,7 +326,7 @@ class UploadFile extends StoreFile
      * @return \dicr\file\UploadFile[]
      * @throws Exception
      */
-    protected static function attributeInstances(array $names, array $types, array $sizes, array $errors, array $paths)
+    protected static function instancesFromData(array $names, array $types, array $sizes, array $errors, array $paths)
     {
         $instances = [];
 
@@ -208,7 +337,6 @@ class UploadFile extends StoreFile
             }
 
             $path = rtrim($paths[$pos] ?? '', DIRECTORY_SEPARATOR);
-
             if ($path === '') {
                 throw new Exception('empty upload file path path');
             }
@@ -223,22 +351,6 @@ class UploadFile extends StoreFile
         }
 
         return $instances;
-    }
-
-    /**
-     * @param array $data
-     * @return \dicr\file\UploadFile[]
-     * @throws Exception
-     */
-    protected static function parseAttribData(array $data)
-    {
-        return static::attributeInstances(
-            (array)($data['name'] ?? []),
-            (array)($data['type'] ?? []),
-            (array)($data['size'] ?? []),
-            (array)($data['error'] ?? []),
-            (array)($data['tmp_name'] ?? [])
-        );
     }
 
     /**
@@ -257,7 +369,6 @@ class UploadFile extends StoreFile
         }
 
         $name = $this->_name;
-
         if (! empty($options['removeExt'])) {
             $name = static::removeExtension($name);
         }
@@ -310,8 +421,7 @@ class UploadFile extends StoreFile
     }
 
     /**
-     * {@inheritDoc}
-     * @see \dicr\file\StoreFile::getSize()
+     * @inheritDoc
      */
     public function getSize()
     {
@@ -343,8 +453,7 @@ class UploadFile extends StoreFile
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFile::getMimeType()
+     * @inheritdoc
      */
     public function getMimeType()
     {

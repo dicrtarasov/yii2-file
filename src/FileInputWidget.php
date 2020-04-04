@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 16:57:19
+ * @version 04.04.20 20:07:59
  */
 
 declare(strict_types = 1);
@@ -297,7 +297,7 @@ class FileInputWidget extends InputWidget
                 'id' => $fileId
             ]) .
 
-            // значек кнопки
+            // знак кнопки
             Html::tag('i', '', [
                 'class' => 'fa fas fa-plus-circle text-success'
             ]),

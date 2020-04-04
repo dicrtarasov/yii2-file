@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 16:53:31
+ * @version 04.04.20 20:14:18
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -35,7 +35,7 @@ class SftpFileStore extends LocalFileStore
     /** @var string пароль для парольной авторизации */
     public $password;
 
-    /** @var string путь к файлу с открытым ключем в формате OpenSSH для авторизации ключем */
+    /** @var string путь к файлу с открытым ключом в формате OpenSSH для авторизации ключом */
     public $pubkeyfile;
 
     /** @var string путь к файлу приватного ключа */

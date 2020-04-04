@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 16:55:30
+ * @version 04.04.20 20:09:35
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -443,7 +443,7 @@ class StoreFile extends AbstractFile
     /**
      * Импорт файла в хранилище
      *
-     * @param string|string[]|AbstractFile $src импорируемый файл
+     * @param string|string[]|AbstractFile $src импортируемый файл
      * @param array $options опции
      *  - bool $ifModified - импортировать файл только если время новее или размер отличается (по-умолчанию true)
      * @return $this
@@ -476,7 +476,7 @@ class StoreFile extends AbstractFile
      * @param array $config опции ThumbFile
      * @return ThumbFile|null|false
      * - если thumbFileConfig не настроен, то false
-     * - если файл не существует и не насроен noimage, то null
+     * - если файл не существует и не настроен noimage, то null
      * @throws InvalidConfigException
      * @throws Throwable
      */

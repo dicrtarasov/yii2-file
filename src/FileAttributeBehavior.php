@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 17:13:56
+ * @version 04.04.20 20:07:41
  */
 
 declare(strict_types = 1);
@@ -450,7 +450,7 @@ class FileAttributeBehavior extends Behavior
         // проверяем элементы массива
         foreach ($files as $file) {
             if (! ($file instanceof StoreFile)) {
-                throw new InvalidArgumentException('files: неокрректный тип элемента');
+                throw new InvalidArgumentException('files: некорректный тип элемента');
             }
         }
 
@@ -648,7 +648,7 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
-     * Выполняет валидаию файла файлового атибута.
+     * Выполняет проверку файла файлового атрибута.
      *
      * @param string $attribute
      * @param mixed $file
@@ -662,7 +662,7 @@ class FileAttributeBehavior extends Behavior
         if (empty($file)) {
             $this->owner->addError($attribute, 'Пустое значение файла');
         } elseif (! ($file instanceof StoreFile)) {
-            $this->owner->addError($attribute, 'Некоррекный тип значения: ' . gettype($file));
+            $this->owner->addError($attribute, 'Некорректный тип значения: ' . gettype($file));
         } elseif (! $file->exists) {
             $this->owner->addError($attribute, 'Загружаемый файл не существует: ' . $file->path);
         } elseif ($file->size <= 0) {
@@ -675,7 +675,7 @@ class FileAttributeBehavior extends Behavior
             if (! empty($file->error)) {
                 $this->owner->addError($attribute, 'Ошибка загрузки файла');
             } elseif (empty($file->name)) {
-                $this->owner->addError($attribute, 'Не задано имя загруаемого файла: ' . $file->path);
+                $this->owner->addError($attribute, 'Не задано имя загружаемого файла: ' . $file->path);
             }
         }
     }
@@ -684,7 +684,7 @@ class FileAttributeBehavior extends Behavior
      * Сохраняет файловые аттрибуты.
      * Выполняет импорт загруженных файлов и удаление старых
      *
-     * @return bool резульаты сохранения
+     * @return bool результаты сохранения
      * @throws StoreException
      * @throws Exception
      * @throws InvalidConfigException
@@ -782,7 +782,7 @@ class FileAttributeBehavior extends Behavior
             $file = $newFile;
         }
 
-        // перед тем как использовать ссылку нужно деинициализировать
+        // перед тем как использовать ссылку нужно очистить переменную
         unset($file);
 
         // удаляем оставшиеся старые файлы которых не было в списке для сохранения
@@ -822,7 +822,7 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
-     * Удаляет все файлы всех аттритутов
+     * Удаляет все файлы всех аттрибутов
      *
      * @return true
      * @throws StoreException

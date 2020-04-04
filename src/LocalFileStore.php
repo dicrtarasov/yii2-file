@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 16:53:02
+ * @version 04.04.20 20:08:56
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -543,7 +543,7 @@ class LocalFileStore extends AbstractFileStore
         // определяем необходимые права
         $perms = $this->permsByPublic(true, $this->public);
 
-        // создаем иректорию
+        // создаем директорию
         if (@mkdir($absPath, $perms, true, /** @scrutinizer ignore-type */ $this->context) === false) {
             $this->throwLastError('Создание директории', $absPath);
         }

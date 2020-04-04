@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 16:49:57
+ * @version 04.04.20 19:59:39
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -213,7 +213,7 @@ abstract class AbstractFileStore extends Component
                 return $this;
             }
         } catch (Throwable $ex) {
-            // для удаленых файлов исключения означают неподдерживаемую функцию
+            // для удаленных файлов исключения означают неподдерживаемую функцию
             $absPath = $this->absolutePath($path);
             if (stream_is_local($absPath)) {
                 throw new StoreException('Ошибка импорта в ' . $absPath, $ex);
@@ -349,7 +349,7 @@ abstract class AbstractFileStore extends Component
     }
 
     /**
-     * Нормализирует относительный путь
+     * Нормализует относительный путь
      *
      * @param string|string[] $path
      * @return string
@@ -396,11 +396,11 @@ abstract class AbstractFileStore extends Component
     abstract public function readContents($path);
 
     /**
-     * Записывает содержиме файла из строки
+     * Записывает содержимое файла из строки
      *
      * @param string|string[] $path
      * @param string $contents содержимое
-     * @return int размер записанных даннных
+     * @return int размер записанных данных
      * @throws StoreException
      */
     abstract public function writeContents($path, string $contents);
@@ -523,8 +523,8 @@ abstract class AbstractFileStore extends Component
      *  - string|null $public - true - публичный доступ, false - приватный доступ
      *  - bool|null $hidden - true - скрытые файлы, false - открытые
      *  - string|null $pathRegex - регулярное выражение пути
-     *  - string|null $nameRegex - регулярное выражение имени вайла
-     *  - callable|null $filter function(StoreFile $file) : bool филььтр элементов
+     *  - string|null $nameRegex - регулярное выражение имени файла
+     *  - callable|null $filter function(StoreFile $file) : bool фильтр элементов
      * @return StoreFile[]
      * @throws StoreException
      */
@@ -549,7 +549,7 @@ abstract class AbstractFileStore extends Component
     abstract protected function unlink($path);
 
     /**
-     * Очищает внуренний кэш файлов PHP.
+     * Очищает внутренний кэш файлов PHP.
      *
      * @param string|string[] $path относительный путь
      * @return $this
@@ -727,12 +727,12 @@ abstract class AbstractFileStore extends Component
      *
      * @param StoreFile $file
      * @param array $filter
-     *     - string|null $dir - true - только директории, false - толькофайлы
+     *     - string|null $dir - true - только директории, false - только файлы
      *     - string|null $public - true - публичный доступ, false - приватный доступ
      *     - bool|null $hidden - true - скрытые файлы, false - открытые
      *     - string|null $pathRegex - регулярное выражение пути
-     *     - string|null $nameRegex - регулярное выражение имени вайла
-     *     - callable|null $filter function(StoreFile $file) : bool филььтр элементов
+     *     - string|null $nameRegex - регулярное выражение имени файла
+     *     - callable|null $filter function(StoreFile $file) : bool фильтр элементов
      * @return bool
      */
     protected function fileMatchFilter(StoreFile $file, array $filter)

@@ -3,9 +3,10 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 03:11:56
+ * @version 04.04.20 20:11:07
  */
 
+declare(strict_types = 1);
 namespace dicr\tests;
 
 use dicr\file\T;
@@ -37,6 +38,10 @@ class TTest extends TestCase
         ]);
     }
 
+    /**
+     * @noinspection SpellCheckingInspection
+     * @noinspection PhpMethodMayBeStaticInspection
+     */
     public function testT()
     {
         Yii::$app->language = 'ua';

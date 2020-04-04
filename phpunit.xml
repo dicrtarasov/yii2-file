@@ -3,12 +3,12 @@
   ~ @copyright 2019-2020 Dicr http://dicr.org
   ~ @author Igor A Tarasov <develop@dicr.org>
   ~ @license GPL
-  ~ @version 24.02.20 03:12:23
+  ~ @version 04.04.20 19:58:24
   -->
 
 <phpunit
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/6.5/phpunit.xsd"
+        xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/8.5/phpunit.xsd"
         bootstrap="./tests/bootstrap.php"
         colors="true"
 >

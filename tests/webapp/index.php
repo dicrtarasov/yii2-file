@@ -2,14 +2,8 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 01:15:59
- */ /**
- * @copyright 2019-2020 Dicr http://dicr.org
- * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 24.02.20 03:15:11
- */ /** @noinspection PhpUnhandledExceptionInspection */
-/** @noinspection UsingInclusionReturnValueInspection */
+ * @version 04.04.20 20:15:06
+ */ /** @noinspection PhpUnhandledExceptionInspection, PhpUnused */
 declare(strict_types = 1);
 
 use dicr\file\LocalFileStore;
@@ -28,6 +22,7 @@ define('VENDOR', __DIR__ . '/../../vendor');
 require_once(VENDOR . '/autoload.php');
 require_once(VENDOR . '/yiisoft/yii2/Yii.php');
 
+/** @noinspection SpellCheckingInspection */
 $app = new Application([
     'id' => 'testapp',
     'basePath' => __DIR__,

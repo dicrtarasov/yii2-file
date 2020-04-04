@@ -7,6 +7,12 @@
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" packagePrefix="dicr\file\" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/.settings" />
+      <excludeFolder url="file://$MODULE_DIR$/src/assets/.sass-cache" />
+      <excludeFolder url="file://$MODULE_DIR$/tests/files" />
+      <excludeFolder url="file://$MODULE_DIR$/tests/webapp/assets" />
+      <excludeFolder url="file://$MODULE_DIR$/tests/webapp/files" />
+      <excludeFolder url="file://$MODULE_DIR$/tests/webapp/runtime" />
+      <excludeFolder url="file://$MODULE_DIR$/tests/webapp/thumb" />
       <excludeFolder url="file://$MODULE_DIR$/vendor" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/bower-asset/inputmask" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/bower-asset/jquery" />
@@ -56,7 +62,8 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="bootstrap" level="application" />
-    <orderEntry type="library" name="jquery" level="application" />
     <orderEntry type="library" name="all" level="application" />
+    <orderEntry type="library" name="all" level="application" />
+    <orderEntry type="library" name="@types/jquery" level="application" />
   </component>
 </module>
