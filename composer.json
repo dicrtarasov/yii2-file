@@ -33,14 +33,14 @@
         "ext-ftp": "*",
         "ext-imagick": "*",
         "ext-mbstring": "*",
-        "yiisoft/yii2": "~2.0.32",
-        "dicr/yii2-asset": "~1.5.0"
+        "yiisoft/yii2": "~2.0.34",
+        "dicr/yii2-asset": "~1.5.3"
     },
     "require-dev": {
         "roave/security-advisories": "dev-master",
-        "phpunit/phpunit": "~8.5.2",
+        "phpunit/phpunit": "~8.5.3",
         "yiisoft/yii2-debug": "~2.1.13",
-        "league/flysystem": "~1.0.64",
+        "league/flysystem": "~1.0.66",
         "yiisoft/yii2-bootstrap4": "~2.0.8"
     },
     "suggest": {
@@ -51,12 +51,7 @@
         "league/flysystem": "for FlysystemFileStore"
     },
     "repositories": [
-        {
-            "type": "git",
-            "url": "https://gitlab.com/dicr/yii2-asset.git"
-        }, {
-            "type": "composer",
-            "url": "https://asset-packagist.org"
-        }
+        {"type": "gitlab", "url": "https://gitlab.com/dicr/yii2-asset.git"},
+        {"type": "composer", "url": "https://asset-packagist.org"}
     ]
 }

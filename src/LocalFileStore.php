@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 00:57:17
+ * @version 04.04.20 16:53:02
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -177,6 +177,7 @@ class LocalFileStore extends AbstractFileStore
             throw new StoreException($fullPath, $ex);
         }
 
+        /** @var \dicr\file\StoreFile[] $files */
         $files = [];
         foreach ($iterator as $item) {
             if (in_array($item->getBasename(), ['.', '..', ''], true)) {
@@ -189,17 +190,12 @@ class LocalFileStore extends AbstractFileStore
             }
 
             $file = $this->file($item);
-
             if ($this->fileMatchFilter($file, $filter)) {
                 $files[] = $file;
             }
         }
 
-        usort($files, static function ($a, $b) {
-            return $a->path <=> $b->path;
-        });
-
-        return $files;
+        return self::sortByName($files);
     }
 
     /**
@@ -215,7 +211,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * Возвращает относительный путь по полному.
      *
-     * @param string $fullPath полныйпуть
+     * @param string $fullPath полный путь
      * @return string|false относительный путь
      */
     public function getRelPath(string $fullPath)

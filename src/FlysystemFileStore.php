@@ -3,10 +3,10 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 00:56:40
+ * @version 04.04.20 16:47:51
  */
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace dicr\file;
 
@@ -43,12 +43,12 @@ class FlysystemFileStore extends AbstractFileStore
             $this->flysystem = call_user_func(/** @scrutinizer ignore-type */ $this->flysystem, $this);
         }
 
-        if (!($this->flysystem instanceof Filesystem)) {
+        if (! ($this->flysystem instanceof Filesystem)) {
             throw new InvalidConfigException('flysystem');
         }
 
         $config = $this->flysystem->getConfig();
-        if (!$config->has('visibility')) {
+        if (! $config->has('visibility')) {
             $config->set('visibility', self::access2visibility($this->public));
         }
 
@@ -90,7 +90,7 @@ class FlysystemFileStore extends AbstractFileStore
     {
         $path = $this->normalizePath($path);
 
-        if (!$this->exists($path)) {
+        if (! $this->exists($path)) {
             return [];
         }
 
@@ -100,6 +100,7 @@ class FlysystemFileStore extends AbstractFileStore
             throw new StoreException($path, $ex);
         }
 
+        /** @var \dicr\file\StoreFile[] $files */
         $files = [];
         foreach ($items as $item) {
             // создаем файл
@@ -111,12 +112,7 @@ class FlysystemFileStore extends AbstractFileStore
             }
         }
 
-        // сортируем
-        usort($files, static function ($a, $b) {
-            return $a->path <=> $b->path;
-        });
-
-        return $files;
+        return self::sortByName($files);
     }
 
     /**
@@ -133,7 +129,7 @@ class FlysystemFileStore extends AbstractFileStore
             throw new StoreException($path, $ex);
         }
 
-        return !empty($ret);
+        return ! empty($ret);
     }
 
     /**
@@ -146,7 +142,7 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * Возвращает тип файл/диретория
+     * Возвращает тип файл/директория
      *
      * @param string|array $path
      * @return string dir|file

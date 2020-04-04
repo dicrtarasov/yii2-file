@@ -3,10 +3,10 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 00:58:33
+ * @version 04.04.20 17:15:46
  */
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace dicr\file;
 
@@ -37,9 +37,6 @@ use function is_string;
  */
 class UploadFile extends StoreFile
 {
-    /** @var self[] */
-    private static $_instances;
-
     /** @var string наименование файла */
     private $_name;
 
@@ -49,20 +46,13 @@ class UploadFile extends StoreFile
     /** @var int размер файла */
     private $_size;
 
-    // @formatter:off
-    /** @var array [
-     *      $formName => [
-     *          $attribute => \dicr\file\UploadFile[]
-     *      ]
-     *  ] кэш распарсенных объектов */
-    // @formatter:on
     /** @var string mime-type */
     private $_mimeType;
 
     /**
      * Конструктор
      *
-     * @param $pathconfig
+     * @param array|string $pathconfig
      */
     public function __construct($pathconfig)
     {
@@ -80,39 +70,58 @@ class UploadFile extends StoreFile
     }
 
     /**
+     * @inheritdoc
+     */
+    public function init()
+    {
+        parent::init();
+
+        if (isset($this->_error)) {
+            /** @noinspection UnnecessaryCastingInspection */
+            $this->_error = (int)$this->_error;
+        }
+
+        if (isset($this->_size)) {
+            /** @noinspection UnnecessaryCastingInspection */
+            $this->_size = (int)$this->_size;
+        }
+    }
+
+    /**
      * Возвращает файлы аттрибутов формы загруженные в $_FILES или null.
      *
      * @param string $formName имя формы для которой возвращает аттрибуты
      * @param string $attribute если задан, то возвращает файлы только для аттрибута
-     * @return mixed
+     * @return \dicr\file\UploadFile[]|null
      * @throws Exception
      */
     public static function instances(string $formName = '', string $attribute = '')
     {
-        if (!isset(self::$_instances)) {
-            self::$_instances = self::parseInstances();
+        /** @var static[][] */
+        static $instances;
+
+        if (! isset($instances)) {
+            $instances = self::parseInstances();
         }
 
-        $path = [trim($formName)];
-
+        $path = [$formName];
         if ($attribute !== '') {
             $path[] = $attribute;
         }
 
-        return ArrayHelper::getValue(self::$_instances, $path);
+        return ArrayHelper::getValue($instances, $path);
     }
 
     /**
      * Парсит $_FILES и создает объекты.
      *
-     * @return array
-     * @throws Exception
+     * @return \dicr\file\UploadFile[][] файлы аттрибута
+     * @throws \yii\base\Exception
      */
     protected static function parseInstances()
     {
         $instances = [];
-
-        if (!empty($_FILES)) {
+        if (! empty($_FILES)) {
             foreach ($_FILES as $key => $data) {
                 if (static::detectFormData($data)) {
                     // аттрибуты формы: $key == $formName, $data == аттрибуты в формате формы
@@ -131,19 +140,18 @@ class UploadFile extends StoreFile
      * Определяет формат данных.
      *
      * @param array $data
-     * @return bool
+     * @return bool true если данные формы
      * @throws Exception
      */
     protected static function detectFormData(array $data)
     {
-
         // если не установлен name, то ошибка формата данных
-        if (!isset($data['name'])) {
+        if (! isset($data['name'])) {
             throw new Exception('Некорректная структура данных $_FILES: ' . var_export($data, true));
         }
 
         // если name не массив - однозначно не форма
-        if (!is_array($data['name'])) {
+        if (! is_array($data['name'])) {
             return false;
         }
 
@@ -153,12 +161,12 @@ class UploadFile extends StoreFile
         }
 
         // средний вариант определяем по типу ключей в name.
-        return !preg_match('~^\d+$~', array_key_first($data['name']));
+        return ! preg_match('~^\d+$~', (string)array_keys($data['name'])[0]);
     }
 
     /**
      * @param array $data
-     * @return array
+     * @return \dicr\file\UploadFile[][]
      * @throws Exception
      */
     protected static function parseFormData(array $data)
@@ -166,10 +174,13 @@ class UploadFile extends StoreFile
         $instances = [];
 
         foreach (array_keys($data['name']) as $attribute) {
-            $instances[$attribute] =
-                static::attributeInstances((array)$data['name'][$attribute], (array)($data['type'][$attribute] ?? []),
-                    (array)($data['size'][$attribute] ?? []), (array)($data['error'][$attribute] ?? []),
-                    (array)($data['tmp_name'][$attribute] ?? []));
+            $instances[$attribute] = static::attributeInstances(
+                (array)$data['name'][$attribute],
+                (array)($data['type'][$attribute] ?? []),
+                (array)($data['size'][$attribute] ?? []),
+                (array)($data['error'][$attribute] ?? []),
+                (array)($data['tmp_name'][$attribute] ?? [])
+            );
         }
 
         return $instances;
@@ -178,12 +189,12 @@ class UploadFile extends StoreFile
     /**
      * Создает объекты для файлов одного аттрибута
      *
-     * @param array $names имена
-     * @param array $types типы
-     * @param array $sizes размеры
-     * @param array $errors ошибки
-     * @param array $paths пути
-     * @return UploadFile[]
+     * @param string[] $names имена
+     * @param string[] $types типы
+     * @param int[] $sizes размеры
+     * @param int[] $errors ошибки
+     * @param string[] $paths пути
+     * @return \dicr\file\UploadFile[]
      * @throws Exception
      */
     protected static function attributeInstances(array $names, array $types, array $sizes, array $errors, array $paths)
@@ -216,32 +227,18 @@ class UploadFile extends StoreFile
 
     /**
      * @param array $data
-     * @return UploadFile[]
+     * @return \dicr\file\UploadFile[]
      * @throws Exception
      */
     protected static function parseAttribData(array $data)
     {
-        return static::attributeInstances((array)($data['name'] ?? []), (array)($data['type'] ?? []),
-            (array)($data['size'] ?? []), (array)($data['error'] ?? []), (array)($data['tmp_name'] ?? []));
-    }
-
-    /**
-     * {@inheritdoc}
-     * @see \yii\base\BaseObject::init()
-     */
-    public function init()
-    {
-        parent::init();
-
-        if (isset($this->_error)) {
-            /** @noinspection UnnecessaryCastingInspection */
-            $this->_error = (int)$this->_error;
-        }
-
-        if (isset($this->_size)) {
-            /** @noinspection UnnecessaryCastingInspection */
-            $this->_size = (int)$this->_size;
-        }
+        return static::attributeInstances(
+            (array)($data['name'] ?? []),
+            (array)($data['type'] ?? []),
+            (array)($data['size'] ?? []),
+            (array)($data['error'] ?? []),
+            (array)($data['tmp_name'] ?? [])
+        );
     }
 
     /**
@@ -251,8 +248,8 @@ class UploadFile extends StoreFile
     public function getName(array $options = [])
     {
         // если имя файла не задано то берем его из пути
-        if (!isset($this->_name)) {
-            if (!empty($this->_error)) {
+        if (! isset($this->_name)) {
+            if (! empty($this->_error)) {
                 return null;
             }
 
@@ -261,7 +258,7 @@ class UploadFile extends StoreFile
 
         $name = $this->_name;
 
-        if (!empty($options['removeExt'])) {
+        if (! empty($options['removeExt'])) {
             $name = static::removeExtension($name);
         }
 
@@ -298,57 +295,6 @@ class UploadFile extends StoreFile
         return $this->_error;
     }
 
-    // @formatter:off
-    /**
-     * Парсит файлы аттрибута, отправленные без имени формы:
-     *
-     * <xmp><input type="file" name="attribute"/></xmp>
-     *
-     * <xmp>
-     * $_FILES = [
-     *  '$attribute' => [
-     *      'name' => 'test.php',
-     *      'type' => 'application/x-php',
-     *      'tmp_name' => '/tmp/phpqmYDrQ',
-     *      'error' => 0,
-     *      'size' => 41
-     *  ]
-     * ];
-     * </xmp>
-     *
-     * <xmp><input type="file" name="attribute[]"/></xmp>
-     *
-     * <xmp>
-     * $_FILES = [
-     *  '$attribute' => [
-     *      'name' => [
-     *          0 => '2018-04-23-195938.jpg',
-     *          1 => 'test.php',
-     *      ],
-     *      'type' => [
-     *          0 => 'image/jpeg',
-     *          1 => 'application/x-php',
-     *      ],
-     *      'tmp_name' => [
-     *          0 => '/tmp/php9PADWU',
-     *          1 => '/tmp/phpEarnq1',
-     *      ],
-     *      'error' => [
-     *          0 => 0,
-     *          1 => 0,
-     *      ],
-     *      'size' => [
-     *          0 => 166980,
-     *          1 => 41,
-     *      ],
-     *  ],
-     * ];
-     * </xmp>
-     *
-     * @param array $data данные аттрибута
-     * @return UploadFile[] файлы аттрибута
-     */
-    // @formatter:on
     /**
      * Устанавливает ошибку
      *
@@ -363,85 +309,14 @@ class UploadFile extends StoreFile
         return $this;
     }
 
-    // @formatter:off
-    /**
-     * Парсит файлы формы, отправленные с именем формы:
-     *
-     * <xmp><input type="file" name="formName[attribute]"/></xmp>
-     *
-     * <xmp>
-     * $_FILES = [
-     *  '$formName' => [
-     *      'name' => [
-     *          '$attribute' => 'test.php'
-     *      ],
-     *      'type' => [
-     *          '$attribute' => 'application/x-php'
-     *      ],
-     *      'tmp_name' => [
-     *          '$attribute' => '/tmp/phpQ2c8T7'
-     *      ],
-     *      'error' => [
-     *          '$attribute' => 0
-     *      ],
-     *      'size' => [
-     *          '$attribute' => 41
-     *      ]
-     *  ]
-     * ];
-     * </xmp>
-     *
-     * <xmp><input type="file" name="formName[attribute][]"/></xmp>
-     *
-     * <xmp>
-     * $_FILES = [
-     *  '$formName' => [
-     *      'name' => [
-     *          '$attribute' => [
-     *              0 => '2018-04-23-195938.jpg',
-     *              1 => 'test.php'
-     *          ]
-     *      ],
-     *      'type' => [
-     *          '$attribute' => [
-     *              0 => 'image/jpeg',
-     *              1 => 'application/x-php'
-     *          ]
-     *      ],
-     *      'tmp_name' => [
-     *          '$attribute' => [
-     *              0 => '/tmp/phpqZNTne',
-     *              1 => '/tmp/phpvK409l'
-     *          ],
-     *      ],
-     *      'error' => [
-     *          '$attribute' => [
-     *              0 => 0,
-     *              1 => 0
-     *          ]
-     *      ],
-     *      'size' => [
-     *          'attribute' => [
-     *              0 => 166980,
-     *              1 => 41
-     *          ]
-     *      ]
-     *  ]
-     * ];
-     * </xmp>
-     *
-     * @param array $data array данные аттрибутов формы
-     * @return array [$attribute => \dicr\file\UploadFile[]] аттрибуты формы с файлами
-     */
-    // @formatter:on
     /**
      * {@inheritDoc}
      * @see \dicr\file\StoreFile::getSize()
      */
     public function getSize()
     {
-        if (!isset($this->_size)) {
-            if (!empty($this->_error)) {
+        if (! isset($this->_size)) {
+            if (! empty($this->_error)) {
                 return null;
             }
 
@@ -451,50 +326,8 @@ class UploadFile extends StoreFile
         return $this->_size;
     }
 
-    // @formatter:off
     /**
-     * Определяет тип структуры данных $_FILES.
-     *
-     * Структура без формы в name содержит либо строку имени файла, либо массив имен с порядковыми значениями:
-     *
-     *  <xmp>'name' => '2018-04-23-195938.jpg'</xmp>
-     *
-     * или
-     *
-     * <xmp>
-     * 'name' => [
-     *      0 => '2018-04-23-195938.jpg',
-     *      1 => 'test.php',
-     * ]
-     * </xmp>
-     *
-     * Структура с именем формы в аттрибуте в name содержит массив имен аттрбутов, значениями которых являются массивы
-     * имен файлов:
-     *
-     * <xmp>
-     * 'name' => [
-     *      '$attribute' => 'test.php'
-     * ]
-     * </xmp>
-     *
-     * или
-     *
-     * <xmp>
-     * 'name' => [
-     *      '$attribute' => [
-     *          0 => '2018-04-23-195938.jpg',
-     *          1 => 'test.php'
-     *      ]
-     * ]
-     * </xmp>
-     *
-     * @param array $data
-     * @return bool
-     * @throws Exception
-     */
-    // @formatter:on
-    /**
-     * Усанавливает размер.
+     * Устанавливает размер.
      *
      * @param int $size
      * @throws InvalidArgumentException
@@ -509,27 +342,14 @@ class UploadFile extends StoreFile
         $this->_size = $size;
     }
 
-    // @formatter:off
-    /**
-     * Парсит структуру $_FILES и создает объекты
-     *
-     * @return array
-     * <xmp>[
-     *      $formName => [
-     *          $attribute => \dicr\file\UploadFile[]
-     *      ]
-     * ]
-     * </xmp>
-     */
-    // @formatter:on
     /**
      * {@inheritdoc}
      * @see \dicr\file\AbstractFile::getMimeType()
      */
     public function getMimeType()
     {
-        if (!isset($this->_mimeType)) {
-            if (!empty($this->_error)) {
+        if (! isset($this->_mimeType)) {
+            if (! empty($this->_error)) {
                 return null;
             }
 

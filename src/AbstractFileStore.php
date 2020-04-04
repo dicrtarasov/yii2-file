@@ -3,11 +3,11 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 06.01.20 00:32:18
+ * @version 04.04.20 16:49:57
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace dicr\file;
 
@@ -20,9 +20,11 @@ use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
 use function call_user_func;
+use function implode;
 use function is_array;
 use function is_callable;
 use function is_string;
+use function usort;
 
 /**
  * Abstract Fle Store.
@@ -64,7 +66,7 @@ abstract class AbstractFileStore extends Component
         }
 
         // проверяем thumbFileConfig
-        if (!empty($this->thumbFileConfig) && !is_array($this->thumbFileConfig)) {
+        if (! empty($this->thumbFileConfig) && ! is_array($this->thumbFileConfig)) {
             throw new InvalidConfigException('thumbFileConfig');
         }
     }
@@ -124,9 +126,9 @@ abstract class AbstractFileStore extends Component
      */
     public function splitPath($path)
     {
-        if (!is_array($path)) {
+        if (! is_array($path)) {
             $regex = sprintf('~[%s\\\/]+~ui', preg_quote($this->pathSeparator, '~'));
-            $path = preg_split($regex, $path, -1, PREG_SPLIT_NO_EMPTY);
+            $path = preg_split($regex, $path, - 1, PREG_SPLIT_NO_EMPTY);
         }
 
         return $path;
@@ -140,11 +142,7 @@ abstract class AbstractFileStore extends Component
      */
     public function buildPath($path)
     {
-        if (is_array($path)) {
-            $path = implode($this->pathSeparator, $path);
-        }
-
-        return $path;
+        return is_array($path) ? implode($this->pathSeparator, $path) : (string)$path;
     }
 
     /**
@@ -247,7 +245,7 @@ abstract class AbstractFileStore extends Component
         $fileConfig = $this->fileConfig ?: [];
 
         // добавляем класс по-умолчанию
-        if (!isset($fileConfig['class'])) {
+        if (! isset($fileConfig['class'])) {
             $fileConfig['class'] = StoreFile::class;
         }
 
@@ -457,10 +455,10 @@ abstract class AbstractFileStore extends Component
     public function checkDir($dir)
     {
         $path = $this->filterPath($dir);
-        if (!empty($path)) {
-            if (!$this->exists($path)) {
+        if (! empty($path)) {
+            if (! $this->exists($path)) {
                 $this->mkdir($path);
-            } elseif (!$this->isDir($path)) {
+            } elseif (! $this->isDir($path)) {
                 throw new StoreException('не является директорией: ' . $this->absolutePath($path));
             }
         }
@@ -564,7 +562,7 @@ abstract class AbstractFileStore extends Component
     }
 
     /**
-     * Создает файл предпросмотра каринки.
+     * Создает файл предпросмотра картинки.
      *
      * @param string|array|StoreFile $file
      * @param array $config
@@ -583,7 +581,7 @@ abstract class AbstractFileStore extends Component
             throw new InvalidArgumentException('file');
         }
 
-        if (!($file instanceof StoreFile)) {
+        if (! ($file instanceof StoreFile)) {
             $file = $this->file($file);
         }
 
@@ -597,12 +595,12 @@ abstract class AbstractFileStore extends Component
         }
 
         // если файл не существует и не задан noimage, то возвращаем null
-        if (!$file->exists && empty($thumb->noimage)) {
+        if (! $file->exists && empty($thumb->noimage)) {
             return null;
         }
 
         // обновляем/создаем файл превью
-        if (!$thumb->isReady) {
+        if (! $thumb->isReady) {
             $thumb->update();
         }
 
@@ -632,7 +630,6 @@ abstract class AbstractFileStore extends Component
 
         // удаляем из параметров значения true, чтобы не перезаписывать конфиг по-умолчанию
         foreach (['noimage', 'watermark', 'disclaimer'] as $field) {
-            $config[$field] = (bool)$config[$field];
             if ($config[$field] === true) {
                 unset($config[$field]);
             }
@@ -664,13 +661,14 @@ abstract class AbstractFileStore extends Component
     public function noimage(array $config = [])
     {
         // создаем превью для пустого файла
-        $thumb = $this->createThumb(array_merge($config, [
-            'source' => null,
+        $thumb = $this->createThumb(array_merge([
             'noimage' => true
+        ], $config, [
+            'source' => null,
         ]));
 
         // если превью настроено, то обновляем файл
-        if (!empty($thumb) && !$thumb->isReady) {
+        if (! empty($thumb) && ! $thumb->isReady) {
             $thumb->update();
         }
 
@@ -692,7 +690,7 @@ abstract class AbstractFileStore extends Component
             throw new InvalidArgumentException('file');
         }
 
-        if (!($file instanceof StoreFile)) {
+        if (! ($file instanceof StoreFile)) {
             $file = $this->file($file);
         }
 
@@ -702,7 +700,7 @@ abstract class AbstractFileStore extends Component
         ]);
 
         // если настроен, то очищаем все файлы превью
-        if (!empty($thumb)) {
+        if (! empty($thumb)) {
             $thumb->clear();
         }
     }
@@ -742,17 +740,17 @@ abstract class AbstractFileStore extends Component
         // ---- вначале быстрые фильтры --------
 
         // фильтруем по регулярному выражению пути
-        if (!empty($filter['pathRegex']) && !preg_match($filter['pathRegex'], $file->path)) {
+        if (! empty($filter['pathRegex']) && ! preg_match($filter['pathRegex'], $file->path)) {
             return false;
         }
 
         // фильтр по регулярному выражению имени
-        if (!empty($filter['nameRegex']) && !preg_match($filter['nameRegex'], $file->name)) {
+        if (! empty($filter['nameRegex']) && ! preg_match($filter['nameRegex'], $file->name)) {
             return false;
         }
 
         // фильтруем по callback
-        if (isset($filter['filter']) && is_callable($filter['filter']) && !call_user_func($filter['filter'], $file)) {
+        if (isset($filter['filter']) && is_callable($filter['filter']) && ! call_user_func($filter['filter'], $file)) {
             return false;
         }
 
@@ -788,11 +786,11 @@ abstract class AbstractFileStore extends Component
         $messages = [];
 
         // добавляем операцию
-        if (!empty($op)) {
+        if (! empty($op)) {
             $messages[] = $op;
         }
 
-        if (!empty($absPath)) {
+        if (! empty($absPath)) {
             $messages[] = $absPath;
         }
 
@@ -800,11 +798,26 @@ abstract class AbstractFileStore extends Component
         $err = @error_get_last();
         /** @scrutinizer ignore-unhandled */
         @error_clear_last();
-        if (!empty($err['message'])) {
+        if (! empty($err['message'])) {
             $messages[] = $err['message'];
         }
 
-        // выбрасываем исключеие
+        // выбрасываем исключение
         throw new StoreException(implode(': ', $messages));
+    }
+
+    /**
+     * Сортировка файлов по имени.
+     *
+     * @param \dicr\file\StoreFile[] $files
+     * @return \dicr\file\StoreFile[]
+     */
+    protected static function sortByName(array $files)
+    {
+        usort($files, static function(StoreFile $a, StoreFile $b) {
+            return $a->path <=> $b->path;
+        });
+
+        return $files;
     }
 }

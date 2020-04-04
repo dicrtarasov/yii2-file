@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 05:25:13
+ * @version 04.04.20 16:57:19
  */
 
 declare(strict_types = 1);
@@ -139,7 +139,7 @@ class FileInputWidget extends InputWidget
         // добавляем enctype форме
         $this->field->form->options['enctype'] = 'multipart/form-data';
 
-        // отключаем валидацию на стороне клиента
+        // отключаем проверку на стороне клиента
         $this->field->enableClientValidation = false;
 
         // добавляем рабочие классы
@@ -171,7 +171,7 @@ class FileInputWidget extends InputWidget
      */
     public function run()
     {
-        // регистрируем ассет
+        // регистрируем ресурсы
         $this->view->registerAssetBundle(FileInputWidgetAsset::class);
 
         // регистрируем плагин
@@ -194,7 +194,7 @@ class FileInputWidget extends InputWidget
     }
 
     /**
-     * Рендерит блок файлов
+     * Верстает блок файлов
      *
      * @return string
      * @throws StoreException
@@ -214,7 +214,7 @@ class FileInputWidget extends InputWidget
     }
 
     /**
-     * Рендерит файл
+     * Верстает блок файла
      *
      * @param int $pos
      * @param StoreFile $file
@@ -257,7 +257,7 @@ class FileInputWidget extends InputWidget
     }
 
     /**
-     * Рендерит картинку
+     * Верстает блок картинки
      *
      * @param StoreFile $file
      * @return string
@@ -281,7 +281,7 @@ class FileInputWidget extends InputWidget
     }
 
     /**
-     * Рендерит кнопку добавления картинки
+     * Верстает кнопку добавления картинки
      *
      * @return string
      */

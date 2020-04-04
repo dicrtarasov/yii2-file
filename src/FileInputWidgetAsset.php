@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 23.02.20 09:50:18
+ * @version 04.04.20 16:39:49
  */
 
 /** @noinspection ClassOverridesFieldOfSuperClassInspection */
@@ -18,9 +18,6 @@ use yii\web\JqueryAsset;
 
 /**
  * Asset Bundle для FileInputWidget
- *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 2018
  */
 class FileInputWidgetAsset extends AssetBundle
 {

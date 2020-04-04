@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 00:58:04
+ * @version 04.04.20 16:55:30
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -71,7 +71,7 @@ class StoreFile extends AbstractFile
      * Существующий префикс удаляется.
      *
      * @param string $attribute аттрибут модели
-     * @param int $pos норядок сортировки
+     * @param int $pos порядок сортировки
      * @param string $name пользовательское имя файла
      * @return string имя файла со служебным префиксом.
      */

@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 00:57:46
+ * @version 04.04.20 16:53:31
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace dicr\file;
 
 use yii\base\InvalidConfigException;
+use function in_array;
 use function is_resource;
 
 /**
@@ -126,12 +127,11 @@ class SftpFileStore extends LocalFileStore
 
         try {
             while (($item = @readdir($dir)) !== false) {
-                if ($item === '' || $item === '.' || $item === '..') {
+                if (in_array($item, ['', '.', '..'], true)) {
                     continue;
                 }
 
                 $file = $this->file($this->childname($path, $item));
-
                 if ($this->fileMatchFilter($file, $filter)) {
                     $files[] = $file;
                 }
@@ -147,11 +147,7 @@ class SftpFileStore extends LocalFileStore
             }
         }
 
-        usort($files, static function ($a, $b) {
-            return $a->path <=> $b->path;
-        });
-
-        return $files;
+        return self::sortByName($files);
     }
 
     /**
