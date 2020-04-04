@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 19:59:39
+ * @version 04.04.20 20:37:31
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -43,7 +43,7 @@ abstract class AbstractFileStore extends Component
     /** @var string path separator */
     public $pathSeparator = DIRECTORY_SEPARATOR;
 
-    /** @var array|false конфиг файлов превью картинок ThumbFile */
+    /** @var array конфиг файлов превью картинок ThumbFile */
     public $thumbFileConfig;
 
     /**
@@ -62,7 +62,7 @@ abstract class AbstractFileStore extends Component
                 throw new InvalidConfigException('url: ' . $this->url);
             }
 
-            $this->url = $url;
+            $this->url = (string)$url;
         }
 
         // проверяем thumbFileConfig
@@ -128,7 +128,7 @@ abstract class AbstractFileStore extends Component
     {
         if (! is_array($path)) {
             $regex = sprintf('~[%s\\\/]+~ui', preg_quote($this->pathSeparator, '~'));
-            $path = preg_split($regex, $path, - 1, PREG_SPLIT_NO_EMPTY);
+            $path = (array)preg_split($regex, $path, - 1, PREG_SPLIT_NO_EMPTY);
         }
 
         return $path;

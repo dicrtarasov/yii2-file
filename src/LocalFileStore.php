@@ -3,11 +3,11 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 20:08:56
+ * @version 04.04.20 20:48:16
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace dicr\file;
 
@@ -22,6 +22,7 @@ use Yii;
 use yii\base\InvalidConfigException;
 use function in_array;
 use function is_array;
+use function is_dir;
 use function is_resource;
 
 /**
@@ -73,7 +74,7 @@ class LocalFileStore extends AbstractFileStore
      */
     public static function root()
     {
-        if (!isset(self::$_rootInstance)) {
+        if (! isset(self::$_rootInstance)) {
             self::$_rootInstance = new static([
                 'path' => '/',
                 'writeFlags' => LOCK_EX
@@ -91,7 +92,7 @@ class LocalFileStore extends AbstractFileStore
     {
         parent::init();
 
-        if (!isset($this->_path)) {
+        if (! isset($this->_path)) {
             throw new InvalidConfigException('path');
         }
 
@@ -102,11 +103,11 @@ class LocalFileStore extends AbstractFileStore
             $this->readMode = 'rb';
         }
 
-        if (!is_resource($this->context)) {
+        if (! is_resource($this->context)) {
             $this->context = stream_context_create($this->context);
         }
 
-        if (!isset($this->perms['dir'], $this->perms['file']) || !is_array($this->perms)) {
+        if (! isset($this->perms['dir'], $this->perms['file']) || ! is_array($this->perms)) {
             throw new InvalidConfigException('perms');
         }
     }
@@ -131,26 +132,27 @@ class LocalFileStore extends AbstractFileStore
     public function setPath(string $path)
     {
         // решаем алиасы
-        /** @noinspection CallableParameterUseCaseInTypeContextInspection */
-        $path = Yii::getAlias($path);
-        if ($path === false) {
-            throw new InvalidArgumentException('path');
+        $fullPath = Yii::getAlias($path);
+        if ($fullPath === false) {
+            throw new InvalidArgumentException('Неизвестный алиас: ' . $path);
         }
 
         // получаем реальный путь
-        $this->_path = $path === '/' ? $path : realpath(/** @scrutinizer ignore-type */ $path);
-        if ($this->_path === false) {
-            throw new StoreException('Путь не существует: ' . $path);
-        }
+        if ($fullPath !== '/') {
+            $fullPath = realpath($fullPath);
+            if ($fullPath === false) {
+                throw new StoreException('Путь не существует: ' . $path);
+            }
 
-        // проверяем что путь директория
-        if ($this->_path !== '/' && !@is_dir($this->_path)) {
-            throw new StoreException('Не является директорией: ' . $this->_path);
+            // проверяем что путь директория
+            if (! @is_dir($fullPath)) {
+                throw new StoreException('Не является директорией: ' . $path);
+            }
         }
 
         // обрезаем слэши (корневой путь станет пустым "")
-        $this->_path = rtrim($this->_path, $this->pathSeparator);
-
+        $fullPath = rtrim((string)$fullPath, $this->pathSeparator);
+        $this->_path = $fullPath;
         return $this;
     }
 
@@ -167,7 +169,7 @@ class LocalFileStore extends AbstractFileStore
 
         $iterator = null;
         try {
-            if (!empty($filter['recursive'])) {
+            if (! empty($filter['recursive'])) {
                 $dirIterator = new RecursiveDirectoryIterator($fullPath, FilesystemIterator::CURRENT_AS_FILEINFO);
                 $iterator = new RecursiveIteratorIterator($dirIterator, RecursiveIteratorIterator::CHILD_FIRST);
             } else {
@@ -356,7 +358,7 @@ class LocalFileStore extends AbstractFileStore
         $exists = $this->exists($path);
 
         // проверяем наличие директории если файл не существует
-        if (!$exists) {
+        if (! $exists) {
             $this->checkDir($this->dirname($path));
         }
 
@@ -533,7 +535,7 @@ class LocalFileStore extends AbstractFileStore
 
         // проверяем на существование
         if ($this->exists($path)) {
-            if (!$this->isDir($path)) {
+            if (! $this->isDir($path)) {
                 throw new StoreException('Уже существует не директория: ' . $absPath);
             }
 

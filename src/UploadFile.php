@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 20:10:40
+ * @version 04.04.20 20:53:06
  */
 
 declare(strict_types = 1);
@@ -61,7 +61,7 @@ class UploadFile extends StoreFile
 
         if (is_string($pathconfig)) {
             $path = $pathconfig;
-        } elseif (is_array($pathconfig)) {
+        } else {
             $config = $pathconfig;
             $path = ArrayHelper::remove($config, 'path');
         }

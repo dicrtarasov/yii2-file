@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 00:58:21
+ * @version 04.04.20 20:52:09
  */
 
 /** @noinspection SpellCheckingInspection */
@@ -41,10 +41,10 @@ class ThumbFile extends StoreFile
     /** @var int */
     public $height = 0;
 
-    /** @var string путь картинки-заглушки или функция, которая возвращает путь */
+    /** @var string|false путь картинки-заглушки или функция, которая возвращает путь */
     public $noimage = '@dicr/file/assets/noimage.png';
 
-    /** @var string callable путь картинки водяного знака */
+    /** @var string|false callable путь картинки водяного знака */
     public $watermark = false;
 
     /** @var float прозрачность картинки watermark */
@@ -403,14 +403,15 @@ class ThumbFile extends StoreFile
         }
 
         $dir = $this->store->file($this->source->path)->parent;
+        if ($dir !== null) {
+            $files = $dir->getList([
+                'nameRegex' => '~^.+\~\d+x\d+(\~[wd])*\.[^\.]+$~',
+                'dir' => false
+            ]);
 
-        $files = $dir->getList([
-            'nameRegex' => '~^.+\~\d+x\d+(\~[wd])*\.[^\.]+$~',
-            'dir' => false
-        ]);
-
-        foreach ($files as $file) {
-            $file->delete();
+            foreach ($files as $file) {
+                $file->delete();
+            }
         }
     }
 

@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 20:07:59
+ * @version 04.04.20 20:54:06
  */
 
 declare(strict_types = 1);
@@ -20,7 +20,6 @@ use function count;
 use function gettype;
 use function in_array;
 use function is_array;
-use function is_numeric;
 use function ksort;
 use function mt_rand;
 use function ob_get_clean;
@@ -67,7 +66,7 @@ class FileInputWidget extends InputWidget
     /** @var array опции плагина */
     public $clientOptions = [];
 
-    /** @var int уникальный идентификатор */
+    /** @var string уникальный идентификатор */
     private $uniqueClass;
 
     /**
@@ -88,11 +87,10 @@ class FileInputWidget extends InputWidget
         }
 
         // limit
-        if (! empty($this->limit) && (! is_numeric($this->limit) || $this->limit < 0)) {
+        $this->limit = (int)$this->limit;
+        if (! empty($this->limit) && $this->limit < 0) {
             throw new InvalidConfigException('limit: ' . $this->limit);
         }
-
-        $this->limit = (int)$this->limit;
 
         // removeExt
         if (! isset($this->removeExt)) {
