@@ -1,7 +1,7 @@
 /vendor/*
 
 *.phar
-*.map
+#*.map включить в git для подключения к проектам
 .sass-cache
 
 /.phpunit.result.cache
