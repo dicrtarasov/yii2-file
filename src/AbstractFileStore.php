@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 21:06:48
+ * @version 29.04.20 17:11:14
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -11,7 +11,6 @@ declare(strict_types = 1);
 
 namespace dicr\file;
 
-use Exception;
 use InvalidArgumentException;
 use Throwable;
 use Yii;
@@ -47,9 +46,8 @@ abstract class AbstractFileStore extends Component
     public $thumbFileConfig;
 
     /**
-     * {@inheritdoc}
-     * @throws InvalidConfigException
-     * @see \yii\base\BaseObject::init()
+     * @inheritdoc
+     * @throws \yii\base\InvalidConfigException
      */
     public function init()
     {
@@ -78,7 +76,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return string
-     * @throws StoreException если путь корневой
+     * @throws \dicr\file\StoreException если путь корневой
      */
     public function dirname($path)
     {
@@ -96,7 +94,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return string[]
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function filterPath($path)
     {
@@ -151,7 +149,7 @@ abstract class AbstractFileStore extends Component
      * @param string|string[] $parent родительский
      * @param string|string[] $child дочерний
      * @return string
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function childname($parent, $child)
     {
@@ -170,7 +168,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return string|null URL файла
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function url($path)
     {
@@ -195,8 +193,8 @@ abstract class AbstractFileStore extends Component
      * @param array $options опции
      *  - bool $ifModified - импортировать файл только если время новее или размер отличается (по-умолчанию true)
      * @return $this
-     * @throws InvalidConfigException
-     * @throws StoreException
+     * @throws \yii\base\InvalidConfigException
+     * @throws \dicr\file\StoreException
      */
     public function import($src, $path, array $options = [])
     {
@@ -222,6 +220,7 @@ abstract class AbstractFileStore extends Component
 
         // копируем
         $srcStream = $src->stream;
+
         try {
             $this->writeStream($path, $srcStream);
         } finally {
@@ -236,8 +235,8 @@ abstract class AbstractFileStore extends Component
      * Создает объект файла с заданным путем.
      *
      * @param string|string[] $path
-     * @return StoreFile
-     * @throws InvalidConfigException
+     * @return \dicr\file\StoreFile
+     * @throws \yii\base\InvalidConfigException
      */
     public function file($path)
     {
@@ -259,7 +258,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return bool
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     abstract public function exists($path);
 
@@ -270,7 +269,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return int
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     abstract public function size($path);
 
@@ -279,7 +278,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return int timestamp
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     abstract public function mtime($path);
 
@@ -297,7 +296,7 @@ abstract class AbstractFileStore extends Component
      * @param string|string[] $path
      * @param resource $stream
      * @return int кол-во данных
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     abstract public function writeStream($path, $stream);
 
@@ -308,7 +307,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return bool
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     abstract public function isFile($path);
 
@@ -317,7 +316,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return bool
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     abstract public function isPublic($path);
 
@@ -327,7 +326,7 @@ abstract class AbstractFileStore extends Component
      * @param string|string[] $path
      * @param bool $public
      * @return $this
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     abstract public function setPublic($path, bool $public);
 
@@ -336,7 +335,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return bool
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function isHidden($path)
     {
@@ -353,7 +352,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return string
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function normalizePath($path)
     {
@@ -365,7 +364,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return string
-     * @throws StoreException если путь корневой
+     * @throws \dicr\file\StoreException если путь корневой
      */
     public function basename($path)
     {
@@ -382,7 +381,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return string
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     abstract public function mimeType($path);
 
@@ -391,7 +390,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return string
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     abstract public function readContents($path);
 
@@ -401,7 +400,7 @@ abstract class AbstractFileStore extends Component
      * @param string|string[] $path
      * @param string $contents содержимое
      * @return int размер записанных данных
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     abstract public function writeContents($path, string $contents);
 
@@ -411,7 +410,7 @@ abstract class AbstractFileStore extends Component
      * @param string|string[] $path
      * @param string|string[] $newpath
      * @return $this
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function copy($path, $newpath)
     {
@@ -431,7 +430,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return resource
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     abstract public function readStream($path);
 
@@ -441,7 +440,7 @@ abstract class AbstractFileStore extends Component
      * @param string|string[] $path
      * @param string|string[] $newpath
      * @return $this
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     abstract public function rename($path, $newpath);
 
@@ -450,7 +449,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $dir
      * @return $this
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function checkDir($dir)
     {
@@ -471,7 +470,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return $this
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     abstract public function mkdir($path);
 
@@ -480,7 +479,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return bool
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     abstract public function isDir($path);
 
@@ -489,7 +488,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return $this
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function delete($path)
     {
@@ -525,8 +524,8 @@ abstract class AbstractFileStore extends Component
      *  - string|null $pathRegex - регулярное выражение пути
      *  - string|null $nameRegex - регулярное выражение имени файла
      *  - callable|null $filter function(StoreFile $file) : bool фильтр элементов
-     * @return StoreFile[]
-     * @throws StoreException
+     * @return \dicr\file\StoreFile[]
+     * @throws \dicr\file\StoreException
      */
     abstract public function list($path, array $filter = []);
 
@@ -544,7 +543,7 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return $this
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     abstract protected function unlink($path);
 
@@ -564,15 +563,13 @@ abstract class AbstractFileStore extends Component
     /**
      * Создает файл предпросмотра картинки.
      *
-     * @param string|array|StoreFile $file
+     * @param string|array|\dicr\file\StoreFile $file
      * @param array $config
-     * @return ThumbFile|null|false превью
+     * @return \dicr\file\ThumbFile|null|false превью
      * - если thumbFileConfig не настроен, то false
      * - если файл не существует и не задан noimage, то null
-     * @throws InvalidConfigException
-     * @throws Exception
-     * @throws Throwable
-     * @throws Throwable
+     * @throws \yii\base\InvalidConfigException
+     * @throws \dicr\file\StoreException
      */
     public function thumb($file, array $config = [])
     {
@@ -651,11 +648,10 @@ abstract class AbstractFileStore extends Component
      * Возвращает превью для noimage.
      *
      * @param array $config конфиг превью.
-     * @return ThumbFile
-     * @throws InvalidConfigException
-     * @throws Exception
-     * @throws Throwable
-     * @throws Throwable
+     * @return \dicr\file\ThumbFile
+     * @throws \yii\base\InvalidConfigException
+     * @throws \dicr\file\StoreException
+     *
      * @noinspection PhpUnused
      */
     public function noimage(array $config = [])
