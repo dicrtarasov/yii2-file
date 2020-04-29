@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 03:13:16
+ * @version 29.04.20 17:30:17
  */
 
 declare(strict_types = 1);
@@ -15,8 +15,6 @@ use yii\i18n\PhpMessageSource;
 
 /**
  * Транслятор текста.
- *
- * @package dicr\file
  */
 class T extends PhpMessageSource
 {

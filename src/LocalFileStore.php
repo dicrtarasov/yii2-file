@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 20:48:16
+ * @version 29.04.20 17:28:14
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -85,8 +85,7 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::init()
+     * @inheritDoc
      */
     public function init()
     {
@@ -127,7 +126,7 @@ class LocalFileStore extends AbstractFileStore
      *
      * @param string $path
      * @return $this
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function setPath(string $path)
     {
@@ -157,11 +156,9 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @throws StoreException
-     * @throws InvalidConfigException
-     * @throws InvalidConfigException
-     * @see \dicr\file\AbstractFileStore::list()
+     * @inheritDoc
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
      */
     public function list($path, array $filter = [])
     {
@@ -201,9 +198,8 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @throws StoreException
-     * @see \dicr\file\AbstractFileStore::absolutePath()
+     * @inheritDoc
+     * @throws \dicr\file\StoreException
      */
     public function absolutePath($path)
     {
@@ -222,8 +218,7 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::isFile()
+     * @inheritDoc
      */
     public function isFile($path)
     {
@@ -231,8 +226,7 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::isPublic()
+     * @inheritdoc
      */
     public function isPublic($path)
     {
@@ -259,8 +253,7 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::isDir()
+     * @inheritdoc
      */
     public function isDir($path)
     {
@@ -268,8 +261,7 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::size()
+     * @inheritDoc
      */
     public function size($path)
     {
@@ -284,8 +276,7 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::mtime()
+     * @inheritDoc
      */
     public function mtime($path)
     {
@@ -300,8 +291,7 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::mimeType()
+     * @inheritDoc
      */
     public function mimeType($path)
     {
@@ -317,8 +307,7 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::readContents()
+     * @inheritDoc
      */
     public function readContents($path)
     {
@@ -333,8 +322,7 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::writeContents()
+     * @inheritDoc
      */
     public function writeContents($path, string $contents)
     {
@@ -347,7 +335,7 @@ class LocalFileStore extends AbstractFileStore
      * @param string|string[] $path
      * @param string|array|resource $contents
      * @return int кол-во записанных байт
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function writeStreamOrContents($path, $contents)
     {
@@ -390,8 +378,7 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::exists()
+     * @inheritDoc
      */
     public function exists($path)
     {
@@ -399,8 +386,7 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::setPublic()
+     * @inheritDoc
      */
     public function setPublic($path, bool $public)
     {
@@ -435,8 +421,7 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::readStream()
+     * @inheritDoc
      */
     public function readStream($path)
     {
@@ -451,8 +436,7 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::writeStream()
+     * @inheritDoc
      */
     public function writeStream($path, $stream)
     {
@@ -460,11 +444,9 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      *
      * Более эффективная версия абстрактного копирования.
-     *
-     * @see \dicr\file\AbstractFileStore::copy()
      */
     public function copy($path, $newpath)
     {
@@ -491,8 +473,7 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::rename()
+     * @inheritDoc
      */
     public function rename($path, $newpath)
     {
@@ -522,8 +503,7 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::mkdir()
+     * @inheritDoc
      */
     public function mkdir($path)
     {
@@ -557,7 +537,7 @@ class LocalFileStore extends AbstractFileStore
      * Конвертирует в строку
      *
      * @return string
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function __toString()
     {
@@ -565,8 +545,7 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFileStore::unlink()
+     * @inheritDoc
      */
     protected function unlink($path)
     {
@@ -587,8 +566,7 @@ class LocalFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFileStore::rmdir()
+     * @inheritDoc
      */
     protected function rmdir($path)
     {

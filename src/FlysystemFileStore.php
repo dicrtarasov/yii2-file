@@ -3,14 +3,13 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 16:47:51
+ * @version 29.04.20 17:23:05
  */
 
 declare(strict_types = 1);
 
 namespace dicr\file;
 
-use Exception;
 use League\Flysystem\AdapterInterface;
 use League\Flysystem\Filesystem;
 use Throwable;
@@ -34,8 +33,7 @@ class FlysystemFileStore extends AbstractFileStore
     public $flysystem;
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::init()
+     * @inheritdoc
      */
     public function init()
     {
@@ -69,7 +67,7 @@ class FlysystemFileStore extends AbstractFileStore
     /**
      * Возвращает адаптер
      *
-     * @return AdapterInterface|NULL
+     * @return \League\Flysystem\AdapterInterface|null
      * @noinspection PhpUnused
      */
     public function getAdapter()
@@ -82,9 +80,8 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @throws InvalidConfigException
-     * @see \dicr\file\AbstractFileStore::list()
+     * @inheritdoc
+     * @throws \yii\base\InvalidConfigException
      */
     public function list($path, array $options = [])
     {
@@ -116,8 +113,7 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::exists()
+     * @inheritdoc
      */
     public function exists($path)
     {
@@ -133,8 +129,7 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::isDir()
+     * @inheritdoc
      */
     public function isDir($path)
     {
@@ -146,7 +141,7 @@ class FlysystemFileStore extends AbstractFileStore
      *
      * @param string|array $path
      * @return string dir|file
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function getType($path)
     {
@@ -170,8 +165,7 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::isFile()
+     * @inheritdoc
      */
     public function isFile($path)
     {
@@ -179,8 +173,7 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::isPublic()
+     * @inheritdoc
      */
     public function isPublic($path)
     {
@@ -211,8 +204,7 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::setPublic()
+     * @inheritdoc
      */
     public function setPublic($path, bool $public)
     {
@@ -235,8 +227,7 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::size()
+     * @inheritdoc
      */
     public function size($path)
     {
@@ -256,8 +247,7 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::mtime()
+     * @inheritdoc
      */
     public function mtime($path)
     {
@@ -265,7 +255,7 @@ class FlysystemFileStore extends AbstractFileStore
 
         try {
             $ret = $this->flysystem->getTimestamp($path);
-        } catch (Exception $ex) {
+        } catch (Throwable $ex) {
             throw new StoreException($path, $ex);
         }
 
@@ -277,8 +267,7 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::mimeType()
+     * @inheritdoc
      */
     public function mimeType($path)
     {
@@ -298,8 +287,7 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::readContents()
+     * @inheritdoc
      */
     public function readContents($path)
     {
@@ -319,8 +307,7 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::writeContents()
+     * @inheritdoc
      */
     public function writeContents($path, string $contents)
     {
@@ -345,8 +332,7 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::readStream()
+     * @inheritdoc
      */
     public function readStream($path)
     {
@@ -366,8 +352,7 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::writeStream()
+     * @inheritdoc
      */
     public function writeStream($path, $stream)
     {
@@ -389,9 +374,8 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @throws NotSupportedException
-     * @see \dicr\file\AbstractFileStore::copy()
+     * @inheritdoc
+     * @throws \yii\base\NotSupportedException
      */
     public function copy($path, $newpath)
     {
@@ -418,10 +402,9 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @throws NotSupportedException
-     * @throws StoreException
-     * @see \dicr\file\AbstractFileStore::absolutePath()
+     * @inheritdoc
+     * @throws \yii\base\NotSupportedException
+     * @throws \dicr\file\StoreException
      */
     public function absolutePath($path)
     {
@@ -436,8 +419,7 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::rename()
+     * @inheritdoc
      */
     public function rename($path, $newpath)
     {
@@ -464,8 +446,7 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::mkdir()
+     * @inheritdoc
      */
     public function mkdir($path)
     {
@@ -485,8 +466,7 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::unlink()
+     * @inheritdoc
      */
     protected function unlink($path)
     {
@@ -508,8 +488,7 @@ class FlysystemFileStore extends AbstractFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\AbstractFileStore::rmdir()
+     * @inheritdoc
      */
     protected function rmdir($path)
     {

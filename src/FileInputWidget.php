@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 20:54:06
+ * @version 29.04.20 17:19:49
  */
 
 declare(strict_types = 1);
@@ -38,7 +38,7 @@ use function preg_match;
  *
  * Чтобы не было привязки к версии bootstrap, виджет наследует базовый yii\widgets\InputWidget
  *
- * @property StoreFile[]|null $value файлы
+ * @property \dicr\file\StoreFile[]|null $value файлы
  */
 class FileInputWidget extends InputWidget
 {
@@ -70,12 +70,8 @@ class FileInputWidget extends InputWidget
     private $uniqueClass;
 
     /**
-     * {@inheritdoc}
-     * @throws InvalidConfigException
-     * @throws InvalidConfigException
-     * @throws InvalidConfigException
-     * @throws InvalidConfigException
-     * @see \yii\widgets\InputWidget::init()
+     * @inheritdoc
+     * @throws \yii\base\InvalidConfigException
      */
     public function init()
     {
@@ -162,10 +158,9 @@ class FileInputWidget extends InputWidget
     }
 
     /**
-     * {@inheritdoc}
-     * @throws InvalidConfigException
-     * @throws StoreException
-     * @see \yii\base\Widget::render()
+     * @inheritdoc
+     * @throws \yii\base\InvalidConfigException
+     * @throws \dicr\file\StoreException
      */
     public function run()
     {
@@ -195,8 +190,7 @@ class FileInputWidget extends InputWidget
      * Верстает блок файлов
      *
      * @return string
-     * @throws StoreException
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     protected function renderFiles()
     {
@@ -215,10 +209,9 @@ class FileInputWidget extends InputWidget
      * Верстает блок файла
      *
      * @param int $pos
-     * @param StoreFile $file
+     * @param \dicr\file\StoreFile $file
      * @return string
-     * @throws StoreException
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     protected function renderFileBlock(int $pos, StoreFile $file)
     {
@@ -257,10 +250,9 @@ class FileInputWidget extends InputWidget
     /**
      * Верстает блок картинки
      *
-     * @param StoreFile $file
+     * @param \dicr\file\StoreFile $file
      * @return string
-     * @throws StoreException
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     protected function renderImage(StoreFile $file)
     {

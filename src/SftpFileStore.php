@@ -3,12 +3,12 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 20:14:18
+ * @version 29.04.20 17:29:33
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
 /** @noinspection PhpComposerExtensionStubsInspection */
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace dicr\file;
 
@@ -51,9 +51,8 @@ class SftpFileStore extends LocalFileStore
     private $sftp;
 
     /**
-     * {@inheritdoc}
-     * @throws StoreException
-     * @see \dicr\file\LocalFileStore::init()
+     * @inheritDoc
+     * @throws \dicr\file\StoreException
      */
     public function init()
     {
@@ -68,20 +67,20 @@ class SftpFileStore extends LocalFileStore
         }
 
         $this->session = @ssh2_connect($this->host, $this->port);
-        if (!is_resource($this->session)) {
+        if (! is_resource($this->session)) {
             throw new StoreException('ошибка подключения к серверу', new StoreException());
         }
 
-        if (!isset($this->username)) {
+        if (! isset($this->username)) {
             throw new InvalidConfigException('username');
         }
 
         if (isset($this->password)) {
-            if (!@ssh2_auth_password($this->session, $this->username, $this->password)) {
+            if (! @ssh2_auth_password($this->session, $this->username, $this->password)) {
                 throw new StoreException('ошибка авторизации по логину и паролю');
             }
         } elseif (isset($this->pubkeyfile, $this->privkeyfile)) {
-            if (!@ssh2_auth_pubkey_file($this->session, $this->username, $this->pubkeyfile, $this->privkeyfile,
+            if (! @ssh2_auth_pubkey_file($this->session, $this->username, $this->pubkeyfile, $this->privkeyfile,
                 $this->passphrase)) {
                 throw new StoreException('ошибка авторизации по открытому ключу');
             }
@@ -98,11 +97,9 @@ class SftpFileStore extends LocalFileStore
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      *
      * Переопределяем родительский метод для отмены проверок пути.
-     *
-     * @see \dicr\file\LocalFileStore::setPath()
      */
     public function setPath(string $path)
     {
@@ -110,9 +107,8 @@ class SftpFileStore extends LocalFileStore
     }
 
     /**
-     * {@inheritDoc}
-     * @throws InvalidConfigException
-     * @see \dicr\file\LocalFileStore::list()
+     * @inheritDoc
+     * @throws \yii\base\InvalidConfigException
      */
     public function list($path, array $filter = [])
     {
@@ -142,7 +138,7 @@ class SftpFileStore extends LocalFileStore
                 }
             }
         } finally {
-            if (!empty($dir)) {
+            if (! empty($dir)) {
                 closedir($dir);
             }
         }
@@ -151,8 +147,7 @@ class SftpFileStore extends LocalFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\LocalFileStore::absolutePath()
+     * @inheritDoc
      */
     public function absolutePath($path)
     {
@@ -164,8 +159,7 @@ class SftpFileStore extends LocalFileStore
      *
      * @param string|array $path
      * @return string
-     * @throws StoreException
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function relativePath($path)
     {
@@ -173,22 +167,21 @@ class SftpFileStore extends LocalFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\LocalFileStore::setPublic()
+     * @inheritDoc
      */
     public function setPublic($path, bool $public)
     {
         $path = $this->filterRootPath($path);
         $absPath = $this->absolutePath($path);
 
-        if (!$this->exists($path)) {
+        if (! $this->exists($path)) {
             throw new StoreException('not exists: ' . $absPath);
         }
 
         $perms = $this->permsByPublic($this->isDir($path), $public);
         $relativePath = $this->relativePath($path);
 
-        if (!@ssh2_sftp_chmod($this->sftp, $relativePath, $perms)) {
+        if (! @ssh2_sftp_chmod($this->sftp, $relativePath, $perms)) {
             $this->throwLastError('Установка прав на файл', $absPath);
         }
 
@@ -198,8 +191,7 @@ class SftpFileStore extends LocalFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\LocalFileStore::rename()
+     * @inheritDoc
      */
     public function rename($path, $newpath)
     {
@@ -215,7 +207,7 @@ class SftpFileStore extends LocalFileStore
 
         $this->checkDir($this->dirname($newpath));
 
-        if (!@ssh2_sftp_rename($this->sftp, $relPath, $relNew)) {
+        if (! @ssh2_sftp_rename($this->sftp, $relPath, $relNew)) {
             $this->throwLastError('переименование файла', $this->absolutePath($newpath));
         }
 
@@ -225,8 +217,7 @@ class SftpFileStore extends LocalFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\LocalFileStore::mkdir()
+     * @inheritDoc
      */
     public function mkdir($path)
     {
@@ -238,7 +229,7 @@ class SftpFileStore extends LocalFileStore
 
         $perms = $this->permsByPublic(true, $this->public);
 
-        if (!@ssh2_sftp_mkdir($this->sftp, $this->relativePath($path), $perms, true)) {
+        if (! @ssh2_sftp_mkdir($this->sftp, $this->relativePath($path), $perms, true)) {
             $this->throwLastError('Создание директории', $this->absolutePath($path));
         }
 
@@ -250,21 +241,20 @@ class SftpFileStore extends LocalFileStore
      */
     public function __destruct()
     {
-        if (!empty($this->session)) {
+        if (! empty($this->session)) {
             /** @scrutinizer ignore-unhandled */
             @ssh2_disconnect($this->session);
         }
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\LocalFileStore::unlink()
+     * @inheritDoc
      */
     protected function unlink($path)
     {
         $this->filterRootPath($path);
 
-        if (!@ssh2_sftp_unlink($this->sftp, $this->relativePath($path))) {
+        if (! @ssh2_sftp_unlink($this->sftp, $this->relativePath($path))) {
             $this->throwLastError('Удаление файла', $this->absolutePath($path));
         }
 
@@ -274,14 +264,13 @@ class SftpFileStore extends LocalFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\LocalFileStore::rmdir()
+     * @inheritDoc
      */
     protected function rmdir($path)
     {
         $this->filterRootPath($path);
 
-        if (!@ssh2_sftp_rmdir($this->sftp, $this->relativePath($path))) {
+        if (! @ssh2_sftp_rmdir($this->sftp, $this->relativePath($path))) {
             $this->throwLastError('Удаление директории', $this->absolutePath($path));
         }
 

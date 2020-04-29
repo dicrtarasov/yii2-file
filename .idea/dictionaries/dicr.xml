@@ -10,6 +10,7 @@
       <w>finfo</w>
       <w>flysystem</w>
       <w>fopen</w>
+      <w>inputmask</w>
       <w>mbstring</w>
       <w>newpath</w>
       <w>noimage</w>

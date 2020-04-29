@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 00:57:58
+ * @version 29.04.20 17:29:53
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -22,9 +22,8 @@ class StoreException extends Exception
     /**
      * Конструктор
      *
-     * @param string|null $msg
-     *     если не задано, то берется из error_get_last
-     * @param Throwable $prev
+     * @param string|null $msg если не задано, то берется из error_get_last
+     * @param \Throwable $prev
      */
     public function __construct(string $msg = '', Throwable $prev = null)
     {

@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 20:53:06
+ * @version 29.04.20 19:31:16
  */
 
 declare(strict_types = 1);
@@ -11,7 +11,6 @@ declare(strict_types = 1);
 namespace dicr\file;
 
 use InvalidArgumentException;
-use yii\base\Exception;
 use yii\helpers\ArrayHelper;
 use function is_array;
 use function is_string;
@@ -93,7 +92,6 @@ class UploadFile extends StoreFile
      * @param string $formName имя формы для которой возвращает аттрибуты
      * @param string $attribute если задан, то возвращает файлы только для аттрибута
      * @return \dicr\file\UploadFile[]|null
-     * @throws Exception
      */
     public static function instances(string $formName = '', string $attribute = '')
     {
@@ -116,7 +114,6 @@ class UploadFile extends StoreFile
      * Парсит $_FILES и создает объекты.
      *
      * @return \dicr\file\UploadFile[][] файлы аттрибута
-     * @throws \yii\base\Exception
      */
     protected static function parseInstances()
     {
@@ -144,13 +141,12 @@ class UploadFile extends StoreFile
      *
      * @param array $data
      * @return bool true если данные формы
-     * @throws Exception
      */
     protected static function isComplexFormData(array $data)
     {
         // если не установлен name, то ошибка формата данных
         if (! isset($data['name'])) {
-            throw new Exception('Некорректная структура данных $_FILES: ' . var_export($data, true));
+            throw new InvalidArgumentException('Некорректная структура данных $_FILES: ' . var_export($data, true));
         }
 
         // если name не массив - однозначно не форма
@@ -215,7 +211,6 @@ class UploadFile extends StoreFile
      *
      * @param array $data данные аттрибута
      * @return \dicr\file\UploadFile[] файлы аттрибута
-     * @throws \yii\base\Exception
      */
     protected static function parseSimpleData(array $data)
     {
@@ -296,7 +291,6 @@ class UploadFile extends StoreFile
      *
      * @param array $data array данные аттрибутов формы
      * @return \dicr\file\UploadFile[][] [$attribute => \dicr\file\UploadFile[]] аттрибуты формы с файлами
-     * @throws Exception
      */
     protected static function parseFormData(array $data)
     {
@@ -324,7 +318,6 @@ class UploadFile extends StoreFile
      * @param int[] $errors ошибки
      * @param string[] $paths пути
      * @return \dicr\file\UploadFile[]
-     * @throws Exception
      */
     protected static function instancesFromData(array $names, array $types, array $sizes, array $errors, array $paths)
     {
@@ -338,7 +331,7 @@ class UploadFile extends StoreFile
 
             $path = rtrim($paths[$pos] ?? '', DIRECTORY_SEPARATOR);
             if ($path === '') {
-                throw new Exception('empty upload file path path');
+                continue;
             }
 
             $instances[$pos] = new static([
@@ -354,8 +347,7 @@ class UploadFile extends StoreFile
     }
 
     /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFile::getName()
+     * @inheritDoc
      */
     public function getName(array $options = [])
     {
@@ -381,7 +373,7 @@ class UploadFile extends StoreFile
      *
      * @param string $name
      * @return $this
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function setName(string $name)
     {
@@ -440,7 +432,7 @@ class UploadFile extends StoreFile
      * Устанавливает размер.
      *
      * @param int $size
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      * @noinspection PhpUnused
      */
     public function setSize(int $size)
@@ -453,7 +445,7 @@ class UploadFile extends StoreFile
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function getMimeType()
     {

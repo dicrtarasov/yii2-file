@@ -3,17 +3,15 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 20:09:35
+ * @version 29.04.20 17:17:36
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace dicr\file;
 
 use InvalidArgumentException;
-use Throwable;
-use yii\base\InvalidConfigException;
 use function is_resource;
 
 /**
@@ -49,7 +47,7 @@ class StoreFile extends AbstractFile
     /**
      * Конструктор
      *
-     * @param AbstractFileStore $store
+     * @param \dicr\file\AbstractFileStore $store
      * @param string|array $path относительный путь
      * @param array $config
      */
@@ -103,7 +101,7 @@ class StoreFile extends AbstractFile
     /**
      * Возвращает хранилище
      *
-     * @return AbstractFileStore
+     * @return \dicr\file\AbstractFileStore
      * @noinspection PhpUnused
      */
     public function getStore()
@@ -115,8 +113,8 @@ class StoreFile extends AbstractFile
      * Возвращает родительскую директорию.
      *
      * @return static|null
-     * @throws StoreException
-     * @throws InvalidConfigException
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
      * @noinspection PhpUnused
      */
     public function getParent()
@@ -129,19 +127,18 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * {@inheritDoc}
-     * @throws StoreException
-     * @see \dicr\file\AbstractFile::getName()
+     * @inheritDoc
+     * @throws \dicr\file\StoreException
      */
     public function getName(array $options = [])
     {
         $name = $this->_store->basename($this->_path);
 
-        if (!empty($options['removePrefix'])) {
+        if (! empty($options['removePrefix'])) {
             $name = static::removeStorePrefix($name);
         }
 
-        if (!empty($options['removeExt'])) {
+        if (! empty($options['removeExt'])) {
             $name = static::removeExtension($name);
         }
 
@@ -149,9 +146,8 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * {@inheritDoc}
-     * @throws StoreException
-     * @see \dicr\file\AbstractFile::normalizePath()
+     * @inheritDoc
+     * @throws \dicr\file\StoreException
      */
     protected function normalizePath($path)
     {
@@ -159,8 +155,7 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFile::getExists()
+     * @inheritDoc
      */
     public function getExists()
     {
@@ -168,8 +163,7 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFile::getIsDir()
+     * @inheritDoc
      */
     public function getIsDir()
     {
@@ -177,8 +171,7 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFile::getIsFile()
+     * @inheritDoc
      */
     public function getIsFile()
     {
@@ -186,8 +179,7 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFile::getSize()
+     * @inheritDoc
      */
     public function getSize()
     {
@@ -195,8 +187,7 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFile::getMtime()
+     * @inheritDoc
      */
     public function getMtime()
     {
@@ -204,8 +195,7 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFile::getMimeType()
+     * @inheritDoc
      */
     public function getMimeType()
     {
@@ -213,8 +203,7 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFile::getContents()
+     * @inheritDoc
      */
     public function getContents()
     {
@@ -222,8 +211,7 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * {@inheritDoc}
-     * @see \dicr\file\AbstractFile::getStream()
+     * @inheritDoc
      */
     public function getStream()
     {
@@ -235,7 +223,7 @@ class StoreFile extends AbstractFile
      *
      * @param string $name новое имя
      * @return $this
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function setName(string $name)
     {
@@ -256,13 +244,13 @@ class StoreFile extends AbstractFile
      *
      * @param string|string[] $path new path
      * @return $this
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function setPath($path)
     {
         $path = $this->normalizePath($path);
 
-        if (!empty($this->_path) && $path !== $this->_path) {
+        if (! empty($this->_path) && $path !== $this->_path) {
             $this->_store->rename($this->_path, $path);
             $this->_path = $path;
             $this->_absolutePath = null;
@@ -280,7 +268,7 @@ class StoreFile extends AbstractFile
      */
     public function getAbsolutePath()
     {
-        if (!isset($this->_absolutePath)) {
+        if (! isset($this->_absolutePath)) {
             $this->_absolutePath = $this->_store->absolutePath($this->_path);
         }
 
@@ -291,11 +279,11 @@ class StoreFile extends AbstractFile
      * Возвращает url.
      *
      * @return string|null
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function getUrl()
     {
-        if (!isset($this->_absoluteUrl)) {
+        if (! isset($this->_absoluteUrl)) {
             $this->_absoluteUrl = $this->_store->url($this->_path);
         }
 
@@ -307,8 +295,8 @@ class StoreFile extends AbstractFile
      *
      * @param string|string[] $path
      * @return static
-     * @throws StoreException
-     * @throws InvalidConfigException
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
      */
     public function child($path)
     {
@@ -320,7 +308,7 @@ class StoreFile extends AbstractFile
      *
      * @param array $options опции и фильтры {@link AbstractFileStore::list}
      * @return static[]
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function getList(array $options = [])
     {
@@ -332,7 +320,7 @@ class StoreFile extends AbstractFile
      *
      * @throw \dicr\file\StoreException если не существует
      * @return bool
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      * @noinspection PhpUnused
      */
     public function getHidden()
@@ -344,7 +332,7 @@ class StoreFile extends AbstractFile
      * Возвращает флаг публичного доступа
      *
      * @return bool
-     * @throws StoreException не существует
+     * @throws \dicr\file\StoreException не существует
      * @noinspection PhpUnused
      */
     public function getPublic()
@@ -357,7 +345,7 @@ class StoreFile extends AbstractFile
      *
      * @param bool $public
      * @return $this
-     * @throws StoreException не существует
+     * @throws \dicr\file\StoreException не существует
      */
     public function setPublic(bool $public)
     {
@@ -371,7 +359,7 @@ class StoreFile extends AbstractFile
      *
      * @param string $contents
      * @return $this
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function setContents(string $contents)
     {
@@ -385,11 +373,11 @@ class StoreFile extends AbstractFile
      *
      * @param resource $stream
      * @return $this
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function setStream($stream)
     {
-        if (!@is_resource($stream)) {
+        if (! @is_resource($stream)) {
             throw new InvalidArgumentException('stream');
         }
 
@@ -403,8 +391,8 @@ class StoreFile extends AbstractFile
      *
      * @param $path
      * @return static новый файл
-     * @throws StoreException
-     * @throws InvalidConfigException
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
      */
     public function copy($path)
     {
@@ -417,7 +405,7 @@ class StoreFile extends AbstractFile
      * Создает директорию.
      *
      * @return $this
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function mkdir()
     {
@@ -430,7 +418,7 @@ class StoreFile extends AbstractFile
      * Проверяет создает родительскую директорию.
      *
      * @return $this
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      * @noinspection PhpUnused
      */
     public function checkDir()
@@ -447,9 +435,8 @@ class StoreFile extends AbstractFile
      * @param array $options опции
      *  - bool $ifModified - импортировать файл только если время новее или размер отличается (по-умолчанию true)
      * @return $this
-     * @throws StoreException
-     * @throws InvalidConfigException
-     * @see AbstractFileStore::import()
+     * @throws \dicr\file\StoreException
+     * @throws \yii\base\InvalidConfigException
      */
     public function import($src, array $options = [])
     {
@@ -461,7 +448,7 @@ class StoreFile extends AbstractFile
      * Удаляет файл
      *
      * @return $this
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function delete()
     {
@@ -474,11 +461,11 @@ class StoreFile extends AbstractFile
      * Создает превью файла.
      *
      * @param array $config опции ThumbFile
-     * @return ThumbFile|null|false
+     * @return \dicr\file\ThumbFile|null|false
      * - если thumbFileConfig не настроен, то false
      * - если файл не существует и не настроен noimage, то null
-     * @throws InvalidConfigException
-     * @throws Throwable
+     * @throws \yii\base\InvalidConfigException
+     * @throws \dicr\file\StoreException
      */
     public function thumb(array $config = [])
     {
@@ -488,8 +475,8 @@ class StoreFile extends AbstractFile
     /**
      * Очищает все превью файла.
      *
-     * @throws InvalidConfigException
-     * @throws StoreException
+     * @throws \yii\base\InvalidConfigException
+     * @throws \dicr\file\StoreException
      * @noinspection PhpUnused
      */
     public function clearThumb()

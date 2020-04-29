@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 16:52:47
+ * @version 29.04.20 17:24:11
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -48,9 +48,8 @@ class FtpFileStore extends LocalFileStore
     private $connection;
 
     /**
-     * {@inheritdoc}
-     * @throws StoreException
-     * @see \dicr\file\LocalFileStore::init()
+     * @inheritdoc
+     * @throws \dicr\file\StoreException
      */
     public function init()
     {
@@ -88,11 +87,9 @@ class FtpFileStore extends LocalFileStore
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      *
      * Переопределяем родительский метод для отмены проверок пути.
-     *
-     * @see \dicr\file\LocalFileStore::setPath()
      */
     public function setPath(string $path)
     {
@@ -100,8 +97,7 @@ class FtpFileStore extends LocalFileStore
     }
 
     /**
-     * {@inheritDoc}
-     * @see \dicr\file\LocalFileStore::list()
+     * @inheritDoc
      */
     public function list($path, array $filter = [])
     {
@@ -145,8 +141,7 @@ class FtpFileStore extends LocalFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\LocalFileStore::absolutePath()
+     * @inheritdoc
      */
     public function absolutePath($path)
     {
@@ -159,7 +154,7 @@ class FtpFileStore extends LocalFileStore
      *
      * @param string|array $path
      * @return string
-     * @throws StoreException
+     * @throws \dicr\file\StoreException
      */
     public function relativePath($path)
     {
@@ -167,8 +162,7 @@ class FtpFileStore extends LocalFileStore
     }
 
     /**
-     * {@inheritDoc}
-     * @see \dicr\file\LocalFileStore::size()
+     * @inheritDoc
      */
     public function size($path)
     {
@@ -181,8 +175,7 @@ class FtpFileStore extends LocalFileStore
     }
 
     /**
-     * {@inheritDoc}
-     * @see \dicr\file\LocalFileStore::mtime()
+     * @inheritDoc
      */
     public function mtime($path)
     {
@@ -195,8 +188,7 @@ class FtpFileStore extends LocalFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\LocalFileStore::rename()
+     * @inheritdoc
      */
     public function rename($path, $newpath)
     {
@@ -222,8 +214,7 @@ class FtpFileStore extends LocalFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\LocalFileStore::mkdir()
+     * @inheritdoc
      */
     public function mkdir($path)
     {
@@ -243,8 +234,7 @@ class FtpFileStore extends LocalFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\LocalFileStore::setPublic()
+     * @inheritdoc
      */
     public function setPublic($path, bool $public)
     {
@@ -272,8 +262,7 @@ class FtpFileStore extends LocalFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\LocalFileStore::unlink()
+     * @inheritdoc
      */
     protected function unlink($path)
     {
@@ -289,8 +278,7 @@ class FtpFileStore extends LocalFileStore
     }
 
     /**
-     * {@inheritdoc}
-     * @see \dicr\file\LocalFileStore::rmdir()
+     * @inheritdoc
      */
     protected function rmdir($path)
     {
