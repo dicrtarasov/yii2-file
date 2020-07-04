@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 29.04.20 19:31:16
+ * @version 04.07.20 13:06:24
  */
 
 declare(strict_types = 1);
@@ -91,7 +91,7 @@ class UploadFile extends StoreFile
      *
      * @param string $formName имя формы для которой возвращает аттрибуты
      * @param string $attribute если задан, то возвращает файлы только для аттрибута
-     * @return \dicr\file\UploadFile[]|null
+     * @return UploadFile[]|null
      */
     public static function instances(string $formName = '', string $attribute = '')
     {
@@ -113,7 +113,7 @@ class UploadFile extends StoreFile
     /**
      * Парсит $_FILES и создает объекты.
      *
-     * @return \dicr\file\UploadFile[][] файлы аттрибута
+     * @return UploadFile[] файлы аттрибута
      */
     protected static function parseInstances()
     {
@@ -210,7 +210,7 @@ class UploadFile extends StoreFile
      * ```
      *
      * @param array $data данные аттрибута
-     * @return \dicr\file\UploadFile[] файлы аттрибута
+     * @return UploadFile[] файлы аттрибута
      */
     protected static function parseSimpleData(array $data)
     {
@@ -290,7 +290,7 @@ class UploadFile extends StoreFile
      * ```
      *
      * @param array $data array данные аттрибутов формы
-     * @return \dicr\file\UploadFile[][] [$attribute => \dicr\file\UploadFile[]] аттрибуты формы с файлами
+     * @return UploadFile[] [$attribute => \dicr\file\UploadFile[]] аттрибуты формы с файлами
      */
     protected static function parseFormData(array $data)
     {
@@ -317,7 +317,7 @@ class UploadFile extends StoreFile
      * @param int[] $sizes размеры
      * @param int[] $errors ошибки
      * @param string[] $paths пути
-     * @return \dicr\file\UploadFile[]
+     * @return UploadFile[]
      */
     protected static function instancesFromData(array $names, array $types, array $sizes, array $errors, array $paths)
     {
@@ -373,7 +373,7 @@ class UploadFile extends StoreFile
      *
      * @param string $name
      * @return $this
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function setName(string $name)
     {
@@ -432,7 +432,7 @@ class UploadFile extends StoreFile
      * Устанавливает размер.
      *
      * @param int $size
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      * @noinspection PhpUnused
      */
     public function setSize(int $size)

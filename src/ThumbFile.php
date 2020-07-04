@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 29.04.20 17:09:54
+ * @version 04.07.20 13:06:24
  */
 
 /** @noinspection SpellCheckingInspection */
@@ -67,7 +67,7 @@ class ThumbFile extends StoreFile
      * Конструктор.
      *
      * @param array $config конфиг
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public function __construct(array $config = [])
     {
@@ -93,7 +93,7 @@ class ThumbFile extends StoreFile
 
     /**
      * @inheritDoc
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public function init()
     {
@@ -190,7 +190,7 @@ class ThumbFile extends StoreFile
     /**
      * Обновляет превью.
      *
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function update()
     {
@@ -214,7 +214,7 @@ class ThumbFile extends StoreFile
     /**
      * Масштабирует картинку.
      *
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     protected function resizeImage()
     {
@@ -231,8 +231,8 @@ class ThumbFile extends StoreFile
     /**
      * Возвращает каринку.
      *
-     * @return \Imagick
-     * @throws \dicr\file\StoreException
+     * @return Imagick
+     * @throws StoreException
      */
     protected function image()
     {
@@ -267,7 +267,7 @@ class ThumbFile extends StoreFile
     /**
      * Накладывает водяной знак.
      *
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     protected function watermarkImage()
     {
@@ -316,7 +316,7 @@ class ThumbFile extends StoreFile
     /**
      * Накладывает пометку о возрастных ограничениях.
      *
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     protected function placeDisclaimer()
     {
@@ -368,7 +368,7 @@ class ThumbFile extends StoreFile
     /**
      * Сохраняет картинку превью.
      *
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     protected function writeImage()
     {
@@ -394,8 +394,8 @@ class ThumbFile extends StoreFile
     /**
      * Удаляет все превью для заданного файла.
      *
-     * @throws \dicr\file\StoreException
-     * @throws \yii\base\InvalidConfigException
+     * @throws StoreException
+     * @throws InvalidConfigException
      */
     public function clear()
     {

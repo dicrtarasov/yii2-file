@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 29.04.20 17:18:20
+ * @version 04.07.20 13:06:24
  */
 
 declare(strict_types=1);
@@ -102,7 +102,7 @@ abstract class AbstractFile extends BaseObject
      * Возвращает флаг существования файла.
      *
      * @return bool
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     abstract public function getExists();
 
@@ -110,7 +110,7 @@ abstract class AbstractFile extends BaseObject
      * Возвращает признак директории.
      *
      * @return bool
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     abstract public function getIsDir();
 
@@ -126,7 +126,7 @@ abstract class AbstractFile extends BaseObject
      * Возвращает размер.
      *
      * @return int размер в байтах
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     abstract public function getSize();
 
@@ -134,7 +134,7 @@ abstract class AbstractFile extends BaseObject
      * Возвращает время изменения файла.
      *
      * @return int timestamp
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     abstract public function getMtime();
 
@@ -142,7 +142,7 @@ abstract class AbstractFile extends BaseObject
      * Возвращает Mime-ип файла.
      *
      * @return string
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     abstract public function getMimeType();
 
@@ -162,7 +162,7 @@ abstract class AbstractFile extends BaseObject
      * Возвращает содержимое файла.
      *
      * @return string
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     abstract public function getContents();
 
@@ -170,7 +170,7 @@ abstract class AbstractFile extends BaseObject
      * Возвращает контент в виде потока.
      *
      * @return resource
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     abstract public function getStream();
 

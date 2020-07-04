@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 29.04.20 17:19:49
+ * @version 04.07.20 13:06:24
  */
 
 declare(strict_types = 1);
@@ -38,7 +38,7 @@ use function preg_match;
  *
  * Чтобы не было привязки к версии bootstrap, виджет наследует базовый yii\widgets\InputWidget
  *
- * @property \dicr\file\StoreFile[]|null $value файлы
+ * @property StoreFile[]|null $value файлы
  */
 class FileInputWidget extends InputWidget
 {
@@ -71,7 +71,7 @@ class FileInputWidget extends InputWidget
 
     /**
      * @inheritdoc
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public function init()
     {
@@ -159,8 +159,8 @@ class FileInputWidget extends InputWidget
 
     /**
      * @inheritdoc
-     * @throws \yii\base\InvalidConfigException
-     * @throws \dicr\file\StoreException
+     * @throws InvalidConfigException
+     * @throws StoreException
      */
     public function run()
     {
@@ -190,7 +190,7 @@ class FileInputWidget extends InputWidget
      * Верстает блок файлов
      *
      * @return string
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     protected function renderFiles()
     {
@@ -209,9 +209,9 @@ class FileInputWidget extends InputWidget
      * Верстает блок файла
      *
      * @param int $pos
-     * @param \dicr\file\StoreFile $file
+     * @param StoreFile $file
      * @return string
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     protected function renderFileBlock(int $pos, StoreFile $file)
     {
@@ -250,9 +250,9 @@ class FileInputWidget extends InputWidget
     /**
      * Верстает блок картинки
      *
-     * @param \dicr\file\StoreFile $file
+     * @param StoreFile $file
      * @return string
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     protected function renderImage(StoreFile $file)
     {

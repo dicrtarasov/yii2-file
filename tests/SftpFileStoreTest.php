@@ -3,11 +3,10 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 01:50:11
+ * @version 04.07.20 13:07:26
  */
 
-declare(strict_types=1);
-
+declare(strict_types = 1);
 namespace dicr\tests;
 
 use dicr\file\SftpFileStore;
@@ -20,7 +19,7 @@ use yii\base\InvalidConfigException;
 class SftpFileStoreTest extends AbstractFileStoreTest
 {
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      * @throws InvalidConfigException
      */
     public static function setUpBeforeClass(): void

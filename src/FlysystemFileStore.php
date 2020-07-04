@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 29.04.20 17:23:05
+ * @version 04.07.20 13:06:24
  */
 
 declare(strict_types = 1);
@@ -67,7 +67,7 @@ class FlysystemFileStore extends AbstractFileStore
     /**
      * Возвращает адаптер
      *
-     * @return \League\Flysystem\AdapterInterface|null
+     * @return AdapterInterface|null
      * @noinspection PhpUnused
      */
     public function getAdapter()
@@ -81,7 +81,7 @@ class FlysystemFileStore extends AbstractFileStore
 
     /**
      * @inheritdoc
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public function list($path, array $options = [])
     {
@@ -97,7 +97,7 @@ class FlysystemFileStore extends AbstractFileStore
             throw new StoreException($path, $ex);
         }
 
-        /** @var \dicr\file\StoreFile[] $files */
+        /** @var StoreFile[] $files */
         $files = [];
         foreach ($items as $item) {
             // создаем файл
@@ -141,7 +141,7 @@ class FlysystemFileStore extends AbstractFileStore
      *
      * @param string|array $path
      * @return string dir|file
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function getType($path)
     {
@@ -375,7 +375,7 @@ class FlysystemFileStore extends AbstractFileStore
 
     /**
      * @inheritdoc
-     * @throws \yii\base\NotSupportedException
+     * @throws NotSupportedException
      */
     public function copy($path, $newpath)
     {
@@ -403,8 +403,8 @@ class FlysystemFileStore extends AbstractFileStore
 
     /**
      * @inheritdoc
-     * @throws \yii\base\NotSupportedException
-     * @throws \dicr\file\StoreException
+     * @throws NotSupportedException
+     * @throws StoreException
      */
     public function absolutePath($path)
     {

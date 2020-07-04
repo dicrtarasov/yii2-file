@@ -28,20 +28,20 @@
         }
     },
     "require": {
-        "php": ">=7.2",
+        "php": "~7.2",
         "ext-fileinfo": "*",
         "ext-ftp": "*",
         "ext-imagick": "*",
         "ext-mbstring": "*",
-        "yiisoft/yii2": "~2.0.34",
-        "dicr/yii2-asset": "~1.5.3"
+        "yiisoft/yii2": "~2.0",
+        "dicr/yii2-asset": "~1.5"
     },
     "require-dev": {
         "roave/security-advisories": "dev-master",
-        "phpunit/phpunit": "~8.5.3",
-        "yiisoft/yii2-debug": "~2.1.13",
-        "league/flysystem": "~1.0.66",
-        "yiisoft/yii2-bootstrap4": "~2.0.8"
+        "phpunit/phpunit": "~8.5",
+        "yiisoft/yii2-debug": "~2.1",
+        "league/flysystem": "~1.0",
+        "yiisoft/yii2-bootstrap4": "~2.0"
     },
     "suggest": {
         "ext-ssh2": "for LocalFileStore with ssh2.sftp:// wrapper",

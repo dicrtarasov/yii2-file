@@ -3,11 +3,10 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 01:49:57
+ * @version 04.07.20 13:07:13
  */
 
-declare(strict_types=1);
-
+declare(strict_types = 1);
 namespace dicr\tests;
 
 use dicr\file\LocalFileStore;
@@ -20,7 +19,7 @@ use yii\base\InvalidConfigException;
 class LocalFileStoreTest extends AbstractFileStoreTest
 {
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      * @throws InvalidConfigException
      */
     public static function setUpBeforeClass(): void

@@ -3,11 +3,10 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 01:49:42
+ * @version 04.07.20 13:06:58
  */
 
-declare(strict_types=1);
-
+declare(strict_types = 1);
 namespace dicr\tests;
 
 use dicr\file\FtpFileStore;
@@ -19,7 +18,7 @@ use Yii;
 class FtpFileStoreTest extends AbstractFileStoreTest
 {
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public static function setUpBeforeClass(): void
     {

@@ -2,8 +2,10 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 20:15:06
- */ /** @noinspection PhpUnhandledExceptionInspection, PhpUnused */
+ * @version 04.07.20 13:11:16
+ */
+
+/** @noinspection PhpUnhandledExceptionInspection, PhpUnused */
 declare(strict_types = 1);
 
 use dicr\file\LocalFileStore;
@@ -13,12 +15,10 @@ use yii\db\Schema;
 use yii\debug\Module;
 use yii\web\Application;
 
-error_reporting(- 1);
-ini_set('display_errors', '1');
-
 define('YII_DEBUG', true);
-
+define('YII_ENV', 'dev');
 define('VENDOR', __DIR__ . '/../../vendor');
+
 require_once(VENDOR . '/autoload.php');
 require_once(VENDOR . '/yiisoft/yii2/Yii.php');
 
@@ -53,10 +53,10 @@ $app = new Application([
             'path' => '@webroot/files',
             'url' => '@web/files',
             'thumbFileConfig' => [
-                'store' => 'cacheStore'
+                'store' => 'thumbStore'
             ]
         ],
-        'cacheStore' => [
+        'thumbStore' => [
             'class' => LocalFileStore::class,
             'path' => '@webroot/thumb',
             'url' => '@web/thumb'

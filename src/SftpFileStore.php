@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 29.04.20 17:29:33
+ * @version 04.07.20 13:06:24
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -52,7 +52,7 @@ class SftpFileStore extends LocalFileStore
 
     /**
      * @inheritDoc
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function init()
     {
@@ -108,7 +108,7 @@ class SftpFileStore extends LocalFileStore
 
     /**
      * @inheritDoc
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public function list($path, array $filter = [])
     {
@@ -159,7 +159,7 @@ class SftpFileStore extends LocalFileStore
      *
      * @param string|array $path
      * @return string
-     * @throws \dicr\file\StoreException
+     * @throws StoreException
      */
     public function relativePath($path)
     {
