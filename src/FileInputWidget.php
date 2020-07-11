@@ -3,13 +3,14 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.07.20 13:06:24
+ * @version 11.07.20 09:40:38
  */
 
 declare(strict_types = 1);
 
 namespace dicr\file;
 
+use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
@@ -152,7 +153,7 @@ class FileInputWidget extends InputWidget
             'removeExt' => $this->removeExt,
             'inputName' => $this->inputName,
             'messages' => [
-                'Удалить' => T::t('Удалить')
+                'Удалить' => Yii::t('dicr/file', 'Удалить')
             ]
         ], $this->clientOptions);
     }
@@ -239,7 +240,7 @@ class FileInputWidget extends InputWidget
         // кнопка удаления файла
         echo Html::button('&times;', [
             'class' => 'del btn btn-link text-danger',
-            'title' => T::t('Удалить')
+            'title' => Yii::t('dicr/file', 'Удалить')
         ]);
 
         echo Html::endTag('div');
@@ -296,7 +297,7 @@ class FileInputWidget extends InputWidget
 
             [
                 'class' => 'add',
-                'title' => T::t('Добавить файл'),
+                'title' => Yii::t('dicr/file', 'Добавить файл'),
                 'style' => [
                     'display' => $this->limit > 0 && count($this->value) >= $this->limit ? 'none' : 'flex'
                 ]

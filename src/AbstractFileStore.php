@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.07.20 13:06:24
+ * @version 11.07.20 09:34:57
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -578,7 +578,7 @@ abstract class AbstractFileStore extends Component
             throw new InvalidArgumentException('file');
         }
 
-        if (! ($file instanceof StoreFile)) {
+        if (! $file instanceof StoreFile) {
             $file = $this->file($file);
         }
 
@@ -651,8 +651,6 @@ abstract class AbstractFileStore extends Component
      * @return ThumbFile
      * @throws InvalidConfigException
      * @throws StoreException
-     *
-     * @noinspection PhpUnused
      */
     public function noimage(array $config = [])
     {
@@ -686,7 +684,7 @@ abstract class AbstractFileStore extends Component
             throw new InvalidArgumentException('file');
         }
 
-        if (! ($file instanceof StoreFile)) {
+        if (! $file instanceof StoreFile) {
             $file = $this->file($file);
         }
 
@@ -753,12 +751,12 @@ abstract class AbstractFileStore extends Component
         // ----- медленные фильтры
 
         // фильтруем по типу
-        if (isset($filter['dir']) && ((bool)$file->isDir !== (bool)$filter['dir'])) {
+        if (isset($filter['dir']) && (bool)$file->isDir !== (bool)$filter['dir']) {
             return false;
         }
 
         // фильтруем по доступности
-        if (isset($filter['public']) && ((bool)$file->public !== (bool)$filter['public'])) {
+        if (isset($filter['public']) && (bool)$file->public !== (bool)$filter['public']) {
             return false;
         }
 

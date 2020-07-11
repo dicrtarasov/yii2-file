@@ -27,6 +27,9 @@
             "dicr\\tests\\": "tests/"
         }
     },
+    "extra": {
+        "bootstrap": "dicr\\file\\Bootstrap"
+    },
     "require": {
         "php": "~7.2",
         "ext-fileinfo": "*",

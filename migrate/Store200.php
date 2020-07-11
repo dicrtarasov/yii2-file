@@ -3,13 +3,10 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 20:09:19
+ * @version 11.07.20 09:38:42
  */
 
-/** @noinspection PhpUnused */
-
 declare(strict_types=1);
-
 namespace dicr\file\migrate;
 
 use dicr\file\AbstractFileStore;
@@ -27,9 +24,6 @@ use yii\base\InvalidConfigException;
  *
  * В схему:
  * {model}/{id}/{attribute}~{id}~{name}
- *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 2019
  */
 class Store200 extends BaseObject
 {

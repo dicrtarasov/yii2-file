@@ -3,21 +3,17 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 19:20:13
+ * @version 11.07.20 09:25:11
  */
 
 declare(strict_types = 1);
-
 namespace dicr\tests\webapp;
 
-use dicr\file\T;
 use Yii;
 use yii\web\Controller;
 
 /**
  * Default test Controller
- *
- * @noinspection PhpUnused
  */
 class SiteController extends Controller
 {
@@ -47,15 +43,5 @@ class SiteController extends Controller
         return $this->render('index', [
             'model' => $model
         ]);
-    }
-
-    /**
-     * @noinspection PhpMethodMayBeStaticInspection
-     */
-    public function actionTest()
-    {
-        Yii::$app->language = 'ua';
-
-        echo T::t('Добавить');
     }
 }

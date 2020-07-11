@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.07.20 13:06:41
+ * @version 11.07.20 09:34:57
  */
 
 declare(strict_types=1);
@@ -13,6 +13,7 @@ use dicr\file\FlysystemFileStore;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
 use Yii;
+use yii\base\InvalidConfigException;
 
 /**
  * Flysystem file store test
@@ -21,6 +22,7 @@ class FlysystemFileStoreTest extends AbstractFileStoreTest
 {
     /**
      * @inheritdoc
+     * @throws InvalidConfigException
      */
     public static function setUpBeforeClass(): void
     {

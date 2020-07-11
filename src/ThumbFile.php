@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.07.20 13:06:24
+ * @version 11.07.20 09:39:22
  */
 
 /** @noinspection SpellCheckingInspection */
@@ -26,7 +26,6 @@ use function is_string;
  * Превью файл в кэше.
  *
  * @property-read bool $isReady флаг сущесвования готового превью
- * @noinspection LongInheritanceChainInspection
  */
 class ThumbFile extends StoreFile
 {
@@ -180,7 +179,6 @@ class ThumbFile extends StoreFile
      * Проверяет актуальность превью.
      *
      * @return bool true если существует и дата изменения не раньше чем у исходного
-     * @noinspection PhpUnused
      */
     public function getIsReady()
     {

@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.07.20 13:06:24
+ * @version 11.07.20 09:39:22
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -103,7 +103,6 @@ class StoreFile extends AbstractFile
      * Возвращает хранилище
      *
      * @return AbstractFileStore
-     * @noinspection PhpUnused
      */
     public function getStore()
     {
@@ -116,7 +115,6 @@ class StoreFile extends AbstractFile
      * @return static|null
      * @throws StoreException
      * @throws InvalidConfigException
-     * @noinspection PhpUnused
      */
     public function getParent()
     {
@@ -265,7 +263,6 @@ class StoreFile extends AbstractFile
      * Возвращает абсолютный путь.
      *
      * @return string
-     * @noinspection PhpUnused
      */
     public function getAbsolutePath()
     {
@@ -322,7 +319,6 @@ class StoreFile extends AbstractFile
      * @throw \dicr\file\StoreException если не существует
      * @return bool
      * @throws StoreException
-     * @noinspection PhpUnused
      */
     public function getHidden()
     {
@@ -334,7 +330,6 @@ class StoreFile extends AbstractFile
      *
      * @return bool
      * @throws StoreException не существует
-     * @noinspection PhpUnused
      */
     public function getPublic()
     {
@@ -420,7 +415,6 @@ class StoreFile extends AbstractFile
      *
      * @return $this
      * @throws StoreException
-     * @noinspection PhpUnused
      */
     public function checkDir()
     {
@@ -478,7 +472,6 @@ class StoreFile extends AbstractFile
      *
      * @throws InvalidConfigException
      * @throws StoreException
-     * @noinspection PhpUnused
      */
     public function clearThumb()
     {

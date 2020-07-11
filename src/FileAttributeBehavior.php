@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 20:07:41
+ * @version 11.07.20 09:42:24
  */
 
 declare(strict_types = 1);
@@ -419,7 +419,7 @@ class FileAttributeBehavior extends Behavior
      */
     protected function checkOwner()
     {
-        if (! ($this->owner instanceof Model)) {
+        if (! $this->owner instanceof Model) {
             throw new InvalidConfigException('owner');
         }
     }
@@ -449,7 +449,7 @@ class FileAttributeBehavior extends Behavior
 
         // проверяем элементы массива
         foreach ($files as $file) {
-            if (! ($file instanceof StoreFile)) {
+            if (! $file instanceof StoreFile) {
                 throw new InvalidArgumentException('files: некорректный тип элемента');
             }
         }
@@ -471,7 +471,6 @@ class FileAttributeBehavior extends Behavior
      * Если путь не установлен, то он рассчитывается автоматически.
      *
      * @param StoreFile $modelPathFile
-     * @noinspection PhpUnused
      */
     public function setFileModelPath(StoreFile $modelPathFile)
     {
@@ -484,7 +483,6 @@ class FileAttributeBehavior extends Behavior
      *
      * @return StoreFile путь удаленной директории модели
      * @throws StoreException
-     * @noinspection PhpUnused
      */
     public function deleteFileModelPath()
     {
@@ -503,7 +501,6 @@ class FileAttributeBehavior extends Behavior
      * @return bool true если данные некоторых атрибутов были загружены
      * @throws Exception
      * @throws InvalidConfigException
-     * @noinspection PhpUnused
      */
     public function loadFileAttributes(string $formName = null)
     {
@@ -526,6 +523,7 @@ class FileAttributeBehavior extends Behavior
      * @return bool true если значение было загружено (присутствуют отправленные данные)
      * @throws Exception
      * @throws InvalidConfigException
+     * @throws \Exception
      */
     public function loadFileAttribute(string $attribute, string $formName = null)
     {
@@ -586,7 +584,6 @@ class FileAttributeBehavior extends Behavior
      * @return bool true, если все проверки успешны
      * @throws Exception
      * @throws InvalidConfigException
-     * @noinspection PhpUnused
      */
     public function validateFileAttributes()
     {
@@ -661,7 +658,7 @@ class FileAttributeBehavior extends Behavior
         // проверяем на пустое значение
         if (empty($file)) {
             $this->owner->addError($attribute, 'Пустое значение файла');
-        } elseif (! ($file instanceof StoreFile)) {
+        } elseif (! $file instanceof StoreFile) {
             $this->owner->addError($attribute, 'Некорректный тип значения: ' . gettype($file));
         } elseif (! $file->exists) {
             $this->owner->addError($attribute, 'Загружаемый файл не существует: ' . $file->path);
@@ -688,7 +685,6 @@ class FileAttributeBehavior extends Behavior
      * @throws StoreException
      * @throws Exception
      * @throws InvalidConfigException
-     * @noinspection PhpUnused
      */
     public function saveFileAttributes()
     {
@@ -737,12 +733,12 @@ class FileAttributeBehavior extends Behavior
         // импортируем новые и переименовываем старые во временные имена с точкой
         foreach ($files as $pos => &$file) {
             // некорректный тип значения
-            if (! ($file instanceof StoreFile)) {
+            if (! $file instanceof StoreFile) {
                 throw new Exception('Неизвестный тип значения файлового аттрибута ' . $attribute);
             }
 
             // если это загружаемый файл и содержит ошибку загрузки, то пропускаем
-            if (($file instanceof UploadFile) && ! empty($file->error)) {
+            if ($file instanceof UploadFile && ! empty($file->error)) {
                 // если это загружаемый файл и содержит ошибки - пропускаем
                 unset($files[$pos]);
                 continue;
@@ -828,7 +824,6 @@ class FileAttributeBehavior extends Behavior
      * @throws StoreException
      * @throws Exception
      * @throws InvalidConfigException
-     * @noinspection PhpUnused
      */
     public function deleteFileAttributes()
     {

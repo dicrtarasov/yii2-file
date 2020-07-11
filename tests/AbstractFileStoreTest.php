@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.07.20 13:08:29
+ * @version 11.07.20 09:01:01
  */
 
 declare(strict_types = 1);
@@ -16,8 +16,6 @@ use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Yii;
 use yii\base\InvalidConfigException;
-use yii\console\Application;
-use yii\di\Container;
 
 /**
  * LocalStore Test
@@ -26,31 +24,6 @@ abstract class AbstractFileStoreTest extends TestCase
 {
     /** @var string id компонента тестового файлового хранилища */
     public const STORE_ID = 'fileStore';
-
-    /**
-     * @inheritdoc
-     * @return Application
-     * @throws InvalidConfigException
-     * @throws InvalidConfigException
-     */
-    public static function setUpBeforeClass(): void
-    {
-        new Application([
-            'id' => 'testapp',
-            'basePath' => __DIR__,
-            'vendorPath' => VENDOR,
-        ]);
-    }
-
-    /**
-     * @inheritdoc
-     * @noinspection DisallowWritingIntoStaticPropertiesInspection
-     */
-    public static function tearDownAfterClass(): void
-    {
-        Yii::$app = null;
-        Yii::$container = new Container();
-    }
 
     /**
      * Test store configured

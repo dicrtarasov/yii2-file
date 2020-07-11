@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.07.20 13:06:58
+ * @version 11.07.20 09:34:57
  */
 
 declare(strict_types = 1);
@@ -11,6 +11,7 @@ namespace dicr\tests;
 
 use dicr\file\FtpFileStore;
 use Yii;
+use yii\base\InvalidConfigException;
 
 /**
  * FtpFileStore Test
@@ -19,6 +20,7 @@ class FtpFileStoreTest extends AbstractFileStoreTest
 {
     /**
      * @inheritdoc
+     * @throws InvalidConfigException
      */
     public static function setUpBeforeClass(): void
     {

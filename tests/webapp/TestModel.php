@@ -3,10 +3,8 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 01:12:20
+ * @version 11.07.20 09:32:04
  */
-
-/** @noinspection LongInheritanceChainInspection */
 
 declare(strict_types=1);
 

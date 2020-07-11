@@ -3,13 +3,14 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.07.20 13:06:24
+ * @version 11.07.20 09:42:24
  */
 
 declare(strict_types = 1);
 
 namespace dicr\file;
 
+use Exception;
 use InvalidArgumentException;
 use yii\helpers\ArrayHelper;
 use function is_array;
@@ -32,7 +33,6 @@ use function is_string;
  * @property int $error ошибка загрузки
  * @property int $size размер файла
  *
- * @noinspection LongInheritanceChainInspection
  */
 class UploadFile extends StoreFile
 {
@@ -92,6 +92,7 @@ class UploadFile extends StoreFile
      * @param string $formName имя формы для которой возвращает аттрибуты
      * @param string $attribute если задан, то возвращает файлы только для аттрибута
      * @return UploadFile[]|null
+     * @throws Exception
      */
     public static function instances(string $formName = '', string $attribute = '')
     {
@@ -391,7 +392,6 @@ class UploadFile extends StoreFile
      * Возвращает ошибку
      *
      * @return int
-     * @noinspection PhpUnused
      */
     public function getError()
     {
@@ -403,7 +403,6 @@ class UploadFile extends StoreFile
      *
      * @param int $error
      * @return $this
-     * @noinspection PhpUnused
      */
     public function setError(int $error)
     {
@@ -433,7 +432,6 @@ class UploadFile extends StoreFile
      *
      * @param int $size
      * @throws InvalidArgumentException
-     * @noinspection PhpUnused
      */
     public function setSize(int $size)
     {
@@ -464,7 +462,6 @@ class UploadFile extends StoreFile
      * Устанавливает MIME-тип.
      *
      * @param string $type
-     * @noinspection PhpUnused
      */
     public function setMimeType(string $type)
     {

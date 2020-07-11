@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.07.20 13:06:24
+ * @version 11.07.20 09:36:43
  */
 
 declare(strict_types=1);
@@ -90,7 +90,6 @@ abstract class AbstractFile extends BaseObject
      * Возвращает расширение файла по имени.
      *
      * @return string|null
-     * @noinspection PhpUnused
      */
     public function getExtension()
     {
