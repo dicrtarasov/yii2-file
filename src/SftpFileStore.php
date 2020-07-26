@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 11.07.20 09:32:04
+ * @version 26.07.20 05:54:51
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -15,6 +15,7 @@ namespace dicr\file;
 use yii\base\InvalidConfigException;
 use function in_array;
 use function is_resource;
+use function ssh2_disconnect;
 
 /**
  * Файловая система SFTP
@@ -53,7 +54,7 @@ class SftpFileStore extends LocalFileStore
      * @inheritDoc
      * @throws StoreException
      */
-    public function init()
+    public function init() : void
     {
         $this->host = trim($this->host);
         if ($this->host === '') {
@@ -100,16 +101,17 @@ class SftpFileStore extends LocalFileStore
      *
      * Переопределяем родительский метод для отмены проверок пути.
      */
-    public function setPath(string $path)
+    public function setPath(string $path) : parent
     {
         $this->_path = '/' . $this->normalizePath($path);
+        return $this;
     }
 
     /**
      * @inheritDoc
      * @throws InvalidConfigException
      */
-    public function list($path, array $filter = [])
+    public function list($path, array $filter = []) : array
     {
         $absPath = $this->absolutePath($path);
 
@@ -148,7 +150,7 @@ class SftpFileStore extends LocalFileStore
     /**
      * @inheritDoc
      */
-    public function absolutePath($path)
+    public function absolutePath($path) : string
     {
         return 'ssh2.sftp://' . (int)$this->sftp . $this->relativePath($path);
     }
@@ -168,7 +170,7 @@ class SftpFileStore extends LocalFileStore
     /**
      * @inheritDoc
      */
-    public function setPublic($path, bool $public)
+    public function setPublic($path, bool $public) : AbstractFileStore
     {
         $path = $this->filterRootPath($path);
         $absPath = $this->absolutePath($path);
@@ -192,7 +194,7 @@ class SftpFileStore extends LocalFileStore
     /**
      * @inheritDoc
      */
-    public function rename($path, $newpath)
+    public function rename($path, $newpath) : AbstractFileStore
     {
         $path = $this->filterRootPath($path);
         $newpath = $this->filterRootPath($newpath);
@@ -218,7 +220,7 @@ class SftpFileStore extends LocalFileStore
     /**
      * @inheritDoc
      */
-    public function mkdir($path)
+    public function mkdir($path) : AbstractFileStore
     {
         $path = $this->filterRootPath($path);
 
@@ -236,20 +238,9 @@ class SftpFileStore extends LocalFileStore
     }
 
     /**
-     * Деструктор
-     */
-    public function __destruct()
-    {
-        if (! empty($this->session)) {
-            /** @scrutinizer ignore-unhandled */
-            @ssh2_disconnect($this->session);
-        }
-    }
-
-    /**
      * @inheritDoc
      */
-    protected function unlink($path)
+    protected function unlink($path) : AbstractFileStore
     {
         $this->filterRootPath($path);
 
@@ -265,7 +256,7 @@ class SftpFileStore extends LocalFileStore
     /**
      * @inheritDoc
      */
-    protected function rmdir($path)
+    protected function rmdir($path) : AbstractFileStore
     {
         $this->filterRootPath($path);
 
@@ -276,5 +267,16 @@ class SftpFileStore extends LocalFileStore
         $this->clearStatCache($path);
 
         return $this;
+    }
+
+    /**
+     * Деструктор
+     */
+    public function __destruct()
+    {
+        if (! empty($this->session)) {
+            /** @scrutinizer ignore-unhandled */
+            @ssh2_disconnect($this->session);
+        }
     }
 }

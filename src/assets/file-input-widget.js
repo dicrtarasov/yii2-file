@@ -2,7 +2,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 20:12:29
+ * @version 26.07.20 06:08:19
  */
 
 (function (window, $) {

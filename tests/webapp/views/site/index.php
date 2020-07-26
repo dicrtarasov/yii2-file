@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 24.02.20 01:46:31
+ * @version 26.07.20 06:10:10
  */
 
 /** @noinspection PhpUnhandledExceptionInspection */
@@ -34,6 +34,7 @@ BootstrapAsset::register($this);
 <head>
     <meta charset="UTF-8"/>
     <title>dicr\\file\\Storage test</title>
+    <!--suppress JSUnresolvedLibraryURL -->
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css"/>
 
     <!--suppress CssUnusedSymbol -->

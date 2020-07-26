@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 11.07.20 09:40:38
+ * @version 26.07.20 05:35:06
  */
 
 declare(strict_types = 1);
@@ -74,7 +74,7 @@ class FileInputWidget extends InputWidget
      * @inheritdoc
      * @throws InvalidConfigException
      */
-    public function init()
+    public function init() : void
     {
         parent::init();
 
@@ -163,7 +163,7 @@ class FileInputWidget extends InputWidget
      * @throws InvalidConfigException
      * @throws StoreException
      */
-    public function run()
+    public function run() : string
     {
         // регистрируем ресурсы
         $this->view->registerAssetBundle(FileInputWidgetAsset::class);
@@ -193,7 +193,7 @@ class FileInputWidget extends InputWidget
      * @return string
      * @throws StoreException
      */
-    protected function renderFiles()
+    protected function renderFiles() : string
     {
         $content = '';
 
@@ -214,10 +214,9 @@ class FileInputWidget extends InputWidget
      * @return string
      * @throws StoreException
      */
-    protected function renderFileBlock(int $pos, StoreFile $file)
+    protected function renderFileBlock(int $pos, StoreFile $file) : string
     {
         ob_start();
-
         echo Html::beginTag('div', ['class' => 'file']);
 
         // $_POST - параметр с именем старого файла
@@ -244,7 +243,6 @@ class FileInputWidget extends InputWidget
         ]);
 
         echo Html::endTag('div');
-
         return ob_get_clean();
     }
 
@@ -255,7 +253,7 @@ class FileInputWidget extends InputWidget
      * @return string
      * @throws StoreException
      */
-    protected function renderImage(StoreFile $file)
+    protected function renderImage(StoreFile $file) : string
     {
         $img = $this->layout === self::LAYOUT_IMAGES ?
             Html::img(preg_match('~^image/.+~uism', $file->mimeType) ? $file->url : null, [
@@ -276,7 +274,7 @@ class FileInputWidget extends InputWidget
      *
      * @return string
      */
-    protected function renderAddButton()
+    protected function renderAddButton() : string
     {
         // id поля файла
         $fileId = $this->id . '-addinput-' . mt_rand();

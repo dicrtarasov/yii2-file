@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 11.07.20 09:17:01
+ * @version 26.07.20 05:21:30
  */
 
 declare(strict_types = 1);
@@ -20,7 +20,7 @@ class Bootstrap implements BootstrapInterface
     /**
      * @inheritDoc
      */
-    public function bootstrap($app)
+    public function bootstrap($app) : void
     {
         $app->i18n->translations['dicr/file'] = [
             'class' => PhpMessageSource::class,

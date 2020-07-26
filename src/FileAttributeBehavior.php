@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 11.07.20 09:42:24
+ * @version 26.07.20 05:32:50
  */
 
 declare(strict_types = 1);
@@ -162,11 +162,10 @@ class FileAttributeBehavior extends Behavior
     private $_modelPath;
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      * @throws InvalidConfigException
-     * @see \yii\base\BaseObject::init()
      */
-    public function init()
+    public function init() : void
     {
         // owner не инициализирован пока не вызван attach
 
@@ -193,10 +192,9 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
-     * {@inheritdoc}
-     * @see \yii\base\Behavior::events()
+     * @inheritdoc
      */
-    public function events()
+    public function events() : array
     {
         return [
             Model::EVENT_BEFORE_VALIDATE => 'validateFileAttributes',
@@ -207,10 +205,9 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
-     * {@inheritdoc}
-     * @see \yii\base\BaseObject::__isset()
+     * @inheritdoc
      */
-    public function __isset($name)
+    public function __isset($name) : bool
     {
         if ($this->hasFileAttribute($name)) {
             return isset($this->attributes[$name]);
@@ -220,25 +217,20 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      * @throws Exception
-     * @see \yii\base\BaseObject::__get()
      */
     public function __get($name)
     {
-        if ($this->hasFileAttribute($name)) {
-            return $this->getFileAttribute($name);
-        }
-
-        return parent::__get($name);
+        return $this->hasFileAttribute($name) ?
+            $this->getFileAttribute($name) : parent::__get($name);
     }
 
     /**
      * {@inheritdoc}
      * @throws Exception
-     * @see \yii\base\BaseObject::__set()
      */
-    public function __set($name, $value)
+    public function __set($name, $value) : void
     {
         if ($this->hasFileAttribute($name)) {
             $this->setFileAttribute($name, $value);
@@ -249,41 +241,29 @@ class FileAttributeBehavior extends Behavior
 
     /**
      * {@inheritdoc}
-     * @see \yii\base\BaseObject::hasProperty()
      */
-    public function hasProperty($name, $checkVars = true)
+    public function hasProperty($name, $checkVars = true) : bool
     {
-        if ($this->hasFileAttribute($name)) {
-            return true;
-        }
-
-        return parent::hasProperty($name, $checkVars);
+        return $this->hasFileAttribute($name) ||
+            parent::hasProperty($name, $checkVars);
     }
 
     /**
      * {@inheritdoc}
-     * @see \yii\base\BaseObject::canGetProperty()
      */
-    public function canGetProperty($name, $checkVars = true)
+    public function canGetProperty($name, $checkVars = true) : bool
     {
-        if ($this->hasFileAttribute($name)) {
-            return true;
-        }
-
-        return parent::canGetProperty($name, $checkVars);
+        return $this->hasFileAttribute($name) ||
+            parent::canGetProperty($name, $checkVars);
     }
 
     /**
      * {@inheritdoc}
-     * @see \yii\base\BaseObject::canSetProperty()
      */
-    public function canSetProperty($name, $checkVars = true)
+    public function canSetProperty($name, $checkVars = true) : bool
     {
-        if ($this->hasFileAttribute($name)) {
-            return true;
-        }
-
-        return parent::canSetProperty($name, $checkVars);
+        return $this->hasFileAttribute($name) ||
+            parent::canSetProperty($name, $checkVars);
     }
 
     /**
@@ -292,7 +272,7 @@ class FileAttributeBehavior extends Behavior
      * @param string $attribute
      * @return bool
      */
-    public function hasFileAttribute(string $attribute)
+    public function hasFileAttribute(string $attribute) : bool
     {
         return array_key_exists($attribute, $this->attributes);
     }
@@ -302,7 +282,7 @@ class FileAttributeBehavior extends Behavior
      *
      * @param string $attribute
      * @param bool $refresh
-     * @return null|StoreFile|StoreFile[]
+     * @return StoreFile[]|StoreFile|null
      * @throws Exception
      */
     public function getFileAttribute(string $attribute, bool $refresh = false)
@@ -327,13 +307,16 @@ class FileAttributeBehavior extends Behavior
      * Проверяет существование файлового атрибута
      *
      * @param string $attribute
+     * @return $this
      * @throws Exception
      */
-    protected function checkFileAttribute(string $attribute)
+    protected function checkFileAttribute(string $attribute) : self
     {
         if (! $this->hasFileAttribute($attribute)) {
             throw new Exception('файловый аттрибут "' . $attribute . '" не существует');
         }
+
+        return $this;
     }
 
     /**
@@ -344,7 +327,7 @@ class FileAttributeBehavior extends Behavior
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    protected function listAttributeFiles(string $attribute)
+    protected function listAttributeFiles(string $attribute) : array
     {
         // путь папки модели
         $modelPath = $this->getFileModelPath();
@@ -376,7 +359,7 @@ class FileAttributeBehavior extends Behavior
      * @return StoreFile|null
      * @throws InvalidConfigException
      */
-    public function getFileModelPath()
+    public function getFileModelPath() : ?StoreFile
     {
         if (! isset($this->_modelPath)) {
             // проверяем владельца поведения
@@ -415,13 +398,16 @@ class FileAttributeBehavior extends Behavior
     /**
      * Проверяет подключенную модель
      *
+     * @return $this
      * @throws InvalidConfigException
      */
-    protected function checkOwner()
+    protected function checkOwner() : self
     {
         if (! $this->owner instanceof Model) {
             throw new InvalidConfigException('owner');
         }
+
+        return $this;
     }
 
     /**
@@ -429,10 +415,10 @@ class FileAttributeBehavior extends Behavior
      *
      * @param string $attribute
      * @param null|StoreFile|StoreFile[] $files
-     * @return static
+     * @return $this
      * @throws Exception
      */
-    public function setFileAttribute(string $attribute, $files)
+    public function setFileAttribute(string $attribute, $files) : self
     {
         $this->checkFileAttribute($attribute);
 
@@ -471,10 +457,12 @@ class FileAttributeBehavior extends Behavior
      * Если путь не установлен, то он рассчитывается автоматически.
      *
      * @param StoreFile $modelPathFile
+     * @return $this
      */
-    public function setFileModelPath(StoreFile $modelPathFile)
+    public function setFileModelPath(StoreFile $modelPathFile) : self
     {
         $this->_modelPath = $modelPathFile;
+        return $this;
     }
 
     /**
@@ -484,7 +472,7 @@ class FileAttributeBehavior extends Behavior
      * @return StoreFile путь удаленной директории модели
      * @throws StoreException
      */
-    public function deleteFileModelPath()
+    public function deleteFileModelPath() : StoreFile
     {
         $path = $this->fileModelPath;
         if ($path !== null) {
@@ -502,7 +490,7 @@ class FileAttributeBehavior extends Behavior
      * @throws Exception
      * @throws InvalidConfigException
      */
-    public function loadFileAttributes(string $formName = null)
+    public function loadFileAttributes(string $formName = null) : bool
     {
         $ret = false;
 
@@ -525,7 +513,7 @@ class FileAttributeBehavior extends Behavior
      * @throws InvalidConfigException
      * @throws \Exception
      */
-    public function loadFileAttribute(string $attribute, string $formName = null)
+    public function loadFileAttribute(string $attribute, string $formName = null) : bool
     {
         $this->checkOwner();
         $this->checkFileAttribute($attribute);
@@ -585,7 +573,7 @@ class FileAttributeBehavior extends Behavior
      * @throws Exception
      * @throws InvalidConfigException
      */
-    public function validateFileAttributes()
+    public function validateFileAttributes() : bool
     {
         $ret = true;
 
@@ -607,7 +595,7 @@ class FileAttributeBehavior extends Behavior
      * @throws Exception
      * @throws InvalidConfigException
      */
-    public function validateFileAttribute(string $attribute)
+    public function validateFileAttribute(string $attribute) : bool
     {
         $this->checkOwner();
         $this->checkFileAttribute($attribute);
@@ -617,7 +605,7 @@ class FileAttributeBehavior extends Behavior
 
         // если атрибут не был инициализирован, то пропускаем проверку
         if (! isset($files)) {
-            return null;
+            return false;
         }
 
         // получаем парамеры атрибута
@@ -649,8 +637,9 @@ class FileAttributeBehavior extends Behavior
      *
      * @param string $attribute
      * @param mixed $file
+     * @return $this
      */
-    protected function validateFile(string $attribute, $file)
+    protected function validateFile(string $attribute, $file) : self
     {
         // параметры аттрибута
         $params = $this->attributes[$attribute] ?? [];
@@ -675,6 +664,8 @@ class FileAttributeBehavior extends Behavior
                 $this->owner->addError($attribute, 'Не задано имя загружаемого файла: ' . $file->path);
             }
         }
+
+        return $this;
     }
 
     /**
@@ -686,7 +677,7 @@ class FileAttributeBehavior extends Behavior
      * @throws Exception
      * @throws InvalidConfigException
      */
-    public function saveFileAttributes()
+    public function saveFileAttributes() : bool
     {
         $ret = true;
         foreach (array_keys($this->attributes) as $attribute) {
@@ -703,12 +694,12 @@ class FileAttributeBehavior extends Behavior
      * Загружает новые файлы (UploadFiles) и удаляется старые Files, согласно текущему значению аттрибута.
      *
      * @param string $attribute
-     * @return bool|null результат сохранения или null, если аттрибут не инициализирован
+     * @return bool результат сохранения
      * @throws StoreException
      * @throws Exception
      * @throws InvalidConfigException
      */
-    public function saveFileAttribute(string $attribute)
+    public function saveFileAttribute(string $attribute) : bool
     {
         $this->checkOwner();
         $this->checkFileAttribute($attribute);
@@ -724,7 +715,7 @@ class FileAttributeBehavior extends Behavior
 
         // если новые значения не установлены, то сохранять не нужно
         if (! isset($files)) {
-            return null;
+            return false;
         }
 
         // получаем старые файлы
@@ -805,7 +796,7 @@ class FileAttributeBehavior extends Behavior
      * @param StoreFile[] $files
      * @return int|null
      */
-    protected static function searchFileByName(StoreFile $file, array $files)
+    protected static function searchFileByName(StoreFile $file, array $files) : ?int
     {
         $name = $file->name;
         foreach ($files as $i => $f) {
@@ -820,30 +811,30 @@ class FileAttributeBehavior extends Behavior
     /**
      * Удаляет все файлы всех аттрибутов
      *
-     * @return true
+     * @return $this
      * @throws StoreException
      * @throws Exception
      * @throws InvalidConfigException
      */
-    public function deleteFileAttributes()
+    public function deleteFileAttributes() : self
     {
         foreach (array_keys($this->attributes) as $attribute) {
             $this->deleteFileAttribute($attribute);
         }
 
-        return true;
+        return $this;
     }
 
     /**
      * Удаляет все файлы аттрибута
      *
      * @param string $attribute
-     * @return true
+     * @return $this
      * @throws StoreException
      * @throws Exception
      * @throws InvalidConfigException
      */
-    public function deleteFileAttribute(string $attribute)
+    public function deleteFileAttribute(string $attribute) : self
     {
         $this->checkFileAttribute($attribute);
         $this->checkOwner();
@@ -856,6 +847,6 @@ class FileAttributeBehavior extends Behavior
         // обновляем значение
         $this->values[$attribute] = [];
 
-        return true;
+        return $this;
     }
 }

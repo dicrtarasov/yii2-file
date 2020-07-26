@@ -3,10 +3,10 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 11.07.20 09:36:43
+ * @version 26.07.20 05:15:59
  */
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace dicr\file;
 
@@ -52,7 +52,7 @@ abstract class AbstractFile extends BaseObject
      * @param string|string[] $path
      * @return string
      */
-    abstract protected function normalizePath($path);
+    abstract protected function normalizePath($path) : string;
 
     /**
      * Возвращает имя файла без расширения.
@@ -60,7 +60,7 @@ abstract class AbstractFile extends BaseObject
      * @param string $name
      * @return string
      */
-    public static function removeExtension(string $name)
+    public static function removeExtension(string $name) : string
     {
         return preg_replace('~^(.+)\.[^.]+$~u', '${1}', $name);
     }
@@ -70,7 +70,7 @@ abstract class AbstractFile extends BaseObject
      *
      * @return string
      */
-    public function getPath()
+    public function getPath() : string
     {
         return $this->_path;
     }
@@ -82,19 +82,19 @@ abstract class AbstractFile extends BaseObject
      * - removePrefix - удаляет служебный префикс позиции файла, если имеется
      * - removeExt - удаляет расширение если имеется
      *
-     * @return string basename
+     * @return string
      */
-    abstract public function getName(array $options = []);
+    abstract public function getName(array $options = []) : string;
 
     /**
      * Возвращает расширение файла по имени.
      *
-     * @return string|null
+     * @return string
      */
-    public function getExtension()
+    public function getExtension() : ?string
     {
         $matches = null;
-        return preg_match('~^.+\.([^.]+)$~u', $this->name, $matches) ? $matches[1] : null;
+        return preg_match('~^.+\.([^.]+)$~u', $this->name, $matches) ? $matches[1] : '';
     }
 
     /**
@@ -103,7 +103,7 @@ abstract class AbstractFile extends BaseObject
      * @return bool
      * @throws StoreException
      */
-    abstract public function getExists();
+    abstract public function getExists() : bool;
 
     /**
      * Возвращает признак директории.
@@ -111,7 +111,7 @@ abstract class AbstractFile extends BaseObject
      * @return bool
      * @throws StoreException
      */
-    abstract public function getIsDir();
+    abstract public function getIsDir() : bool;
 
     /**
      * Возвращает признак файла.
@@ -119,7 +119,7 @@ abstract class AbstractFile extends BaseObject
      * @return bool
      * @throws StoreException
      */
-    abstract public function getIsFile();
+    abstract public function getIsFile() : bool;
 
     /**
      * Возвращает размер.
@@ -127,7 +127,7 @@ abstract class AbstractFile extends BaseObject
      * @return int размер в байтах
      * @throws StoreException
      */
-    abstract public function getSize();
+    abstract public function getSize() : int;
 
     /**
      * Возвращает время изменения файла.
@@ -135,7 +135,7 @@ abstract class AbstractFile extends BaseObject
      * @return int timestamp
      * @throws StoreException
      */
-    abstract public function getMtime();
+    abstract public function getMtime() : int;
 
     /**
      * Возвращает Mime-ип файла.
@@ -143,7 +143,7 @@ abstract class AbstractFile extends BaseObject
      * @return string
      * @throws StoreException
      */
-    abstract public function getMimeType();
+    abstract public function getMimeType() : string;
 
     /**
      * Сравнивает Mime-тип файла.
@@ -151,7 +151,7 @@ abstract class AbstractFile extends BaseObject
      * @param string $type mime-тип с использованием шаблонов (image/png, text/*)
      * @return bool
      */
-    public function matchMimeType(string $type)
+    public function matchMimeType(string $type) : bool
     {
         $regex = '~^' . str_replace(['/', '*'], ['\\/', '.+'], $type) . '$~uism';
         return (bool)preg_match($this->mimeType, $regex);
@@ -163,7 +163,7 @@ abstract class AbstractFile extends BaseObject
      * @return string
      * @throws StoreException
      */
-    abstract public function getContents();
+    abstract public function getContents() : string;
 
     /**
      * Возвращает контент в виде потока.
@@ -178,8 +178,8 @@ abstract class AbstractFile extends BaseObject
      *
      * @return string path
      */
-    public function __toString()
+    public function __toString() : string
     {
-        return $this->_path;
+        return (string)$this->_path;
     }
 }

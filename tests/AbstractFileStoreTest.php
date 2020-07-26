@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 11.07.20 09:01:01
+ * @version 26.07.20 06:13:22
  */
 
 declare(strict_types = 1);
@@ -11,7 +11,6 @@ namespace dicr\tests;
 
 use dicr\file\AbstractFileStore;
 use dicr\file\StoreException;
-use dicr\file\StoreFile;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Yii;
@@ -35,7 +34,7 @@ abstract class AbstractFileStoreTest extends TestCase
         $store = static::store();
 
         self::assertInstanceOf(AbstractFileStore::class, $store);
-        self::assertInstanceOf(StoreFile::class, $store->file(''));
+        self::assertNotEmpty($store->file(''));
     }
 
     /**
@@ -147,7 +146,7 @@ abstract class AbstractFileStoreTest extends TestCase
 
         $file = $store->file('test-dir');
         if (! $file->exists) {
-            self::assertInstanceOf(StoreFile::class, $file->mkdir());
+            self::assertNotEmpty($file->mkdir());
         }
 
         self::assertTrue($file->isDir);
@@ -155,7 +154,7 @@ abstract class AbstractFileStoreTest extends TestCase
 
         $file = $store->file('test-file');
         if (! $file->exists) {
-            self::assertInstanceOf(StoreFile::class, $file->setContents(''));
+            self::assertNotEmpty($file->setContents(''));
         }
 
         self::assertFalse($file->isDir);
@@ -176,12 +175,12 @@ abstract class AbstractFileStoreTest extends TestCase
 
         $file = $store->file('test-file');
         if (! $file->exists) {
-            self::assertInstanceOf(StoreFile::class, $file->setContents(''));
+            self::assertNotEmpty($file->setContents(''));
         }
 
-        self::assertInstanceOf(StoreFile::class, $file->setPublic(false));
+        self::assertNotEmpty($file->setPublic(false));
         self::assertFalse($file->public);
-        self::assertInstanceOf(StoreFile::class, $file->setPublic(true));
+        self::assertNotEmpty($file->setPublic(true));
         self::assertTrue($file->public);
 
         $this->expectException(StoreException::class);
@@ -216,9 +215,9 @@ abstract class AbstractFileStoreTest extends TestCase
 
         $file = $store->file('test-file');
 
-        self::assertInstanceOf(StoreFile::class, $file->setContents('1234567890'));
+        self::assertNotEmpty($file->setContents('1234567890'));
         self::assertSame(10, $file->size);
-        self::assertInstanceOf(StoreFile::class, $file->setContents(''));
+        self::assertNotEmpty($file->setContents(''));
         self::assertSame(0, $file->size);
 
         $this->expectException(StoreException::class);
@@ -263,7 +262,7 @@ abstract class AbstractFileStoreTest extends TestCase
     {
         $store = static::store();
 
-        self::assertInstanceOf(StoreFile::class, $store->file('test-file')->setContents('12345'));
+        self::assertNotEmpty($store->file('test-file')->setContents('12345'));
         self::assertSame(5, $store->file('test-file')->size);
 
         self::assertSame('12345', $store->file('test-file')->contents);
@@ -287,7 +286,7 @@ abstract class AbstractFileStoreTest extends TestCase
         fwrite($stream, 'test');
         rewind($stream);
 
-        self::assertInstanceOf(StoreFile::class, $store->file('test-file')->setStream($stream));
+        self::assertNotEmpty($store->file('test-file')->setStream($stream));
         self::assertSame(4, $store->file('test-file')->size);
 
         $stream = $store->file('test-file')->stream;
@@ -311,26 +310,26 @@ abstract class AbstractFileStoreTest extends TestCase
 
         $dir = $store->file('test-dir');
         if (! $dir->exists) {
-            self::assertInstanceOf(StoreFile::class, $dir->mkdir());
+            self::assertNotEmpty($dir->mkdir());
         }
 
         self::assertTrue($dir->isDir);
 
-        self::assertInstanceOf(StoreFile::class, $dir->delete());
+        self::assertNotEmpty($dir->delete());
         self::assertFalse($dir->exists);
 
         $file = $store->file('test-file');
         if (! $file->exists) {
-            self::assertInstanceOf(StoreFile::class, $file->setContents('123'));
+            self::assertNotEmpty($file->setContents('123'));
         }
 
         self::assertTrue($file->exists);
         self::assertTrue($file->isFile);
 
-        self::assertInstanceOf(StoreFile::class, $file->delete());
+        self::assertNotEmpty($file->delete());
         self::assertFalse($file->exists);
 
-        self::assertInstanceOf(StoreFile::class, $store->file(md5((string)time()))->delete());
+        self::assertNotEmpty($store->file(md5((string)time()))->delete());
     }
 
     /**
@@ -345,22 +344,22 @@ abstract class AbstractFileStoreTest extends TestCase
         $store->list('123');
 
         $dir = $store->file('test-dir');
-        self::assertInstanceOf(StoreFile::class, $dir);
+        self::assertNotEmpty($dir);
         if (! $dir->exists) {
-            self::assertInstanceOf(StoreFile::class, $dir->mkdir());
+            self::assertNotEmpty($dir->mkdir());
         }
 
         $file = $store->file('test-file');
-        self::assertInstanceOf(StoreFile::class, $file);
+        self::assertNotEmpty($file);
         if (! $file->exists) {
-            self::assertInstanceOf(StoreFile::class, $file->setContents(''));
+            self::assertNotEmpty($file->setContents(''));
         }
 
         self::assertCount(2, $store->list('', [
             'regex' => '~^test\-~'
         ]));
 
-        self::assertInstanceOf(StoreFile::class, $dir->delete());
-        self::assertInstanceOf(StoreFile::class, $file->delete());
+        self::assertNotEmpty($dir->delete());
+        self::assertNotEmpty($file->delete());
     }
 }

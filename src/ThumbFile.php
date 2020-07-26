@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 11.07.20 09:39:22
+ * @version 26.07.20 06:03:02
  */
 
 /** @noinspection SpellCheckingInspection */
@@ -94,7 +94,7 @@ class ThumbFile extends StoreFile
      * @inheritDoc
      * @throws InvalidConfigException
      */
-    public function init()
+    public function init() : void
     {
         parent::init();
 
@@ -167,7 +167,7 @@ class ThumbFile extends StoreFile
      *
      * @return string
      */
-    protected function createPath()
+    protected function createPath() : string
     {
         return preg_replace('~^(.+)\.[^.]+$~u', sprintf('${1}~%dx%d%s%s.%s', $this->width, $this->height,
             ! $this->isNoimage && ! empty($this->watermark) ? '~w' : '',
@@ -180,7 +180,7 @@ class ThumbFile extends StoreFile
      *
      * @return bool true если существует и дата изменения не раньше чем у исходного
      */
-    public function getIsReady()
+    public function getIsReady() : bool
     {
         return $this->exists && $this->mtime >= $this->source->mtime;
     }
@@ -190,7 +190,7 @@ class ThumbFile extends StoreFile
      *
      * @throws StoreException
      */
-    public function update()
+    public function update() : self
     {
         $this->preprocessImage();
         $this->resizeImage();
@@ -198,15 +198,18 @@ class ThumbFile extends StoreFile
         $this->placeDisclaimer();
         $this->postprocessImage();
         $this->writeImage();
+
+        return $this;
     }
 
     /**
      * Предварительная обработка картинки после загрузки.
      * (для дочерних классов)
      */
-    protected function preprocessImage()
+    protected function preprocessImage() : self
     {
         // NOOP
+        return $this;
     }
 
     /**
@@ -214,7 +217,7 @@ class ThumbFile extends StoreFile
      *
      * @throws StoreException
      */
-    protected function resizeImage()
+    protected function resizeImage() : self
     {
         // если заданы размеры, то делаем масштабирование
         if (! empty($this->width) || ! empty($this->height)) {
@@ -224,6 +227,8 @@ class ThumbFile extends StoreFile
                 throw new RuntimeException('error creating thumb');
             }
         }
+
+        return $this;
     }
 
     /**
@@ -232,7 +237,7 @@ class ThumbFile extends StoreFile
      * @return Imagick
      * @throws StoreException
      */
-    protected function image()
+    protected function image() : Imagick
     {
         if (! isset($this->_image)) {
             // создаем каринку
@@ -267,10 +272,10 @@ class ThumbFile extends StoreFile
      *
      * @throws StoreException
      */
-    protected function watermarkImage()
+    protected function watermarkImage() : self
     {
         if ($this->isNoimage || empty($this->watermark)) {
-            return;
+            return $this;
         }
 
         $watermark = null;
@@ -309,6 +314,8 @@ class ThumbFile extends StoreFile
                 $watermark->destroy();
             }
         }
+
+        return $this;
     }
 
     /**
@@ -316,10 +323,10 @@ class ThumbFile extends StoreFile
      *
      * @throws StoreException
      */
-    protected function placeDisclaimer()
+    protected function placeDisclaimer() : self
     {
         if ($this->isNoimage || empty($this->disclaimer)) {
-            return;
+            return $this;
         }
 
         $disclaimer = null;
@@ -352,15 +359,18 @@ class ThumbFile extends StoreFile
                 $disclaimer->destroy();
             }
         }
+
+        return $this;
     }
 
     /**
      * После обработка перед сохранением.
      * (для дочерних классов)
      */
-    protected function postprocessImage()
+    protected function postprocessImage() : self
     {
         // NOOP
+        return $this;
     }
 
     /**
@@ -368,7 +378,7 @@ class ThumbFile extends StoreFile
      *
      * @throws StoreException
      */
-    protected function writeImage()
+    protected function writeImage() : self
     {
         $image = $this->image();
 
@@ -387,6 +397,7 @@ class ThumbFile extends StoreFile
 
         // сохраняем
         $this->contents = $image->getImageBlob();
+        return $this;
     }
 
     /**
@@ -395,7 +406,7 @@ class ThumbFile extends StoreFile
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    public function clear()
+    public function clear() : self
     {
         if (empty($this->source)) {
             throw new RuntimeException('empty source');
@@ -412,6 +423,16 @@ class ThumbFile extends StoreFile
                 $file->delete();
             }
         }
+
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function __toString() : string
+    {
+        return (string)$this->url;
     }
 
     /**
@@ -423,13 +444,5 @@ class ThumbFile extends StoreFile
             $this->_image->destroy();
             $this->_image = null;
         }
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function __toString()
-    {
-        return (string)$this->url;
     }
 }

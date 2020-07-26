@@ -2,7 +2,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.07.20 13:11:16
+ * @version 26.07.20 06:10:10
  */
 
 /** @noinspection PhpUnhandledExceptionInspection, PhpUnused */
@@ -15,8 +15,17 @@ use yii\db\Schema;
 use yii\debug\Module;
 use yii\web\Application;
 
+/**
+ *
+ */
 define('YII_DEBUG', true);
+/**
+ *
+ */
 define('YII_ENV', 'dev');
+/**
+ *
+ */
 define('VENDOR', __DIR__ . '/../../vendor');
 
 require_once(VENDOR . '/autoload.php');

@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.07.20 13:06:24
+ * @version 26.07.20 05:51:45
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -72,7 +72,7 @@ class LocalFileStore extends AbstractFileStore
      *
      * @return static
      */
-    public static function root()
+    public static function root() : self
     {
         if (! isset(self::$_rootInstance)) {
             self::$_rootInstance = new static([
@@ -87,7 +87,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    public function init()
+    public function init() : void
     {
         parent::init();
 
@@ -116,7 +116,7 @@ class LocalFileStore extends AbstractFileStore
      *
      * @return string
      */
-    public function getPath()
+    public function getPath() : string
     {
         return $this->_path;
     }
@@ -128,7 +128,7 @@ class LocalFileStore extends AbstractFileStore
      * @return $this
      * @throws StoreException
      */
-    public function setPath(string $path)
+    public function setPath(string $path) : self
     {
         // решаем алиасы
         $fullPath = Yii::getAlias($path);
@@ -160,7 +160,7 @@ class LocalFileStore extends AbstractFileStore
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    public function list($path, array $filter = [])
+    public function list($path, array $filter = []) : array
     {
         $fullPath = $this->absolutePath($path);
 
@@ -201,7 +201,7 @@ class LocalFileStore extends AbstractFileStore
      * @inheritDoc
      * @throws StoreException
      */
-    public function absolutePath($path)
+    public function absolutePath($path) : string
     {
         return $this->buildPath(array_merge([$this->path], $this->filterPath($path)));
     }
@@ -210,17 +210,18 @@ class LocalFileStore extends AbstractFileStore
      * Возвращает относительный путь по полному.
      *
      * @param string $fullPath полный путь
-     * @return string|false относительный путь
+     * @return string|null относительный путь
      */
-    public function getRelPath(string $fullPath)
+    public function getRelPath(string $fullPath) : ?string
     {
-        return mb_strpos($fullPath, $this->path) === 0 ? mb_substr($fullPath, mb_strlen($this->path)) : false;
+        return mb_strpos($fullPath, $this->path) === 0 ?
+            mb_substr($fullPath, mb_strlen($this->path)) : null;
     }
 
     /**
      * @inheritDoc
      */
-    public function isFile($path)
+    public function isFile($path) : bool
     {
         return @is_file($this->absolutePath($path));
     }
@@ -228,7 +229,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritdoc
      */
-    public function isPublic($path)
+    public function isPublic($path) : bool
     {
         $absPath = $this->absolutePath($path);
 
@@ -247,7 +248,7 @@ class LocalFileStore extends AbstractFileStore
      * @param int $perms права доступа
      * @return bool $public
      */
-    protected function publicByPerms(bool $dir, int $perms)
+    protected function publicByPerms(bool $dir, int $perms) : bool
     {
         return ($this->perms[$dir ? 'dir' : 'file'] & 0007) === ($perms & 0007);
     }
@@ -255,7 +256,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritdoc
      */
-    public function isDir($path)
+    public function isDir($path) : bool
     {
         return @is_dir($this->absolutePath($path));
     }
@@ -263,7 +264,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    public function size($path)
+    public function size($path) : int
     {
         $absPath = $this->absolutePath($path);
 
@@ -278,7 +279,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    public function mtime($path)
+    public function mtime($path) : int
     {
         $absPath = $this->absolutePath($path);
 
@@ -293,7 +294,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    public function mimeType($path)
+    public function mimeType($path) : string
     {
         $absPath = $this->absolutePath($path);
 
@@ -309,7 +310,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    public function readContents($path)
+    public function readContents($path) : string
     {
         $absPath = $this->absolutePath($path);
 
@@ -324,7 +325,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    public function writeContents($path, string $contents)
+    public function writeContents($path, string $contents) : int
     {
         return $this->writeStreamOrContents($path, $contents);
     }
@@ -337,7 +338,7 @@ class LocalFileStore extends AbstractFileStore
      * @return int кол-во записанных байт
      * @throws StoreException
      */
-    public function writeStreamOrContents($path, $contents)
+    public function writeStreamOrContents($path, $contents) : int
     {
         // фильтруем и проверяем путь
         $path = $this->filterRootPath($path);
@@ -380,7 +381,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    public function exists($path)
+    public function exists($path) : bool
     {
         return @file_exists($this->absolutePath($path));
     }
@@ -388,7 +389,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    public function setPublic($path, bool $public)
+    public function setPublic($path, bool $public) : parent
     {
         // фильтруем и проверяем путь
         $path = $this->filterRootPath($path);
@@ -415,7 +416,7 @@ class LocalFileStore extends AbstractFileStore
      * @param bool $public - публичный доступ или приватный
      * @return int права доступа
      */
-    protected function permsByPublic(bool $dir, bool $public)
+    protected function permsByPublic(bool $dir, bool $public) : int
     {
         return $this->perms[$dir ? 'dir' : 'file'] & ($public ? 0777 : 0700);
     }
@@ -438,7 +439,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    public function writeStream($path, $stream)
+    public function writeStream($path, $stream) : int
     {
         return $this->writeStreamOrContents($path, $stream);
     }
@@ -448,7 +449,7 @@ class LocalFileStore extends AbstractFileStore
      *
      * Более эффективная версия абстрактного копирования.
      */
-    public function copy($path, $newpath)
+    public function copy($path, $newpath) : parent
     {
         // проверяем аргументы
         $path = $this->filterRootPath($path);
@@ -475,7 +476,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    public function rename($path, $newpath)
+    public function rename($path, $newpath) : parent
     {
         // фильтруем и проверяем пути
         $path = $this->filterRootPath($path);
@@ -505,7 +506,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    public function mkdir($path)
+    public function mkdir($path) : parent
     {
         // фильтруем и проверяем путь
         $path = $this->filterRootPath($path);
@@ -539,7 +540,7 @@ class LocalFileStore extends AbstractFileStore
      * @return string
      * @throws StoreException
      */
-    public function __toString()
+    public function __toString() : string
     {
         return $this->absolutePath('');
     }
@@ -547,7 +548,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    protected function unlink($path)
+    protected function unlink($path) : parent
     {
         // фильтруем и проверяем путь
         $path = $this->filterRootPath($path);
@@ -568,7 +569,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    protected function rmdir($path)
+    protected function rmdir($path) : parent
     {
         // фильтруем и проверяем путь
         $path = $this->filterRootPath($path);

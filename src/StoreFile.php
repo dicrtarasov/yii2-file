@@ -3,10 +3,9 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 11.07.20 09:39:22
+ * @version 26.07.20 06:10:10
  */
 
-/** @noinspection PhpUsageOfSilenceOperatorInspection */
 declare(strict_types = 1);
 
 namespace dicr\file;
@@ -33,7 +32,7 @@ use function is_resource;
  */
 class StoreFile extends AbstractFile
 {
-    // регулярное выражение имени файла со служебным префиксом
+    /** @var string регулярное выражение имени файла со служебным префиксом */
     protected const STORE_PREFIX_REGEX = '~^\.?([^\~]+)\~(\d+)\~(.+)$~u';
 
     /** @var AbstractFileStore */
@@ -74,7 +73,7 @@ class StoreFile extends AbstractFile
      * @param string $name пользовательское имя файла
      * @return string имя файла со служебным префиксом.
      */
-    public static function createStorePrefix(string $attribute, int $pos, string $name)
+    public static function createStorePrefix(string $attribute, int $pos, string $name) : string
     {
         // удаляем текущий префикс
         $name = static::removeStorePrefix($name);
@@ -89,7 +88,7 @@ class StoreFile extends AbstractFile
      * @param string $name имя файла
      * @return string оригинальное имя без префикса
      */
-    public static function removeStorePrefix(string $name)
+    public static function removeStorePrefix(string $name) : string
     {
         $matches = null;
         if (preg_match(self::STORE_PREFIX_REGEX, $name, $matches)) {
@@ -104,7 +103,7 @@ class StoreFile extends AbstractFile
      *
      * @return AbstractFileStore
      */
-    public function getStore()
+    public function getStore() : AbstractFileStore
     {
         return $this->_store;
     }
@@ -116,7 +115,7 @@ class StoreFile extends AbstractFile
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    public function getParent()
+    public function getParent() : ?self
     {
         if ($this->_path === '') {
             return null;
@@ -129,7 +128,7 @@ class StoreFile extends AbstractFile
      * @inheritDoc
      * @throws StoreException
      */
-    public function getName(array $options = [])
+    public function getName(array $options = []) : string
     {
         $name = $this->_store->basename($this->_path);
 
@@ -148,7 +147,7 @@ class StoreFile extends AbstractFile
      * @inheritDoc
      * @throws StoreException
      */
-    protected function normalizePath($path)
+    protected function normalizePath($path) : string
     {
         return $this->_store->normalizePath($path);
     }
@@ -156,7 +155,7 @@ class StoreFile extends AbstractFile
     /**
      * @inheritDoc
      */
-    public function getExists()
+    public function getExists() : bool
     {
         return $this->_store->exists($this->_path);
     }
@@ -164,7 +163,7 @@ class StoreFile extends AbstractFile
     /**
      * @inheritDoc
      */
-    public function getIsDir()
+    public function getIsDir() : bool
     {
         return $this->_store->isDir($this->_path);
     }
@@ -172,7 +171,7 @@ class StoreFile extends AbstractFile
     /**
      * @inheritDoc
      */
-    public function getIsFile()
+    public function getIsFile() : bool
     {
         return $this->_store->isFile($this->_path);
     }
@@ -180,7 +179,7 @@ class StoreFile extends AbstractFile
     /**
      * @inheritDoc
      */
-    public function getSize()
+    public function getSize() : int
     {
         return $this->_store->size($this->_path);
     }
@@ -188,7 +187,7 @@ class StoreFile extends AbstractFile
     /**
      * @inheritDoc
      */
-    public function getMtime()
+    public function getMtime() : int
     {
         return $this->_store->mtime($this->_path);
     }
@@ -196,7 +195,7 @@ class StoreFile extends AbstractFile
     /**
      * @inheritDoc
      */
-    public function getMimeType()
+    public function getMimeType() : string
     {
         return $this->_store->mimeType($this->_path);
     }
@@ -204,7 +203,7 @@ class StoreFile extends AbstractFile
     /**
      * @inheritDoc
      */
-    public function getContents()
+    public function getContents() : string
     {
         return $this->_store->readContents($this->_path);
     }
@@ -224,7 +223,7 @@ class StoreFile extends AbstractFile
      * @return $this
      * @throws StoreException
      */
-    public function setName(string $name)
+    public function setName(string $name) : self
     {
         // получаем новое имя файла
         $name = $this->_store->basename($name);
@@ -245,7 +244,7 @@ class StoreFile extends AbstractFile
      * @return $this
      * @throws StoreException
      */
-    public function setPath($path)
+    public function setPath($path) : self
     {
         $path = $this->normalizePath($path);
 
@@ -264,7 +263,7 @@ class StoreFile extends AbstractFile
      *
      * @return string
      */
-    public function getAbsolutePath()
+    public function getAbsolutePath() : string
     {
         if (! isset($this->_absolutePath)) {
             $this->_absolutePath = $this->_store->absolutePath($this->_path);
@@ -279,7 +278,7 @@ class StoreFile extends AbstractFile
      * @return string|null
      * @throws StoreException
      */
-    public function getUrl()
+    public function getUrl() : ?string
     {
         if (! isset($this->_absoluteUrl)) {
             $this->_absoluteUrl = $this->_store->url($this->_path);
@@ -296,7 +295,7 @@ class StoreFile extends AbstractFile
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    public function child($path)
+    public function child($path) : self
     {
         return $this->_store->file($this->_store->childname($this->_path, $path));
     }
@@ -308,7 +307,7 @@ class StoreFile extends AbstractFile
      * @return static[]
      * @throws StoreException
      */
-    public function getList(array $options = [])
+    public function getList(array $options = []) : array
     {
         return $this->_store->list($this->_path, $options);
     }
@@ -320,7 +319,7 @@ class StoreFile extends AbstractFile
      * @return bool
      * @throws StoreException
      */
-    public function getHidden()
+    public function getHidden() : bool
     {
         return $this->_store->isHidden($this->_path);
     }
@@ -331,7 +330,7 @@ class StoreFile extends AbstractFile
      * @return bool
      * @throws StoreException не существует
      */
-    public function getPublic()
+    public function getPublic() : bool
     {
         return $this->_store->isPublic($this->_path);
     }
@@ -343,7 +342,7 @@ class StoreFile extends AbstractFile
      * @return $this
      * @throws StoreException не существует
      */
-    public function setPublic(bool $public)
+    public function setPublic(bool $public) : self
     {
         $this->_store->setPublic($this->_path, $public);
 
@@ -357,10 +356,9 @@ class StoreFile extends AbstractFile
      * @return $this
      * @throws StoreException
      */
-    public function setContents(string $contents)
+    public function setContents(string $contents) : self
     {
         $this->_store->writeContents($this->_path, $contents);
-
         return $this;
     }
 
@@ -371,9 +369,9 @@ class StoreFile extends AbstractFile
      * @return $this
      * @throws StoreException
      */
-    public function setStream($stream)
+    public function setStream($stream) : self
     {
-        if (! @is_resource($stream)) {
+        if (! is_resource($stream)) {
             throw new InvalidArgumentException('stream');
         }
 
@@ -390,7 +388,7 @@ class StoreFile extends AbstractFile
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    public function copy($path)
+    public function copy($path) : self
     {
         $this->_store->copy($this->_path, $path);
 
@@ -403,7 +401,7 @@ class StoreFile extends AbstractFile
      * @return $this
      * @throws StoreException
      */
-    public function mkdir()
+    public function mkdir() : self
     {
         $this->_store->mkdir($this->_path);
 
@@ -416,7 +414,7 @@ class StoreFile extends AbstractFile
      * @return $this
      * @throws StoreException
      */
-    public function checkDir()
+    public function checkDir() : self
     {
         $this->_store->checkDir($this->_store->dirname($this->_path));
 
@@ -433,7 +431,7 @@ class StoreFile extends AbstractFile
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    public function import($src, array $options = [])
+    public function import($src, array $options = []) : self
     {
         $this->_store->import($src, $this->_path, $options);
         return $this;
@@ -445,7 +443,7 @@ class StoreFile extends AbstractFile
      * @return $this
      * @throws StoreException
      */
-    public function delete()
+    public function delete() : self
     {
         $this->_store->delete($this->_path);
 
@@ -456,13 +454,13 @@ class StoreFile extends AbstractFile
      * Создает превью файла.
      *
      * @param array $config опции ThumbFile
-     * @return ThumbFile|null|false
+     * @return ThumbFile|null
      * - если thumbFileConfig не настроен, то false
      * - если файл не существует и не настроен noimage, то null
      * @throws InvalidConfigException
      * @throws StoreException
      */
-    public function thumb(array $config = [])
+    public function thumb(array $config = []) : ?ThumbFile
     {
         return $this->store->thumb($this, $config);
     }
@@ -473,8 +471,9 @@ class StoreFile extends AbstractFile
      * @throws InvalidConfigException
      * @throws StoreException
      */
-    public function clearThumb()
+    public function clearThumb() : self
     {
         $this->store->clearThumb($this);
+        return $this;
     }
 }

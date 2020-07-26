@@ -3,11 +3,10 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 11.07.20 09:42:24
+ * @version 26.07.20 06:07:46
  */
 
 declare(strict_types = 1);
-
 namespace dicr\file;
 
 use Exception;
@@ -71,7 +70,7 @@ class UploadFile extends StoreFile
     /**
      * @inheritdoc
      */
-    public function init()
+    public function init() : void
     {
         parent::init();
 
@@ -94,7 +93,7 @@ class UploadFile extends StoreFile
      * @return UploadFile[]|null
      * @throws Exception
      */
-    public static function instances(string $formName = '', string $attribute = '')
+    public static function instances(string $formName = '', string $attribute = '') : ?array
     {
         /** @var static[][] */
         static $instances;
@@ -116,7 +115,7 @@ class UploadFile extends StoreFile
      *
      * @return UploadFile[] файлы аттрибута
      */
-    protected static function parseInstances()
+    protected static function parseInstances() : array
     {
         $instances = [];
 
@@ -143,7 +142,7 @@ class UploadFile extends StoreFile
      * @param array $data
      * @return bool true если данные формы
      */
-    protected static function isComplexFormData(array $data)
+    protected static function isComplexFormData(array $data) : bool
     {
         // если не установлен name, то ошибка формата данных
         if (! isset($data['name'])) {
@@ -213,7 +212,7 @@ class UploadFile extends StoreFile
      * @param array $data данные аттрибута
      * @return UploadFile[] файлы аттрибута
      */
-    protected static function parseSimpleData(array $data)
+    protected static function parseSimpleData(array $data) : array
     {
         return static::instancesFromData(
             (array)($data['name'] ?? []),
@@ -293,7 +292,7 @@ class UploadFile extends StoreFile
      * @param array $data array данные аттрибутов формы
      * @return UploadFile[] [$attribute => \dicr\file\UploadFile[]] аттрибуты формы с файлами
      */
-    protected static function parseFormData(array $data)
+    protected static function parseFormData(array $data) : array
     {
         $instances = [];
 
@@ -320,7 +319,12 @@ class UploadFile extends StoreFile
      * @param string[] $paths пути
      * @return UploadFile[]
      */
-    protected static function instancesFromData(array $names, array $types, array $sizes, array $errors, array $paths)
+    protected static function instancesFromData(
+        array $names,
+        array $types,
+        array $sizes,
+        array $errors,
+        array $paths) : array
     {
         $instances = [];
 
@@ -350,12 +354,12 @@ class UploadFile extends StoreFile
     /**
      * @inheritDoc
      */
-    public function getName(array $options = [])
+    public function getName(array $options = []) : string
     {
         // если имя файла не задано то берем его из пути
         if (! isset($this->_name)) {
             if (! empty($this->_error)) {
-                return null;
+                return '';
             }
 
             $this->_name = parent::getName();
@@ -376,7 +380,7 @@ class UploadFile extends StoreFile
      * @return $this
      * @throws StoreException
      */
-    public function setName(string $name)
+    public function setName(string $name) : parent
     {
         $name = $this->_store->basename($name);
         if (empty($name)) {
@@ -393,7 +397,7 @@ class UploadFile extends StoreFile
      *
      * @return int
      */
-    public function getError()
+    public function getError() : int
     {
         return $this->_error;
     }
@@ -404,7 +408,7 @@ class UploadFile extends StoreFile
      * @param int $error
      * @return $this
      */
-    public function setError(int $error)
+    public function setError(int $error) : self
     {
         $this->_error = $error;
 
@@ -414,11 +418,11 @@ class UploadFile extends StoreFile
     /**
      * @inheritDoc
      */
-    public function getSize()
+    public function getSize() : int
     {
         if (! isset($this->_size)) {
             if (! empty($this->_error)) {
-                return null;
+                return 0;
             }
 
             $this->_size = parent::getSize();
@@ -431,25 +435,27 @@ class UploadFile extends StoreFile
      * Устанавливает размер.
      *
      * @param int $size
+     * @return UploadFile
      * @throws InvalidArgumentException
      */
-    public function setSize(int $size)
+    public function setSize(int $size) : self
     {
         if ($size < 0) {
             throw new InvalidArgumentException('size');
         }
 
         $this->_size = $size;
+        return $this;
     }
 
     /**
      * @inheritDoc
      */
-    public function getMimeType()
+    public function getMimeType() : string
     {
         if (! isset($this->_mimeType)) {
             if (! empty($this->_error)) {
-                return null;
+                return '';
             }
 
             $this->_mimeType = parent::getMimeType();
@@ -462,9 +468,11 @@ class UploadFile extends StoreFile
      * Устанавливает MIME-тип.
      *
      * @param string $type
+     * @return UploadFile
      */
-    public function setMimeType(string $type)
+    public function setMimeType(string $type) : self
     {
         $this->_mimeType = $type;
+        return $this;
     }
 }

@@ -3,13 +3,10 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 04.04.20 16:39:49
+ * @version 26.07.20 06:10:10
  */
 
-/** @noinspection ClassOverridesFieldOfSuperClassInspection */
-
 declare(strict_types = 1);
-
 namespace dicr\file;
 
 use dicr\asset\JuiAsset;
@@ -21,20 +18,20 @@ use yii\web\JqueryAsset;
  */
 class FileInputWidgetAsset extends AssetBundle
 {
-    /** @var string */
+    /** @inheritDoc */
     public $sourcePath = __DIR__ . '/assets';
 
-    /** @var string[] */
+    /** @inheritDoc */
     public $css = [
         'file-input-widget.css'
     ];
 
-    /** @var string[] */
+    /** @inheritDoc */
     public $js = [
         'file-input-widget.js'
     ];
 
-    /** @var string[] */
+    /** @inheritDoc */
     public $depends = [
         JqueryAsset::class,
         JuiAsset::class,
