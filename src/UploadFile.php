@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 26.07.20 06:07:46
+ * @version 26.07.20 07:56:58
  */
 
 declare(strict_types = 1);
@@ -380,7 +380,7 @@ class UploadFile extends StoreFile
      * @return $this
      * @throws StoreException
      */
-    public function setName(string $name) : parent
+    public function setName(string $name) : StoreFile
     {
         $name = $this->_store->basename($name);
         if (empty($name)) {

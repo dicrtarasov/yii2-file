@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 26.07.20 05:47:11
+ * @version 26.07.20 07:52:51
  */
 
 declare(strict_types = 1);
@@ -204,7 +204,7 @@ class FlysystemFileStore extends AbstractFileStore
     /**
      * @inheritdoc
      */
-    public function setPublic($path, bool $public) : parent
+    public function setPublic($path, bool $public) : AbstractFileStore
     {
         $path = $this->normalizePath($path);
         $visibility = self::access2visibility($public);
@@ -419,7 +419,7 @@ class FlysystemFileStore extends AbstractFileStore
     /**
      * @inheritdoc
      */
-    public function rename($path, $newpath) : parent
+    public function rename($path, $newpath) : AbstractFileStore
     {
         $path = $this->normalizePath($path);
         $newpath = $this->normalizePath($newpath);
@@ -446,7 +446,7 @@ class FlysystemFileStore extends AbstractFileStore
     /**
      * @inheritdoc
      */
-    public function mkdir($path) : parent
+    public function mkdir($path) : AbstractFileStore
     {
         $path = $this->normalizePath($path);
 
@@ -466,7 +466,7 @@ class FlysystemFileStore extends AbstractFileStore
     /**
      * @inheritdoc
      */
-    protected function unlink($path) : parent
+    protected function unlink($path) : AbstractFileStore
     {
         $path = $this->normalizePath($this->filterRootPath($path));
 
@@ -488,7 +488,7 @@ class FlysystemFileStore extends AbstractFileStore
     /**
      * @inheritdoc
      */
-    protected function rmdir($path) : parent
+    protected function rmdir($path) : AbstractFileStore
     {
         $path = $this->normalizePath($this->filterRootPath($path));
 

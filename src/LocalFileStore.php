@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 26.07.20 05:51:45
+ * @version 26.07.20 07:55:22
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -389,7 +389,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    public function setPublic($path, bool $public) : parent
+    public function setPublic($path, bool $public) : AbstractFileStore
     {
         // фильтруем и проверяем путь
         $path = $this->filterRootPath($path);
@@ -449,7 +449,7 @@ class LocalFileStore extends AbstractFileStore
      *
      * Более эффективная версия абстрактного копирования.
      */
-    public function copy($path, $newpath) : parent
+    public function copy($path, $newpath) : AbstractFileStore
     {
         // проверяем аргументы
         $path = $this->filterRootPath($path);
@@ -476,7 +476,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    public function rename($path, $newpath) : parent
+    public function rename($path, $newpath) : AbstractFileStore
     {
         // фильтруем и проверяем пути
         $path = $this->filterRootPath($path);
@@ -506,7 +506,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    public function mkdir($path) : parent
+    public function mkdir($path) : AbstractFileStore
     {
         // фильтруем и проверяем путь
         $path = $this->filterRootPath($path);
@@ -548,7 +548,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    protected function unlink($path) : parent
+    protected function unlink($path) : AbstractFileStore
     {
         // фильтруем и проверяем путь
         $path = $this->filterRootPath($path);
@@ -569,7 +569,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    protected function rmdir($path) : parent
+    protected function rmdir($path) : AbstractFileStore
     {
         // фильтруем и проверяем путь
         $path = $this->filterRootPath($path);

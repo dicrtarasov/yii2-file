@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 26.07.20 05:54:51
+ * @version 26.07.20 07:56:15
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -101,7 +101,7 @@ class SftpFileStore extends LocalFileStore
      *
      * Переопределяем родительский метод для отмены проверок пути.
      */
-    public function setPath(string $path) : parent
+    public function setPath(string $path) : LocalFileStore
     {
         $this->_path = '/' . $this->normalizePath($path);
         return $this;

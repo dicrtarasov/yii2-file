@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 26.07.20 05:21:18
+ * @version 26.07.20 07:50:28
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -608,14 +608,13 @@ abstract class AbstractFileStore extends Component
      * Создает ThumbFile.
      *
      * @param array $config
-     * @return ThumbFile|null ThumbFile
+     * @return ThumbFile ThumbFile
      * @throws InvalidConfigException
      */
-    protected function createThumb(array $config = []) : ?ThumbFile
+    protected function createThumb(array $config = []) : ThumbFile
     {
         if (empty($this->thumbFileConfig)) {
-            Yii::warning('конфиг ThumbFile для создания превью не настроен');
-            return null;
+            throw new InvalidConfigException('ThumbFile для создания превью не настроен');
         }
 
         // устанавливаем парамеры по-умолчанию
