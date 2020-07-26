@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 26.07.20 05:32:50
+ * @version 26.07.20 08:06:51
  */
 
 declare(strict_types = 1);
@@ -205,6 +205,19 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
+     * @inheritDoc
+     * @throws InvalidConfigException
+     */
+    public function attach($owner)
+    {
+        if (! $owner instanceof Model) {
+            throw new InvalidConfigException('Данный behavior можно подключать к моделям');
+        }
+
+        parent::attach($owner);
+    }
+
+    /**
      * @inheritdoc
      */
     public function __isset($name) : bool
@@ -362,9 +375,6 @@ class FileAttributeBehavior extends Behavior
     public function getFileModelPath() : ?StoreFile
     {
         if (! isset($this->_modelPath)) {
-            // проверяем владельца поведения
-            $this->checkOwner();
-
             // относительный путь
             $relpath = [];
 
@@ -393,21 +403,6 @@ class FileAttributeBehavior extends Behavior
         }
 
         return $this->_modelPath;
-    }
-
-    /**
-     * Проверяет подключенную модель
-     *
-     * @return $this
-     * @throws InvalidConfigException
-     */
-    protected function checkOwner() : self
-    {
-        if (! $this->owner instanceof Model) {
-            throw new InvalidConfigException('owner');
-        }
-
-        return $this;
     }
 
     /**
@@ -515,7 +510,6 @@ class FileAttributeBehavior extends Behavior
      */
     public function loadFileAttribute(string $attribute, string $formName = null) : bool
     {
-        $this->checkOwner();
         $this->checkFileAttribute($attribute);
 
         // имя формы
@@ -571,7 +565,6 @@ class FileAttributeBehavior extends Behavior
      *
      * @return bool true, если все проверки успешны
      * @throws Exception
-     * @throws InvalidConfigException
      */
     public function validateFileAttributes() : bool
     {
@@ -593,11 +586,9 @@ class FileAttributeBehavior extends Behavior
      * @param string $attribute
      * @return bool|null результаты проверки или null, если атрибут не инициализирован
      * @throws Exception
-     * @throws InvalidConfigException
      */
     public function validateFileAttribute(string $attribute) : bool
     {
-        $this->checkOwner();
         $this->checkFileAttribute($attribute);
 
         // получаем текущее значение
@@ -701,7 +692,6 @@ class FileAttributeBehavior extends Behavior
      */
     public function saveFileAttribute(string $attribute) : bool
     {
-        $this->checkOwner();
         $this->checkFileAttribute($attribute);
         $modelPath = $this->getFileModelPath();
 
@@ -837,7 +827,6 @@ class FileAttributeBehavior extends Behavior
     public function deleteFileAttribute(string $attribute) : self
     {
         $this->checkFileAttribute($attribute);
-        $this->checkOwner();
 
         // удаляем файлы аттрибута
         foreach ($this->listAttributeFiles($attribute) as $file) {
