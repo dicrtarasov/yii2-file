@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 26.07.20 07:56:58
+ * @version 27.07.20 13:36:57
  */
 
 declare(strict_types = 1);
@@ -399,7 +399,8 @@ class UploadFile extends StoreFile
      */
     public function getError() : int
     {
-        return $this->_error;
+        /** @noinspection UnnecessaryCastingInspection */
+        return (int)$this->_error;
     }
 
     /**
@@ -408,10 +409,9 @@ class UploadFile extends StoreFile
      * @param int $error
      * @return $this
      */
-    public function setError(int $error) : self
+    public function setError($error) : self
     {
-        $this->_error = $error;
-
+        $this->_error = (int)$error;
         return $this;
     }
 
@@ -438,13 +438,14 @@ class UploadFile extends StoreFile
      * @return UploadFile
      * @throws InvalidArgumentException
      */
-    public function setSize(int $size) : self
+    public function setSize($size) : self
     {
         if ($size < 0) {
             throw new InvalidArgumentException('size');
         }
 
-        $this->_size = $size;
+        $this->_size = (int)$size;
+
         return $this;
     }
 
