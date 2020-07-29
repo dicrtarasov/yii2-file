@@ -58,9 +58,11 @@
       <path value="$PROJECT_DIR$/vendor/yiisoft/yii2-debug" />
       <path value="$PROJECT_DIR$/vendor/npm-asset/bootstrap" />
       <path value="$PROJECT_DIR$/vendor/yiisoft/yii2-bootstrap4" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/code-unit" />
+      <path value="$PROJECT_DIR$/vendor/phpunit/php-invoker" />
     </include_path>
   </component>
-  <component name="PhpProjectSharedConfiguration" php_language_level="7.2" />
+  <component name="PhpProjectSharedConfiguration" php_language_level="7.3" />
   <component name="PhpRuntimeConfiguration">
     <extensions>
       <extension name="FFI" enabled="true" />

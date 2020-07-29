@@ -3,11 +3,10 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 26.07.20 08:06:51
+ * @version 29.07.20 08:17:32
  */
 
 declare(strict_types = 1);
-
 namespace dicr\file;
 
 use LogicException;
@@ -20,14 +19,28 @@ use yii\base\Model;
 use yii\db\ActiveRecord;
 use yii\di\Instance;
 use function array_key_exists;
+use function array_keys;
 use function array_slice;
+use function array_values;
+use function basename;
 use function count;
 use function gettype;
+use function implode;
 use function is_array;
+use function ksort;
+use function mt_rand;
+use function preg_quote;
+use function reset;
+use function strnatcasecmp;
+use function usort;
 
-// @formatter:off
 /**
  * Файловые аттрибуты модели.
+ *
+ * Добавляет следующие свойства модели:
+ * -method bool loadFileAttributes($formName = null)
+ * -method saveFileAttributes()
+ * -method StoreFile|StoreFile[]|null getFileAttribute(string $attribute, bool $refresh = false)
  *
  * ```php
  * class TestModel extends Model {
@@ -49,18 +62,15 @@ use function is_array;
  * ```
  *
  * attributes - массив обрабатываемых аттрибутов.
- *  Ключ - название аттрибута,
- *  Значение - массив параметров атрибута:
- *      - int|null $min - минимальное требуемое кол-во файлов
- *      - int|null $limit - ограничение количества файлов.
- *          - если $limit == 0,
- *              то значение аттрибута - массив файлов \dicr\file\AbstractFile[] без ограничения на кол-во
- *          - если $limit - число,
- *              то значение аттрибута - массив \dicr\file\AbstractFile[] с ограничением кол-ва файлов limit
- *          - если $limit == 1,
- *              то значение атрибута - один файл \dicr\file\AbstractFile
- *      - int|null $maxsize - максимальный размер
- *      - string|null $type mime-ип загруженных файлов
+ *   - ключ - название аттрибута,
+ *   - значение - массив параметров атрибута:
+ *     - int|null $min - минимальное требуемое кол-во файлов
+ *     - int|null $limit - ограничение количества файлов.
+ *       - если $limit == 1, то значение атрибута - один файл \dicr\file\AbstractFile
+ *       - если $limit == 0, то значение аттрибута - массив файлов \dicr\file\AbstractFile[] без ограничения на кол-во
+ *       - если $limit число, то значение - массив \dicr\file\AbstractFile[] с ограничением кол-ва файлов limit
+ *     - int|null $maxsize - максимальный размер
+ *     - string|null $type mime-ип загруженных файлов
  *
  * Если значение не массив, то оно принимается в качестве limit.
  *
@@ -137,11 +147,11 @@ use function is_array;
  * }
  * ```
  *
- * @property StoreFile $fileModelPath путь папки модели
- * @property string $fileAttribute
  * @property-read Model $owner
+ * @property StoreFile|null $modelFilePath путь папки модели
+ *
+ * @noinspection MissingPropertyAnnotationsInspection
  */
-// @formatter:on
 class FileAttributeBehavior extends Behavior
 {
     /** @var AbstractFileStore|string|array хранилище файлов */
@@ -155,17 +165,11 @@ class FileAttributeBehavior extends Behavior
      */
     public $attributes;
 
-    /** @var StoreFile[][] текущие значения аттрибутов [attributeName => \dicr\file\StoreFile[]] */
-    private $values = [];
-
-    /** @var StoreFile путь папки модели */
-    private $_modelPath;
-
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      * @throws InvalidConfigException
      */
-    public function init() : void
+    public function init()
     {
         // owner не инициализирован пока не вызван attach
 
@@ -192,9 +196,9 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
-    public function events() : array
+    public function events()
     {
         return [
             Model::EVENT_BEFORE_VALIDATE => 'validateFileAttributes',
@@ -211,42 +215,39 @@ class FileAttributeBehavior extends Behavior
     public function attach($owner)
     {
         if (! $owner instanceof Model) {
-            throw new InvalidConfigException('Данный behavior можно подключать к моделям');
+            throw new InvalidConfigException('Некорректный тип владельца: ' . gettype($owner));
         }
 
         parent::attach($owner);
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
-    public function __isset($name) : bool
-    {
-        if ($this->hasFileAttribute($name)) {
-            return isset($this->attributes[$name]);
-        }
-
-        return parent::__isset($name);
-    }
-
-    /**
-     * @inheritdoc
-     * @throws Exception
-     */
-    public function __get($name)
+    public function __isset($name)
     {
         return $this->hasFileAttribute($name) ?
-            $this->getFileAttribute($name) : parent::__get($name);
+            isset($this->attributes[$name]) : parent::__isset($name);
     }
 
     /**
      * {@inheritdoc}
      * @throws Exception
      */
-    public function __set($name, $value) : void
+    public function __get($name)
+    {
+        return $this->hasFileAttribute($name) ?
+            $this->getFileAttributeValue($name) : parent::__get($name);
+    }
+
+    /**
+     * {@inheritdoc}
+     * @throws Exception
+     */
+    public function __set($name, $value)
     {
         if ($this->hasFileAttribute($name)) {
-            $this->setFileAttribute($name, $value);
+            $this->setFileAttributeValue($name, $value);
         } else {
             parent::__set($name, $value);
         }
@@ -255,28 +256,25 @@ class FileAttributeBehavior extends Behavior
     /**
      * {@inheritdoc}
      */
-    public function hasProperty($name, $checkVars = true) : bool
+    public function hasProperty($name, $checkVars = true)
     {
-        return $this->hasFileAttribute($name) ||
-            parent::hasProperty($name, $checkVars);
+        return $this->hasFileAttribute($name) || parent::hasProperty($name, $checkVars);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function canGetProperty($name, $checkVars = true) : bool
+    public function canGetProperty($name, $checkVars = true)
     {
-        return $this->hasFileAttribute($name) ||
-            parent::canGetProperty($name, $checkVars);
+        return $this->hasFileAttribute($name) || parent::canGetProperty($name, $checkVars);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function canSetProperty($name, $checkVars = true) : bool
+    public function canSetProperty($name, $checkVars = true)
     {
-        return $this->hasFileAttribute($name) ||
-            parent::canSetProperty($name, $checkVars);
+        return $this->hasFileAttribute($name) || parent::canSetProperty($name, $checkVars);
     }
 
     /**
@@ -291,39 +289,13 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
-     * Возвращает значение файлового аттрибута
-     *
-     * @param string $attribute
-     * @param bool $refresh
-     * @return StoreFile[]|StoreFile|null
-     * @throws Exception
-     */
-    public function getFileAttribute(string $attribute, bool $refresh = false)
-    {
-        $this->checkFileAttribute($attribute);
-
-        if (! isset($this->values[$attribute]) || $refresh) {
-            $this->values[$attribute] = $this->listAttributeFiles($attribute);
-        }
-
-        $vals = $this->values[$attribute];
-
-        // если аттрибут имеет скалярный тип, то возвращаем первое значение
-        if ((int)$this->attributes[$attribute]['limit'] === 1) {
-            return ! empty($vals) ? reset($vals) : null;
-        }
-
-        return $vals;
-    }
-
-    /**
-     * Проверяет существование файлового атрибута
+     * Проверяет существование файлового атрибута.
      *
      * @param string $attribute
      * @return $this
      * @throws Exception
      */
-    protected function checkFileAttribute(string $attribute) : self
+    protected function checkIsFileAttribute(string $attribute) : self
     {
         if (! $this->hasFileAttribute($attribute)) {
             throw new Exception('файловый аттрибут "' . $attribute . '" не существует');
@@ -332,36 +304,8 @@ class FileAttributeBehavior extends Behavior
         return $this;
     }
 
-    /**
-     * Получает список файлов аттрибута модели.
-     *
-     * @param string $attribute аттрибут
-     * @return StoreFile[] файлы
-     * @throws StoreException
-     * @throws InvalidConfigException
-     */
-    protected function listAttributeFiles(string $attribute) : array
-    {
-        // путь папки модели
-        $modelPath = $this->getFileModelPath();
-
-        // если папка не существует, то возвращаем пустой список
-        if ($modelPath === null || ! $modelPath->exists) {
-            return [];
-        }
-
-        // получаем список файлов
-        $files = $modelPath->getList([
-            'nameRegex' => '~^' . preg_quote($attribute, '~') . '\~\d+\~.+~ui'
-        ]);
-
-        // сортируем по полному пути (path/model/id/{attribute}-{pos}-{filename}.ext)
-        usort($files, static function(StoreFile $a, StoreFile $b) {
-            return strnatcasecmp($a->path, $b->path);
-        });
-
-        return $files;
-    }
+    /** @var StoreFile путь папки модели */
+    private $_modelFilePath;
 
     /**
      * Возвращает папку модели в хранилище файлов.
@@ -372,9 +316,9 @@ class FileAttributeBehavior extends Behavior
      * @return StoreFile|null
      * @throws InvalidConfigException
      */
-    public function getFileModelPath() : ?StoreFile
+    public function getModelFilePath() : ?StoreFile
     {
-        if (! isset($this->_modelPath)) {
+        if (! isset($this->_modelFilePath)) {
             // относительный путь
             $relpath = [];
 
@@ -399,37 +343,130 @@ class FileAttributeBehavior extends Behavior
                 }
             }
 
-            $this->_modelPath = $this->store->file($relpath);
+            $this->_modelFilePath = $this->store->file($relpath);
         }
 
-        return $this->_modelPath;
+        return $this->_modelFilePath;
+    }
+
+    /**
+     * Устанавливает путь папки модели.
+     * Если путь не установлен, то он рассчитывается автоматически.
+     *
+     * @param StoreFile|null $path
+     * @return $this
+     */
+    public function setModelFilePath(StoreFile $path = null) : self
+    {
+        $this->_modelFilePath = $path;
+
+        return $this;
+    }
+
+    /**
+     * Удаляет папку модели.
+     * (нужен для обработчика событий модели).
+     *
+     * @return $this
+     * @throws StoreException
+     * @throws InvalidConfigException
+     */
+    public function deleteModelFilePath() : self
+    {
+        $path = $this->getModelFilePath();
+
+        if ($path !== null) {
+            $path->delete();
+        }
+
+        return $this;
+    }
+
+    /**
+     * Получает список файлов аттрибута модели.
+     *
+     * @param string $attribute аттрибут
+     * @return StoreFile[] файлы
+     * @throws StoreException
+     * @throws InvalidConfigException
+     */
+    protected function listAttributeFiles(string $attribute) : array
+    {
+        // путь папки модели
+        $modelPath = $this->getModelFilePath();
+
+        // если папка не существует, то возвращаем пустой список
+        if ($modelPath === null || ! $modelPath->exists) {
+            return [];
+        }
+
+        // получаем список файлов
+        $files = $modelPath->getList([
+            'nameRegex' => '~^' . preg_quote($attribute, '~') . '\~\d+\~.+~ui'
+        ]);
+
+        // сортируем по полному пути (path/model/id/{attribute}-{pos}-{filename}.ext)
+        usort($files, static function(StoreFile $a, StoreFile $b) {
+            return strnatcasecmp($a->path, $b->path);
+        });
+
+        return $files;
+    }
+
+    /** @var StoreFile[][] текущие значения аттрибутов [attributeName => \dicr\file\StoreFile[]] */
+    private $values = [];
+
+    /**
+     * Возвращает значение файлового аттрибута
+     *
+     * @param string $attribute
+     * @param bool $refresh
+     * @return StoreFile[]|StoreFile|null
+     * @throws Exception
+     */
+    public function getFileAttributeValue(string $attribute, bool $refresh = false)
+    {
+        $this->checkIsFileAttribute($attribute);
+
+        if (! isset($this->values[$attribute]) || $refresh) {
+            $this->values[$attribute] = $this->listAttributeFiles($attribute);
+        }
+
+        $vals = $this->values[$attribute];
+
+        // если аттрибут имеет скалярный тип, то возвращаем первое значение
+        if ((int)$this->attributes[$attribute]['limit'] === 1) {
+            return ! empty($vals) ? reset($vals) : null;
+        }
+
+        return $vals;
     }
 
     /**
      * Устанавливает значение файлового аттрибута
      *
      * @param string $attribute
-     * @param null|StoreFile|StoreFile[] $files
+     * @param StoreFile[]|StoreFile|null $value
      * @return $this
      * @throws Exception
      */
-    public function setFileAttribute(string $attribute, $files) : self
+    public function setFileAttributeValue(string $attribute, $value) : self
     {
-        $this->checkFileAttribute($attribute);
+        $this->checkIsFileAttribute($attribute);
 
         // конвертируем значение в массив (нельзя (array), потому что Model::toArray)
-        if (empty($files)) {
-            $files = [];
-        } elseif (! is_array($files)) {
-            $files = [$files];
+        if (empty($value)) {
+            $value = [];
+        } elseif (! is_array($value)) {
+            $value = [$value];
         }
 
         // переиндексируем
-        ksort($files);
-        $files = array_values($files);
+        ksort($value);
+        $value = array_values($value);
 
         // проверяем элементы массива
-        foreach ($files as $file) {
+        foreach ($value as $file) {
             if (! $file instanceof StoreFile) {
                 throw new InvalidArgumentException('files: некорректный тип элемента');
             }
@@ -438,64 +475,13 @@ class FileAttributeBehavior extends Behavior
         // ограничиваем размер по limit
         $limit = $this->attributes[$attribute]['limit'];
         if ($limit > 0) {
-            $files = array_slice($files, 0, $limit);
+            $value = array_slice($value, 0, $limit);
         }
 
         // обновляем значение в кеше
-        $this->values[$attribute] = $files;
+        $this->values[$attribute] = $value;
 
         return $this;
-    }
-
-    /**
-     * Устанавливает путь папки модели.
-     * Если путь не установлен, то он рассчитывается автоматически.
-     *
-     * @param StoreFile $modelPathFile
-     * @return $this
-     */
-    public function setFileModelPath(StoreFile $modelPathFile) : self
-    {
-        $this->_modelPath = $modelPathFile;
-        return $this;
-    }
-
-    /**
-     * Удаляет папку модели.
-     * (нужен для обработчика событий модели).
-     *
-     * @return StoreFile путь удаленной директории модели
-     * @throws StoreException
-     */
-    public function deleteFileModelPath() : StoreFile
-    {
-        $path = $this->fileModelPath;
-        if ($path !== null) {
-            $path->delete();
-        }
-
-        return $path;
-    }
-
-    /**
-     * Загружает файловые аттрибуты из $_POST и $FILES
-     *
-     * @param string $formName имя формы модели
-     * @return bool true если данные некоторых атрибутов были загружены
-     * @throws Exception
-     * @throws InvalidConfigException
-     */
-    public function loadFileAttributes(string $formName = null) : bool
-    {
-        $ret = false;
-
-        foreach (array_keys($this->attributes) as $attribute) {
-            if ($this->loadFileAttribute($attribute, $formName)) {
-                $ret = true;
-            }
-        }
-
-        return $ret;
     }
 
     /**
@@ -510,7 +496,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function loadFileAttribute(string $attribute, string $formName = null) : bool
     {
-        $this->checkFileAttribute($attribute);
+        $this->checkIsFileAttribute($attribute);
 
         // имя формы
         if (empty($formName)) {
@@ -526,7 +512,7 @@ class FileAttributeBehavior extends Behavior
         }
 
         // путь аттрибута модели (null если это не сохраненная ActiveRecord без id)
-        $attributePath = $this->getFileModelPath();
+        $attributePath = $this->getModelFilePath();
 
         // новое значение аттрибута
         $value = [];
@@ -560,67 +546,24 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
-     * Выполняет проверку файловых аттрибутов.
-     * Добавляет ошибки модели по addError.
+     * Загружает файловые аттрибуты из $_POST и $FILES
      *
-     * @return bool true, если все проверки успешны
+     * @param string $formName имя формы модели
+     * @return bool true если данные некоторых атрибутов были загружены
      * @throws Exception
+     * @throws InvalidConfigException
      */
-    public function validateFileAttributes() : bool
+    public function loadFileAttributes(string $formName = null) : bool
     {
-        $ret = true;
+        $ret = false;
 
         foreach (array_keys($this->attributes) as $attribute) {
-            if ($this->validateFileAttribute($attribute) === false) {
-                $ret = false;
+            if ($this->loadFileAttribute($attribute, $formName)) {
+                $ret = true;
             }
         }
 
         return $ret;
-    }
-
-    /**
-     * Выполняет проверку файлового аттрибута и загруженных файлов.
-     * Добавляет ошибки модели по addError
-     *
-     * @param string $attribute
-     * @return bool|null результаты проверки или null, если атрибут не инициализирован
-     * @throws Exception
-     */
-    public function validateFileAttribute(string $attribute) : bool
-    {
-        $this->checkFileAttribute($attribute);
-
-        // получаем текущее значение
-        $files = $this->values[$attribute] ?? null;
-
-        // если атрибут не был инициализирован, то пропускаем проверку
-        if (! isset($files)) {
-            return false;
-        }
-
-        // получаем парамеры атрибута
-        $params = $this->attributes[$attribute];
-
-        // минимальное количество
-        if (! empty($params['min']) && count($files) < $params['min']) {
-            /** @scrutinizer ignore-call */
-            $this->owner->addError($attribute, 'Необходимо не менее ' . (int)$params['min'] . ' количество файлов');
-        }
-
-        // максимальное количество
-        if (! empty($params['limit']) && count($files) > $params['limit']) {
-            /** @scrutinizer ignore-call */
-            $this->owner->addError($attribute, 'Максимальное кол-во файлов: ' . (int)$params['limit']);
-        }
-
-        // проверяем каждый файл
-        foreach ($files as $file) {
-            $this->validateFile($attribute, $file);
-        }
-
-        /** @scrutinizer ignore-call */
-        return empty($this->owner->getErrors($attribute));
     }
 
     /**
@@ -660,19 +603,62 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
-     * Сохраняет файловые аттрибуты.
-     * Выполняет импорт загруженных файлов и удаление старых
+     * Выполняет проверку файлового аттрибута и загруженных файлов.
+     * Добавляет ошибки модели по addError
      *
-     * @return bool результаты сохранения
-     * @throws StoreException
+     * @param string $attribute
+     * @return bool|null результаты проверки или null, если атрибут не инициализирован
      * @throws Exception
-     * @throws InvalidConfigException
      */
-    public function saveFileAttributes() : bool
+    public function validateFileAttribute(string $attribute) : ?bool
+    {
+        $this->checkIsFileAttribute($attribute);
+
+        // получаем текущее значение
+        $files = $this->values[$attribute] ?? null;
+
+        // если атрибут не был инициализирован, то пропускаем проверку
+        if (! isset($files)) {
+            return null;
+        }
+
+        // получаем парамеры атрибута
+        $params = $this->attributes[$attribute];
+
+        // минимальное количество
+        if (! empty($params['min']) && count($files) < $params['min']) {
+            /** @scrutinizer ignore-call */
+            $this->owner->addError($attribute, 'Необходимо не менее ' . (int)$params['min'] . ' количество файлов');
+        }
+
+        // максимальное количество
+        if (! empty($params['limit']) && count($files) > $params['limit']) {
+            /** @scrutinizer ignore-call */
+            $this->owner->addError($attribute, 'Максимальное кол-во файлов: ' . (int)$params['limit']);
+        }
+
+        // проверяем каждый файл
+        foreach ($files as $file) {
+            $this->validateFile($attribute, $file);
+        }
+
+        /** @scrutinizer ignore-call */
+        return empty($this->owner->getErrors($attribute));
+    }
+
+    /**
+     * Выполняет проверку файловых аттрибутов.
+     * Добавляет ошибки модели по addError.
+     *
+     * @return bool true, если все проверки успешны
+     * @throws Exception
+     */
+    public function validateFileAttributes() : bool
     {
         $ret = true;
+
         foreach (array_keys($this->attributes) as $attribute) {
-            if ($this->saveFileAttribute($attribute) === false) {
+            if ($this->validateFileAttribute($attribute) === false) {
                 $ret = false;
             }
         }
@@ -685,15 +671,15 @@ class FileAttributeBehavior extends Behavior
      * Загружает новые файлы (UploadFiles) и удаляется старые Files, согласно текущему значению аттрибута.
      *
      * @param string $attribute
-     * @return bool результат сохранения
+     * @return bool|null результат сохранения или null, если аттрибут не инициализирован
      * @throws StoreException
      * @throws Exception
      * @throws InvalidConfigException
      */
-    public function saveFileAttribute(string $attribute) : bool
+    public function saveFileAttribute(string $attribute) : ?bool
     {
-        $this->checkFileAttribute($attribute);
-        $modelPath = $this->getFileModelPath();
+        $this->checkIsFileAttribute($attribute);
+        $modelPath = $this->getModelFilePath();
 
         // проверяем что модель сохранена перед тем как сохранять ее файлы
         if ($modelPath === null) {
@@ -705,7 +691,7 @@ class FileAttributeBehavior extends Behavior
 
         // если новые значения не установлены, то сохранять не нужно
         if (! isset($files)) {
-            return false;
+            return null;
         }
 
         // получаем старые файлы
@@ -767,16 +753,85 @@ class FileAttributeBehavior extends Behavior
             $file->delete();
         }
 
-        // переименовываем файлы в правильные имена
+        // сортируем файлы
         ksort($files);
+
+        // переиндексируем и переименовываем файлы
+        $value = [];
         foreach (array_values($files) as $pos => $file) {
             $file->name = StoreFile::createStorePrefix($attribute, $pos, $file->name);
-            $files[$pos] = $file;
+            $value[$pos] = $file;
         }
 
         // обновляем значение аттрибута модели
-        $this->values[$attribute] = $files;
+        $this->values[$attribute] = $value;
         return true;
+    }
+
+    /**
+     * Сохраняет файловые аттрибуты.
+     * Выполняет импорт загруженных файлов и удаление старых
+     *
+     * @return bool результаты сохранения
+     * @throws StoreException
+     * @throws Exception
+     * @throws InvalidConfigException
+     */
+    public function saveFileAttributes() : bool
+    {
+        $ret = true;
+        foreach (array_keys($this->attributes) as $attribute) {
+            if ($this->saveFileAttribute($attribute) === false) {
+                $ret = false;
+            }
+        }
+
+        return $ret;
+    }
+
+    /**
+     * Удаляет все файлы аттрибута
+     *
+     * @param string $attribute
+     * @return true
+     * @throws StoreException
+     * @throws Exception
+     * @throws InvalidConfigException
+     */
+    public function deleteFileAttribute(string $attribute) : bool
+    {
+        $this->checkIsFileAttribute($attribute);
+
+        // удаляем файлы аттрибута
+        foreach ($this->listAttributeFiles($attribute) as $file) {
+            $file->delete();
+        }
+
+        // обновляем значение
+        $this->values[$attribute] = [];
+
+        return true;
+    }
+
+    /**
+     * Удаляет все файлы всех аттрибутов
+     *
+     * @return bool
+     * @throws StoreException
+     * @throws Exception
+     * @throws InvalidConfigException
+     */
+    public function deleteFileAttributes() : bool
+    {
+        $ret = true;
+
+        foreach (array_keys($this->attributes) as $attribute) {
+            if (! $this->deleteFileAttribute($attribute)) {
+                $ret = false;
+            }
+        }
+
+        return $ret;
     }
 
     /**
@@ -796,46 +851,5 @@ class FileAttributeBehavior extends Behavior
         }
 
         return null;
-    }
-
-    /**
-     * Удаляет все файлы всех аттрибутов
-     *
-     * @return $this
-     * @throws StoreException
-     * @throws Exception
-     * @throws InvalidConfigException
-     */
-    public function deleteFileAttributes() : self
-    {
-        foreach (array_keys($this->attributes) as $attribute) {
-            $this->deleteFileAttribute($attribute);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Удаляет все файлы аттрибута
-     *
-     * @param string $attribute
-     * @return $this
-     * @throws StoreException
-     * @throws Exception
-     * @throws InvalidConfigException
-     */
-    public function deleteFileAttribute(string $attribute) : self
-    {
-        $this->checkFileAttribute($attribute);
-
-        // удаляем файлы аттрибута
-        foreach ($this->listAttributeFiles($attribute) as $file) {
-            $file->delete();
-        }
-
-        // обновляем значение
-        $this->values[$attribute] = [];
-
-        return $this;
     }
 }

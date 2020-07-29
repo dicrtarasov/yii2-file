@@ -3,19 +3,15 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 26.07.20 06:10:10
+ * @version 29.07.20 08:24:33
  */
 
 /** @noinspection PhpUnhandledExceptionInspection */
 declare(strict_types = 1);
 
-/**
- *
- */
+/** */
 define('YII_DEBUG', true);
-/**
- *
- */
+/** */
 define('YII_ENV', 'dev');
 
 require_once(dirname(__DIR__) . '/vendor/autoload.php');
@@ -28,6 +24,9 @@ new yii\web\Application([
     'basePath' => __DIR__,
     'bootstrap' => [
         'dicr/file' => dicr\file\Bootstrap::class
+    ],
+    'components' => [
+        'cache' => yii\caching\ArrayCache::class
     ]
 ]);
 
