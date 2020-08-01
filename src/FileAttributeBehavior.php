@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 29.07.20 08:17:32
+ * @version 01.08.20 14:02:40
  */
 
 declare(strict_types = 1);
@@ -204,7 +204,7 @@ class FileAttributeBehavior extends Behavior
             Model::EVENT_BEFORE_VALIDATE => 'validateFileAttributes',
             ActiveRecord::EVENT_AFTER_INSERT => 'saveFileAttributes',
             ActiveRecord::EVENT_AFTER_UPDATE => 'saveFileAttributes',
-            ActiveRecord::EVENT_AFTER_DELETE => 'deleteFileModelPath'
+            ActiveRecord::EVENT_AFTER_DELETE => 'deleteModelFilePath'
         ];
     }
 
