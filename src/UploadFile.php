@@ -1,9 +1,9 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 27.07.20 13:36:57
+ * @version 02.08.20 06:25:52
  */
 
 declare(strict_types = 1);
@@ -51,6 +51,7 @@ class UploadFile extends StoreFile
      * Конструктор
      *
      * @param array|string $pathconfig
+     * @throws StoreException
      */
     public function __construct($pathconfig)
     {
@@ -114,6 +115,7 @@ class UploadFile extends StoreFile
      * Парсит $_FILES и создает объекты.
      *
      * @return UploadFile[] файлы аттрибута
+     * @throws StoreException
      */
     protected static function parseInstances() : array
     {
@@ -211,6 +213,7 @@ class UploadFile extends StoreFile
      *
      * @param array $data данные аттрибута
      * @return UploadFile[] файлы аттрибута
+     * @throws StoreException
      */
     protected static function parseSimpleData(array $data) : array
     {
@@ -291,6 +294,7 @@ class UploadFile extends StoreFile
      *
      * @param array $data array данные аттрибутов формы
      * @return UploadFile[] [$attribute => \dicr\file\UploadFile[]] аттрибуты формы с файлами
+     * @throws StoreException
      */
     protected static function parseFormData(array $data) : array
     {
@@ -318,6 +322,7 @@ class UploadFile extends StoreFile
      * @param int[] $errors ошибки
      * @param string[] $paths пути
      * @return UploadFile[]
+     * @throws StoreException
      */
     protected static function instancesFromData(
         array $names,

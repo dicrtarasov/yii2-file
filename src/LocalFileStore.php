@@ -1,9 +1,9 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 26.07.20 07:55:22
+ * @version 02.08.20 06:27:23
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -150,7 +150,7 @@ class LocalFileStore extends AbstractFileStore
         }
 
         // обрезаем слэши (корневой путь станет пустым "")
-        $fullPath = rtrim((string)$fullPath, $this->pathSeparator);
+        $fullPath = rtrim($fullPath, $this->pathSeparator);
         $this->_path = $fullPath;
         return $this;
     }
@@ -289,6 +289,17 @@ class LocalFileStore extends AbstractFileStore
         }
 
         return $time;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function touch($path, ?int $time = null) : void
+    {
+        $absPath = $this->absolutePath($path);
+        if (! @touch($absPath, $time ?: time())) {
+            $this->throwLastError('Ошибка обновления времени правки файла', $absPath);
+        }
     }
 
     /**

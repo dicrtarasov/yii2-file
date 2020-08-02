@@ -1,9 +1,9 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 26.07.20 07:50:28
+ * @version 02.08.20 06:26:46
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -16,8 +16,10 @@ use Throwable;
 use Yii;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
+use yii\base\NotSupportedException;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
+use function array_pop;
 use function call_user_func;
 use function implode;
 use function is_array;
@@ -87,6 +89,23 @@ abstract class AbstractFileStore extends Component
 
         array_pop($path);
         return $this->buildPath($path);
+    }
+
+    /**
+     * Возвращает имя файла из пути.
+     *
+     * @param string|string[] $path
+     * @return string
+     * @throws StoreException если путь корневой
+     */
+    public function basename($path) : string
+    {
+        $path = $this->splitPath($path);
+        if (empty($path)) {
+            throw new StoreException('корневой каталог');
+        }
+
+        return (string)array_pop($path);
     }
 
     /**
@@ -187,7 +206,7 @@ abstract class AbstractFileStore extends Component
     /**
      * Импорт файла в хранилище.
      *
-     * @param string|string[]|AbstractFile $src импортируемый файл
+     * @param string|string[]|StoreFile $src импортируемый файл
      *  Если путь задан строкой или массивом, то считается абсолютным путем локального файла.
      * @param string|string[] $path относительный путь в хранилище для импорта
      * @param array $options опции
@@ -283,6 +302,19 @@ abstract class AbstractFileStore extends Component
     abstract public function mtime($path) : int;
 
     /**
+     * Обновляет время модификации файла.
+     *
+     * @param string[]|string $path
+     * @param int|null $time время, если не задано, то time()
+     * @throws StoreException
+     * @noinspection PhpUnusedParameterInspection
+     */
+    public function touch($path, int $time = null) : void
+    {
+        throw new StoreException('', new NotSupportedException('touch'));
+    }
+
+    /**
      * Возвращает полный путь
      *
      * @param string|string[] $path
@@ -360,23 +392,6 @@ abstract class AbstractFileStore extends Component
     }
 
     /**
-     * Возвращает имя файла из пути.
-     *
-     * @param string|string[] $path
-     * @return string
-     * @throws StoreException если путь корневой
-     */
-    public function basename($path) : string
-    {
-        $path = $this->splitPath($path);
-        if (empty($path)) {
-            throw new StoreException('корневой каталог');
-        }
-
-        return (string)array_pop($path);
-    }
-
-    /**
      * Возвращает MIME-тип файла.
      *
      * @param string|string[] $path
@@ -445,6 +460,15 @@ abstract class AbstractFileStore extends Component
     abstract public function rename($path, $newpath) : self;
 
     /**
+     * Возвращает флаг директории.
+     *
+     * @param string|string[] $path
+     * @return bool
+     * @throws StoreException
+     */
+    abstract public function isDir($path) : bool;
+
+    /**
      * Проверяет/создает директорию.
      *
      * @param string|string[] $dir
@@ -473,15 +497,6 @@ abstract class AbstractFileStore extends Component
      * @throws StoreException
      */
     abstract public function mkdir($path) : self;
-
-    /**
-     * Возвращает флаг директории.
-     *
-     * @param string|string[] $path
-     * @return bool
-     * @throws StoreException
-     */
-    abstract public function isDir($path) : bool;
 
     /**
      * Удаляет рекурсивно директорию/файл.

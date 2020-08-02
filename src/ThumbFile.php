@@ -1,9 +1,9 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 26.07.20 06:03:02
+ * @version 02.08.20 06:23:59
  */
 
 /** @noinspection SpellCheckingInspection */
@@ -29,7 +29,7 @@ use function is_string;
  */
 class ThumbFile extends StoreFile
 {
-    /** @var AbstractFile исходный файл */
+    /** @var StoreFile исходный файл */
     public $source;
 
     /** @var int */
@@ -67,6 +67,7 @@ class ThumbFile extends StoreFile
      *
      * @param array $config конфиг
      * @throws InvalidConfigException
+     * @throws StoreException
      */
     public function __construct(array $config = [])
     {
@@ -147,7 +148,7 @@ class ThumbFile extends StoreFile
 
         // проверяем источник
         if (! empty($this->source)) {
-            if (! ($this->source instanceof AbstractFile)) {
+            if (! ($this->source instanceof StoreFile)) {
                 throw new InvalidConfigException('source: ' . gettype($this->source));
             }
         } elseif (! empty($this->noimage)) {

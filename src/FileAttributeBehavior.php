@@ -1,9 +1,9 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 01.08.20 14:02:40
+ * @version 02.08.20 06:23:16
  */
 
 declare(strict_types = 1);
@@ -504,8 +504,10 @@ class FileAttributeBehavior extends Behavior
             $formName = $this->owner->formName();
         }
 
-        // проверяем что была отправка формы с данными аттрибута
+        /** @var array $post имена старых файлов с позициями */
         $post = (Yii::$app->request->post())[$formName][$attribute] ?? null;
+
+        /** @var array загруженные новые файлы с позициями $files */
         $files = UploadFile::instances($formName, $attribute);
         if (! isset($post) && ! isset($files)) {
             return false;
@@ -548,12 +550,12 @@ class FileAttributeBehavior extends Behavior
     /**
      * Загружает файловые аттрибуты из $_POST и $FILES
      *
-     * @param string $formName имя формы модели
+     * @param string|null $formName имя формы модели
      * @return bool true если данные некоторых атрибутов были загружены
      * @throws Exception
      * @throws InvalidConfigException
      */
-    public function loadFileAttributes(string $formName = null) : bool
+    public function loadFileAttributes(?string $formName = null) : bool
     {
         $ret = false;
 
@@ -759,7 +761,12 @@ class FileAttributeBehavior extends Behavior
         // переиндексируем и переименовываем файлы
         $value = [];
         foreach (array_values($files) as $pos => $file) {
+            // добавляем индекс позиции
             $file->name = StoreFile::createStorePrefix($attribute, $pos, $file->name);
+
+            // обновляем время изменения для правильной генерации thumbnail
+            $file->touch();
+
             $value[$pos] = $file;
         }
 

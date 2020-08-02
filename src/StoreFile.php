@@ -1,9 +1,9 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 26.07.20 06:10:10
+ * @version 02.08.20 06:25:04
  */
 
 declare(strict_types = 1);
@@ -11,32 +11,47 @@ declare(strict_types = 1);
 namespace dicr\file;
 
 use InvalidArgumentException;
+use yii\base\BaseObject;
 use yii\base\InvalidConfigException;
 use function is_resource;
+use function preg_match;
+use function preg_replace;
+use function str_replace;
 
 /**
  * Файл хранилища файлов.
  * Все операции выполняются через перенаправления к AbstractStore.
  *
  * @property-read AbstractFileStore $store хранилище
- * @property string $path относительный путь (rw)
- * @property-read StoreFile|null $parent родительский каталог (dirname)
- * @property string $name имя файла (basename)
+ *
+ * @property string $path относительный путь файла
  * @property-read string $absolutePath абсолютный путь
  * @property-read string|null $url абсолютный URL
+ * @property string $name имя файла без пути (basename)
+ * @property-read string|null $extension расширение файла
+ * @property-read StoreFile|null $parent родительский каталог (dirname)
+ * @property-read StoreFile[] $list
+ * @property-read bool $exists существует
+ * @property-read bool $isDir поддерживает листинг
+ * @property-read bool $isFile поддерживает получение содержимого
+ * @property-read int $size размер в байтах
+ * @property-read int $mtime время изменения
+ * @property-read string $mimeType MIME-тип содержимого
  * @property bool $public публичный доступ
  * @property-read bool $hidden скрытый
- * @property string $contents содержимое в виде строки (rw)
- * @property resource $stream содержимое в виде потока (rw)
- * @property-read StoreFile[] $list
+ * @property string $contents содержимое в виде строки
+ * @property resource $stream содержимое в виде потока
  */
-class StoreFile extends AbstractFile
+class StoreFile extends BaseObject
 {
     /** @var string регулярное выражение имени файла со служебным префиксом */
     protected const STORE_PREFIX_REGEX = '~^\.?([^\~]+)\~(\d+)\~(.+)$~u';
 
     /** @var AbstractFileStore */
     protected $_store;
+
+    /** @var string путь файла */
+    protected $_path;
 
     /** @var string кэш абсолютного пути */
     private $_absolutePath;
@@ -50,6 +65,7 @@ class StoreFile extends AbstractFile
      * @param AbstractFileStore $store
      * @param string|array $path относительный путь
      * @param array $config
+     * @throws StoreException
      */
     public function __construct(AbstractFileStore $store, $path, array $config = [])
     {
@@ -57,11 +73,53 @@ class StoreFile extends AbstractFile
             throw new InvalidArgumentException('store');
         }
 
-        // store необходимо установить до установки пути, потому что parent::__construct
-        // использует normalizePath
+        // store необходимо установить до установки пути, потому что normalizePath использует store
         $this->_store = $store;
 
-        parent::__construct($path, $config);
+        $this->_path = $this->normalizePath($path);
+
+        parent::__construct($config);
+    }
+
+    /**
+     * Возвращает хранилище
+     *
+     * @return AbstractFileStore
+     */
+    public function getStore() : AbstractFileStore
+    {
+        return $this->_store;
+    }
+
+    /**
+     * Возвращает путь
+     *
+     * @return string
+     */
+    public function getPath() : string
+    {
+        return $this->_path;
+    }
+
+    /**
+     * Устанавливает путь.
+     *
+     * @param string|string[] $path new path
+     * @return $this
+     * @throws StoreException
+     */
+    public function setPath($path) : self
+    {
+        $path = $this->normalizePath($path);
+
+        if (! empty($this->_path) && $path !== $this->_path) {
+            $this->_store->rename($this->_path, $path);
+            $this->_path = $path;
+            $this->_absolutePath = null;
+            $this->_absoluteUrl = null;
+        }
+
+        return $this;
     }
 
     /**
@@ -99,33 +157,12 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * Возвращает хранилище
+     * Имя файла.
      *
-     * @return AbstractFileStore
-     */
-    public function getStore() : AbstractFileStore
-    {
-        return $this->_store;
-    }
-
-    /**
-     * Возвращает родительскую директорию.
-     *
-     * @return static|null
-     * @throws StoreException
-     * @throws InvalidConfigException
-     */
-    public function getParent() : ?self
-    {
-        if ($this->_path === '') {
-            return null;
-        }
-
-        return $this->_store->file($this->_store->dirname($this->_path));
-    }
-
-    /**
-     * @inheritDoc
+     * @param array $options
+     * - removePrefix - удаляет служебный префикс позиции файла, если имеется
+     * - removeExt - удаляет расширение если имеется
+     * @return string
      * @throws StoreException
      */
     public function getName(array $options = []) : string
@@ -141,79 +178,6 @@ class StoreFile extends AbstractFile
         }
 
         return $name;
-    }
-
-    /**
-     * @inheritDoc
-     * @throws StoreException
-     */
-    protected function normalizePath($path) : string
-    {
-        return $this->_store->normalizePath($path);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getExists() : bool
-    {
-        return $this->_store->exists($this->_path);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getIsDir() : bool
-    {
-        return $this->_store->isDir($this->_path);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getIsFile() : bool
-    {
-        return $this->_store->isFile($this->_path);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getSize() : int
-    {
-        return $this->_store->size($this->_path);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getMtime() : int
-    {
-        return $this->_store->mtime($this->_path);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getMimeType() : string
-    {
-        return $this->_store->mimeType($this->_path);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getContents() : string
-    {
-        return $this->_store->readContents($this->_path);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getStream()
-    {
-        return $this->_store->readStream($this->_path);
     }
 
     /**
@@ -238,22 +202,179 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * Устанавливает путь.
+     * Нормализация пути.
      *
-     * @param string|string[] $path new path
+     * @param string|string[] $path
+     * @return string
+     * @throws StoreException
+     */
+    protected function normalizePath($path) : string
+    {
+        return $this->_store->normalizePath($path);
+    }
+
+    /**
+     * Расширение файла по имени.
+     *
+     * @return string
+     */
+    public function getExtension() : string
+    {
+        $matches = null;
+        return preg_match('~^.+\.([^.]+)$~u', $this->name, $matches) ? $matches[1] : '';
+    }
+
+    /**
+     * Удаляет расширение из имени файла.
+     *
+     * @param string $name
+     * @return string
+     */
+    public static function removeExtension(string $name) : string
+    {
+        return preg_replace('~^(.+)\.[^.]+$~u', '${1}', $name);
+    }
+
+    /**
+     * Возвращает флаг существования файла.
+     *
+     * @return bool
+     * @throws StoreException
+     */
+    public function getExists() : bool
+    {
+        return $this->_store->exists($this->_path);
+    }
+
+    /**
+     * Возвращает признак директории.
+     *
+     * @return bool
+     * @throws StoreException
+     */
+    public function getIsDir() : bool
+    {
+        return $this->_store->isDir($this->_path);
+    }
+
+    /**
+     * Возвращает признак файла.
+     *
+     * @return bool
+     * @throws StoreException
+     */
+    public function getIsFile() : bool
+    {
+        return $this->_store->isFile($this->_path);
+    }
+
+    /**
+     * Возвращает размер.
+     *
+     * @return int размер в байтах
+     * @throws StoreException
+     */
+    public function getSize() : int
+    {
+        return $this->_store->size($this->_path);
+    }
+
+    /**
+     * Возвращает время изменения файла.
+     *
+     * @return int timestamp
+     * @throws StoreException
+     */
+    public function getMtime() : int
+    {
+        return $this->_store->mtime($this->_path);
+    }
+
+    /**
+     * Обновляет время модификации.
+     *
+     * @param int|null $time время, если null, то time()
      * @return $this
      * @throws StoreException
      */
-    public function setPath($path) : self
+    public function touch(?int $time = null) : self
     {
-        $path = $this->normalizePath($path);
+        $this->_store->touch($this->_path, $time);
+        return $this;
+    }
 
-        if (! empty($this->_path) && $path !== $this->_path) {
-            $this->_store->rename($this->_path, $path);
-            $this->_path = $path;
-            $this->_absolutePath = null;
-            $this->_absoluteUrl = null;
+    /**
+     * Возвращает Mime-ип файла.
+     *
+     * @return string
+     * @throws StoreException
+     */
+    public function getMimeType() : string
+    {
+        return $this->_store->mimeType($this->_path);
+    }
+
+    /**
+     * Сравнивает Mime-тип файла.
+     *
+     * @param string $type mime-тип с использованием шаблонов (image/png, text/*)
+     * @return bool
+     */
+    public function matchMimeType(string $type) : bool
+    {
+        $regex = '~^' . str_replace(['/', '*'], ['\\/', '.+'], $type) . '$~uism';
+        return (bool)preg_match($this->mimeType, $regex);
+    }
+
+    /**
+     * Возвращает содержимое файла.
+     *
+     * @return string
+     * @throws StoreException
+     */
+    public function getContents() : string
+    {
+        return $this->_store->readContents($this->_path);
+    }
+
+    /**
+     * Записывает содержимое файла из строки
+     *
+     * @param string $contents
+     * @return $this
+     * @throws StoreException
+     */
+    public function setContents(string $contents) : self
+    {
+        $this->_store->writeContents($this->_path, $contents);
+        return $this;
+    }
+
+    /**
+     * Возвращает контент в виде потока.
+     *
+     * @return resource
+     * @throws StoreException
+     */
+    public function getStream()
+    {
+        return $this->_store->readStream($this->_path);
+    }
+
+    /**
+     * Сохраняет содержимое файла из потока
+     *
+     * @param resource $stream
+     * @return $this
+     * @throws StoreException
+     */
+    public function setStream($stream) : self
+    {
+        if (! is_resource($stream)) {
+            throw new InvalidArgumentException('stream');
         }
+
+        $this->_store->writeStream($this->_path, $stream);
 
         return $this;
     }
@@ -285,6 +406,22 @@ class StoreFile extends AbstractFile
         }
 
         return $this->_absoluteUrl;
+    }
+
+    /**
+     * Возвращает родительскую директорию.
+     *
+     * @return static|null
+     * @throws StoreException
+     * @throws InvalidConfigException
+     */
+    public function getParent() : ?self
+    {
+        if ($this->_path === '') {
+            return null;
+        }
+
+        return $this->_store->file($this->_store->dirname($this->_path));
     }
 
     /**
@@ -350,33 +487,18 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * Записывает содержимое файла из строки
+     * Импорт файла в хранилище
      *
-     * @param string $contents
+     * @param string|string[]|StoreFile $src импортируемый файл
+     * @param array $options опции
+     *  - bool $ifModified - импортировать файл только если время новее или размер отличается (по-умолчанию true)
      * @return $this
      * @throws StoreException
+     * @throws InvalidConfigException
      */
-    public function setContents(string $contents) : self
+    public function import($src, array $options = []) : self
     {
-        $this->_store->writeContents($this->_path, $contents);
-        return $this;
-    }
-
-    /**
-     * Сохраняет содержимое файла из потока
-     *
-     * @param resource $stream
-     * @return $this
-     * @throws StoreException
-     */
-    public function setStream($stream) : self
-    {
-        if (! is_resource($stream)) {
-            throw new InvalidArgumentException('stream');
-        }
-
-        $this->_store->writeStream($this->_path, $stream);
-
+        $this->_store->import($src, $this->_path, $options);
         return $this;
     }
 
@@ -422,22 +544,6 @@ class StoreFile extends AbstractFile
     }
 
     /**
-     * Импорт файла в хранилище
-     *
-     * @param string|string[]|AbstractFile $src импортируемый файл
-     * @param array $options опции
-     *  - bool $ifModified - импортировать файл только если время новее или размер отличается (по-умолчанию true)
-     * @return $this
-     * @throws StoreException
-     * @throws InvalidConfigException
-     */
-    public function import($src, array $options = []) : self
-    {
-        $this->_store->import($src, $this->_path, $options);
-        return $this;
-    }
-
-    /**
      * Удаляет файл
      *
      * @return $this
@@ -475,5 +581,15 @@ class StoreFile extends AbstractFile
     {
         $this->store->clearThumb($this);
         return $this;
+    }
+
+    /**
+     * Конвертирует в строку.
+     *
+     * @return string path
+     */
+    public function __toString() : string
+    {
+        return (string)$this->_path;
     }
 }
