@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 02.08.20 06:26:46
+ * @version 05.08.20 02:20:09
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -632,17 +632,21 @@ abstract class AbstractFileStore extends Component
             throw new InvalidConfigException('ThumbFile для создания превью не настроен');
         }
 
-        // устанавливаем парамеры по-умолчанию
+        // чтобы по-умолчанию не применялись функции watermark и disclaimer из конфига
+        // устанавливаем значения в пустые
         $config = array_merge([
-            'noimage' => false,
-            'watermark' => false, // по-умолчанию не создавать watermark
-            'disclaimer' => false // по-умолчанию не применять disclaimer
+            'watermark' => '', // по-умолчанию не создавать watermark
+            'disclaimer' => '' // по-умолчанию не применять disclaimer
         ], $config);
 
-        // удаляем из параметров значения true, чтобы не перезаписывать конфиг по-умолчанию
+        // удаляем из параметров значения true, чтобы применились значения из конфига по-умолчанию
         foreach (['noimage', 'watermark', 'disclaimer'] as $field) {
-            if ($config[$field] === true) {
-                unset($config[$field]);
+            if (isset($config[$field])) {
+                if ($config[$field] === true) {
+                    unset($config[$field]);
+                } elseif ($config[$field] === false) {
+                    $config[$field] = '';
+                }
             }
         }
 

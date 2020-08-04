@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 05.08.20 02:14:15
+ * @version 05.08.20 02:22:28
  */
 
 /** @noinspection SpellCheckingInspection */
@@ -20,7 +20,6 @@ use yii\base\InvalidConfigException;
 use yii\di\Instance;
 use yii\helpers\ArrayHelper;
 use function gettype;
-use function is_bool;
 use function is_file;
 use function is_readable;
 use function is_string;
@@ -31,6 +30,9 @@ use function substr;
 
 /**
  * Превью файл в кэше.
+ *
+ * Для своих функций disclaimer и watermark можно наследовать класс и переопределить функции, дальше в конфиге store
+ * указать свой класс в конфиге thumbFile.
  *
  * @property-read bool $isReady флаг сущесвования готового превью
  */
@@ -85,23 +87,6 @@ class ThumbFile extends StoreFile
     public function __construct(array $config = [])
     {
         $store = Instance::ensure(ArrayHelper::remove($config, 'store'), AbstractFileStore::class);
-
-        // устанавливаем пустые значения, чтобы не применялись watermark и disclaimer по-умолчанию
-        $config = array_merge([
-            'watermark' => '',
-            'disclaimer' => ''
-        ], $config);
-
-        // удаляем значения true, чтобы применить конфиг по-умолчанию и заменяем false на пустые значения
-        foreach (['noimage', 'watermark', 'disclaimer'] as $field) {
-            if (isset($config[$field]) && is_bool($config[$field])) {
-                if ($config[$field] === true) {
-                    unset($config[$field]);
-                } elseif ($config[$field] === false) {
-                    $config[$field] = '';
-                }
-            }
-        }
 
         /** @noinspection PhpParamsInspection */
         parent::__construct($store, '', $config);
