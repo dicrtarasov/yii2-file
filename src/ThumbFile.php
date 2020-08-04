@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 02.08.20 06:23:59
+ * @version 05.08.20 02:14:15
  */
 
 /** @noinspection SpellCheckingInspection */
@@ -20,7 +20,14 @@ use yii\base\InvalidConfigException;
 use yii\di\Instance;
 use yii\helpers\ArrayHelper;
 use function gettype;
+use function is_bool;
+use function is_file;
+use function is_readable;
 use function is_string;
+use function mb_strtolower;
+use function md5;
+use function preg_replace;
+use function substr;
 
 /**
  * Превью файл в кэше.
@@ -29,7 +36,10 @@ use function is_string;
  */
 class ThumbFile extends StoreFile
 {
-    /** @var StoreFile исходный файл */
+    /**
+     * @var StoreFile|null исходный файл
+     * Если пустой, то применяется noimage
+     */
     public $source;
 
     /** @var int */
@@ -41,14 +51,14 @@ class ThumbFile extends StoreFile
     /** @var string|false путь картинки-заглушки или функция, которая возвращает путь */
     public $noimage = '@dicr/file/assets/noimage.png';
 
-    /** @var string|false callable путь картинки водяного знака */
-    public $watermark = false;
+    /** @var string путь картинки водяного знака */
+    public $watermark = '';
 
     /** @var float прозрачность картинки watermark */
     public $watermarkOpacity = 0.7;
 
-    /** @var string|false путь каринки дисклеймера */
-    public $disclaimer = false;
+    /** @var string путь каринки дисклеймера */
+    public $disclaimer = '';
 
     /** @var float качество сжаия каринки */
     public $quality = 0.8;
@@ -57,7 +67,7 @@ class ThumbFile extends StoreFile
     public $format = 'jpg';
 
     /** @var bool файл является заглушкой noimage */
-    public $isNoimage = false;
+    protected $isNoimage = false;
 
     /** @var Imagick сырое изображение */
     protected $_image;
@@ -66,6 +76,9 @@ class ThumbFile extends StoreFile
      * Конструктор.
      *
      * @param array $config конфиг
+     * Чтобы не применялись по-умолчанию, watermark и disclaimer сбрасываются в пустые значения.
+     * Чтобы применить watermark, disclaimer по-умолчанию моно установить значения в true.
+     *
      * @throws InvalidConfigException
      * @throws StoreException
      */
@@ -73,17 +86,20 @@ class ThumbFile extends StoreFile
     {
         $store = Instance::ensure(ArrayHelper::remove($config, 'store'), AbstractFileStore::class);
 
-        // устанавливаем параметры по-умолчанию
+        // устанавливаем пустые значения, чтобы не применялись watermark и disclaimer по-умолчанию
         $config = array_merge([
-            'noimage' => false,
-            'watermark' => false,
-            'disclaimer' => false
+            'watermark' => '',
+            'disclaimer' => ''
         ], $config);
 
-        // удаляем значения true, чтобы не перезаписывали дефолтные значения
+        // удаляем значения true, чтобы применить конфиг по-умолчанию и заменяем false на пустые значения
         foreach (['noimage', 'watermark', 'disclaimer'] as $field) {
-            if (isset($config[$field]) && $config[$field] === true) {
-                unset($config[$field]);
+            if (isset($config[$field]) && is_bool($config[$field])) {
+                if ($config[$field] === true) {
+                    unset($config[$field]);
+                } elseif ($config[$field] === false) {
+                    $config[$field] = '';
+                }
             }
         }
 
@@ -109,22 +125,26 @@ class ThumbFile extends StoreFile
             throw new InvalidConfigException('height');
         }
 
-        if (is_string($this->noimage)) {
-            $this->noimage = Yii::getAlias($this->noimage);
-            if (! is_file($this->noimage) || ! is_readable($this->noimage)) {
-                throw new InvalidConfigException('noimage недоступен: ' . $this->noimage);
+        if (! empty($this->noimage)) {
+            if (is_string($this->noimage)) {
+                $this->noimage = Yii::getAlias($this->noimage);
+                if (! is_file($this->noimage) || ! is_readable($this->noimage)) {
+                    throw new InvalidConfigException('noimage недоступен: ' . $this->noimage);
+                }
+            } else {
+                throw new InvalidConfigException('noimage: ' . gettype($this->noimage));
             }
-        } elseif ($this->noimage !== false) {
-            throw new InvalidConfigException('noimage');
         }
 
-        if (is_string($this->watermark)) {
-            $this->watermark = Yii::getAlias($this->watermark);
-            if (! is_file($this->watermark) || ! is_readable($this->watermark)) {
-                throw new InvalidConfigException('watermark недоступен: ' . $this->watermark);
+        if (! empty($this->watermark)) {
+            if (is_string($this->watermark)) {
+                $this->watermark = Yii::getAlias($this->watermark);
+                if (! is_file($this->watermark) || ! is_readable($this->watermark)) {
+                    throw new InvalidConfigException('watermark недоступен: ' . $this->watermark);
+                }
+            } else {
+                throw new InvalidConfigException('watermark: ' . gettype($this->watermark));
             }
-        } elseif ($this->watermark !== false) {
-            throw new InvalidConfigException('watermark');
         }
 
         $this->watermarkOpacity = (float)$this->watermarkOpacity;
@@ -132,18 +152,20 @@ class ThumbFile extends StoreFile
             throw new InvalidConfigException('watermarkOpacity: ' . $this->watermarkOpacity);
         }
 
+        if (! empty($this->disclaimer)) {
+            if (is_string($this->disclaimer)) {
+                $this->disclaimer = Yii::getAlias($this->disclaimer);
+                if (! is_file($this->disclaimer) || ! is_readable($this->disclaimer)) {
+                    throw new InvalidConfigException('disclaimer недоступен');
+                }
+            } else {
+                throw new InvalidConfigException('disclaimer: ' . gettype($this->disclaimer));
+            }
+        }
+
         $this->quality = (float)$this->quality;
         if ($this->quality < 0 || $this->quality > 1) {
             throw new InvalidConfigException('quality: ' . $this->quality);
-        }
-
-        if (is_string($this->disclaimer)) {
-            $this->disclaimer = Yii::getAlias($this->disclaimer);
-            if (! is_file($this->disclaimer) || ! is_readable($this->disclaimer)) {
-                throw new InvalidConfigException('disclaimer недоступен');
-            }
-        } elseif ($this->disclaimer !== false) {
-            throw new InvalidConfigException('disclaimer: ' . gettype($this->disclaimer));
         }
 
         // проверяем источник
@@ -164,16 +186,35 @@ class ThumbFile extends StoreFile
     }
 
     /**
-     * Обновляет путь картинки в кеше.
+     * Генерирует путь картинки в кеше.
      *
      * @return string
      */
     protected function createPath() : string
     {
-        return preg_replace('~^(.+)\.[^.]+$~u', sprintf('${1}~%dx%d%s%s.%s', $this->width, $this->height,
-            ! $this->isNoimage && ! empty($this->watermark) ? '~w' : '',
-            ! $this->isNoimage && ! empty($this->disclaimer) ? '~d' : '', preg_quote($this->format, '~')),
-            $this->isNoimage ? 'noimage/' . $this->source->name : $this->source->path);
+        // путь файла в кэше
+        $path = $this->isNoimage ? 'noimage/' . $this->noimage : $this->source->path;
+
+        // удаляем расшиение
+        $path = preg_replace('~\.[^\.+]$~u', '', $path);
+
+        // добавляем размер
+        $path .= '~' . $this->width . 'x' . $this->height;
+
+        if (! $this->isNoimage) {
+            // помечаем картинки с watermark
+            if (! empty($this->watermark)) {
+                $path .= '~w' . substr(md5($this->watermark), 0, 4);
+            }
+
+            // помечаем картинки с дисклеймером
+            if (! empty($this->disclaimer)) {
+                $path .= '~d' . substr(md5($this->watermark), 0, 4);
+            }
+        }
+
+        // добавляем расширение
+        return $path . '.' . mb_strtolower($this->format);
     }
 
     /**
@@ -260,6 +301,7 @@ class ThumbFile extends StoreFile
                     throw new StoreException('Ошибка чтения картинки: ' . $this->noimage, $ex);
                 }
 
+                // помечаем картинку как noimage и пересчитываем путь
                 $this->isNoimage = true;
                 $this->_path = $this->createPath();
             }
@@ -278,8 +320,6 @@ class ThumbFile extends StoreFile
         if ($this->isNoimage || empty($this->watermark)) {
             return $this;
         }
-
-        $watermark = null;
 
         /** @noinspection BadExceptionsProcessingInspection */
         try {
@@ -311,7 +351,7 @@ class ThumbFile extends StoreFile
         } catch (ImagickException $ex) {
             throw new StoreException('Ошибка создания watermark: ' . $this->watermark, $ex);
         } finally {
-            if ($watermark !== null) {
+            if (! empty($watermark)) {
                 $watermark->destroy();
             }
         }
@@ -416,7 +456,7 @@ class ThumbFile extends StoreFile
         $dir = $this->store->file($this->source->path)->parent;
         if ($dir !== null) {
             $files = $dir->getList([
-                'nameRegex' => '~^.+\~\d+x\d+(\~[wd])*\.[^\.]+$~',
+                'nameRegex' => '~^.+\~\d+x\d+(\~[wd0-9a-f])*\.[^\.]+$~',
                 'dir' => false
             ]);
 
@@ -443,7 +483,7 @@ class ThumbFile extends StoreFile
     {
         if (! empty($this->_image)) {
             $this->_image->destroy();
-            $this->_image = null;
+            unset($this->_image);
         }
     }
 }
