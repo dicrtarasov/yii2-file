@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 05.08.20 02:22:28
+ * @version 05.08.20 23:19:03
  */
 
 /** @noinspection SpellCheckingInspection */
@@ -26,6 +26,7 @@ use function is_string;
 use function mb_strtolower;
 use function md5;
 use function preg_replace;
+use function round;
 use function substr;
 
 /**
@@ -181,7 +182,7 @@ class ThumbFile extends StoreFile
         $path = $this->isNoimage ? 'noimage/' . $this->noimage : $this->source->path;
 
         // удаляем расшиение
-        $path = preg_replace('~\.[^\.+]$~u', '', $path);
+        $path = preg_replace('~\.[^\.]+$~u', '', $path);
 
         // добавляем размер
         $path .= '~' . $this->width . 'x' . $this->height;
