@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 01:26:40
+ * @version 09.08.20 04:18:36
  */
 
 declare(strict_types = 1);
@@ -18,7 +18,6 @@ use yii\di\Instance;
 use yii\helpers\ArrayHelper;
 use function gettype;
 use function is_file;
-use function is_readable;
 use function is_string;
 use function mb_strtolower;
 use function md5;
@@ -111,8 +110,8 @@ class ThumbFile extends StoreFile
 
         if (! empty($this->noimage)) {
             if (is_string($this->noimage)) {
-                $this->noimage = Yii::getAlias($this->noimage);
-                if (! is_file($this->noimage) || ! is_readable($this->noimage)) {
+                $this->noimage = (string)Yii::getAlias($this->noimage);
+                if (! is_string($this->noimage) || ! is_file($this->noimage)) {
                     throw new InvalidConfigException('noimage недоступен: ' . $this->noimage);
                 }
             } else {
@@ -123,7 +122,7 @@ class ThumbFile extends StoreFile
         if (! empty($this->watermark)) {
             if (is_string($this->watermark)) {
                 $this->watermark = Yii::getAlias($this->watermark);
-                if (! is_file($this->watermark) || ! is_readable($this->watermark)) {
+                if (! is_string($this->watermark) || ! is_file($this->watermark)) {
                     throw new InvalidConfigException('watermark недоступен: ' . $this->watermark);
                 }
             } else {
@@ -139,7 +138,7 @@ class ThumbFile extends StoreFile
         if (! empty($this->disclaimer)) {
             if (is_string($this->disclaimer)) {
                 $this->disclaimer = Yii::getAlias($this->disclaimer);
-                if (! is_file($this->disclaimer) || ! is_readable($this->disclaimer)) {
+                if (! is_string($this->disclaimer) || ! is_file($this->disclaimer)) {
                     throw new InvalidConfigException('disclaimer недоступен');
                 }
             } else {
@@ -468,6 +467,7 @@ class ThumbFile extends StoreFile
 
         // путь файла в кэше
         $path = $this->isNoimage ? 'noimage/' . $this->noimage : $this->source->path;
+
         $dir = $this->store->file($path)->parent;
         if ($dir !== null) {
             // удаляем расширение

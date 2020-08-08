@@ -63,7 +63,7 @@
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="7.4" />
-  <component name="PhpRuntimeConfiguration" default_stubs_path="$PROJECT_DIR$/../phpstorm-stubs">
+  <component name="PhpRuntimeConfiguration">
     <extensions>
       <extension name="Ev" enabled="false" />
       <extension name="FFI" enabled="true" />

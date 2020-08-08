@@ -3,9 +3,10 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 01:18:55
+ * @version 09.08.20 04:21:35
  */
 
+/** @noinspection PhpUsageOfSilenceOperatorInspection */
 declare(strict_types = 1);
 namespace dicr\file;
 
@@ -22,6 +23,7 @@ use function in_array;
 use function is_array;
 use function is_dir;
 use function is_resource;
+use function is_string;
 
 /**
  * Локальная файловая система.
@@ -122,7 +124,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * Установить корневой путь
      *
-     * @param string $path
+     * @param string|array $path
      * @return $this
      * @throws StoreException
      */
@@ -130,14 +132,14 @@ class LocalFileStore extends AbstractFileStore
     {
         // решаем алиасы
         $fullPath = Yii::getAlias($path);
-        if ($fullPath === false) {
+        if (! is_string($fullPath)) {
             throw new InvalidArgumentException('Неизвестный алиас: ' . $path);
         }
 
         // получаем реальный путь
         if ($fullPath !== '/') {
             $fullPath = realpath($fullPath);
-            if ($fullPath === false) {
+            if (! is_string($fullPath)) {
                 throw new StoreException('Путь не существует: ' . $path);
             }
 
@@ -230,7 +232,7 @@ class LocalFileStore extends AbstractFileStore
     {
         $absPath = $this->absolutePath($path);
 
-        $perms = fileperms($absPath);
+        $perms = @fileperms($absPath);
         if ($perms === false) {
             $this->throwLastError('Проверки типа доступа файла', $absPath);
         }
@@ -265,7 +267,7 @@ class LocalFileStore extends AbstractFileStore
     {
         $absPath = $this->absolutePath($path);
 
-        $size = filesize($absPath);
+        $size = @filesize($absPath);
         if ($size === false) {
             $this->throwLastError('Получение размера файла', $absPath);
         }
@@ -280,7 +282,7 @@ class LocalFileStore extends AbstractFileStore
     {
         $absPath = $this->absolutePath($path);
 
-        $time = filemtime($absPath);
+        $time = @filemtime($absPath);
         if ($time === false) {
             $this->throwLastError('Получения времени модификации файла', $absPath);
         }
@@ -294,7 +296,7 @@ class LocalFileStore extends AbstractFileStore
     public function touch($path, ?int $time = null): void
     {
         $absPath = $this->absolutePath($path);
-        if (! touch($absPath, $time ?: time())) {
+        if (! @touch($absPath, $time ?: time())) {
             $this->throwLastError('Ошибка обновления времени правки файла', $absPath);
         }
     }
@@ -307,7 +309,7 @@ class LocalFileStore extends AbstractFileStore
         $absPath = $this->absolutePath($path);
 
         $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $type = $finfo->file($absPath, FILEINFO_NONE, /** @scrutinizer ignore-type */ $this->context);
+        $type = @$finfo->file($absPath, FILEINFO_NONE, /** @scrutinizer ignore-type */ $this->context);
         if ($type === false) {
             $this->throwLastError('Получение mime-типа', $absPath);
         }
@@ -322,7 +324,7 @@ class LocalFileStore extends AbstractFileStore
     {
         $absPath = $this->absolutePath($path);
 
-        $contents = file_get_contents($absPath, false, /** @scrutinizer ignore-type */ $this->context);
+        $contents = @file_get_contents($absPath, false, /** @scrutinizer ignore-type */ $this->context);
         if ($contents === false) {
             $this->throwLastError('Чтение файла', $absPath);
         }
@@ -362,7 +364,7 @@ class LocalFileStore extends AbstractFileStore
         // строим абсолютный путь
         $absPath = $this->absolutePath($path);
 
-        $bytes = file_put_contents(
+        $bytes = @file_put_contents(
             $absPath, $contents, $this->writeFlags, /** @scrutinizer ignore-type */ $this->context
         );
 
@@ -410,7 +412,7 @@ class LocalFileStore extends AbstractFileStore
         // абсолютный путь
         $absPath = $this->absolutePath($path);
 
-        if (chmod($absPath, $perms) === false) {
+        if (@chmod($absPath, $perms) === false) {
             $this->throwLastError('Смена прав доступа', $absPath);
         }
 
@@ -438,7 +440,7 @@ class LocalFileStore extends AbstractFileStore
     {
         $absPath = $this->absolutePath($path);
 
-        $stream = fopen(
+        $stream = @fopen(
             $absPath, $this->readMode, false, /** @scrutinizer ignore-type */ $this->context
         );
 
@@ -477,7 +479,7 @@ class LocalFileStore extends AbstractFileStore
 
         $this->checkDir($newpath);
 
-        if (copy($absPath, $absNew, /** @scrutinizer ignore-type */ $this->context) === false) {
+        if (@copy($absPath, $absNew, /** @scrutinizer ignore-type */ $this->context) === false) {
             $this->throwLastError('Копирование файла', $absNew);
         }
 
@@ -507,7 +509,7 @@ class LocalFileStore extends AbstractFileStore
         // проверяем директорию назначения
         $this->checkDir($this->dirname($newpath));
 
-        if (rename($absPath, $absNew, /** @scrutinizer ignore-type */ $this->context) === false) {
+        if (@rename($absPath, $absNew, /** @scrutinizer ignore-type */ $this->context) === false) {
             $this->throwLastError('Переименование файла', $absNew);
         }
 
@@ -540,7 +542,7 @@ class LocalFileStore extends AbstractFileStore
         $perms = $this->permsByPublic(true, $this->public);
 
         // создаем директорию
-        if (mkdir(
+        if (@mkdir(
                 $absPath, $perms, true, /** @scrutinizer ignore-type */ $this->context
             ) === false) {
             $this->throwLastError('Создание директории', $absPath);
@@ -571,7 +573,7 @@ class LocalFileStore extends AbstractFileStore
         $absPath = $this->absolutePath($path);
 
         // удаляем
-        if (unlink($absPath, /** @scrutinizer ignore-type */ $this->context) === false) {
+        if (@unlink($absPath, /** @scrutinizer ignore-type */ $this->context) === false) {
             $this->throwLastError('Удаление файла', $absPath);
         }
 
@@ -592,7 +594,7 @@ class LocalFileStore extends AbstractFileStore
         $absPath = $this->absolutePath($path);
 
         // удаляем директорию
-        if (rmdir($absPath, /** @scrutinizer ignore-type */ $this->context) === false) {
+        if (@rmdir($absPath, /** @scrutinizer ignore-type */ $this->context) === false) {
             $this->throwLastError('Удаление директории', $absPath);
         }
 

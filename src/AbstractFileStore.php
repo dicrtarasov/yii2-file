@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 01:30:45
+ * @version 09.08.20 04:05:19
  */
 
 declare(strict_types = 1);
@@ -47,7 +47,7 @@ abstract class AbstractFileStore extends Component
     /** @var bool публичный доступ к файлам */
     public $public = true;
 
-    /** @var array конфиг для создания файлов */
+    /** @var array|null конфиг для создания файлов */
     public $fileConfig;
 
     /** @var array|null конфиг файлов превью картинок ThumbFile */
@@ -57,7 +57,7 @@ abstract class AbstractFileStore extends Component
      * @inheritdoc
      * @throws InvalidConfigException
      */
-    public function init() : void
+    public function init(): void
     {
         parent::init();
 
@@ -69,11 +69,6 @@ abstract class AbstractFileStore extends Component
             }
 
             $this->url = (string)$url;
-        }
-
-        // проверяем thumbFileConfig
-        if (! empty($this->thumbFileConfig) && ! is_array($this->thumbFileConfig)) {
-            throw new InvalidConfigException('thumbFileConfig');
         }
     }
 
@@ -101,7 +96,7 @@ abstract class AbstractFileStore extends Component
      * @param string|string[] $path
      * @return string[]
      */
-    public function filterPath($path) : array
+    public function filterPath($path): array
     {
         $filtered = [];
 
@@ -328,7 +323,7 @@ abstract class AbstractFileStore extends Component
      * @return bool
      * @throws StoreException
      */
-    abstract public function isPublic($path) : bool;
+    abstract public function isPublic($path): bool;
 
     /**
      * Устанавливает публичность файла.
@@ -338,7 +333,7 @@ abstract class AbstractFileStore extends Component
      * @return $this
      * @throws StoreException
      */
-    abstract public function setPublic($path, bool $public) : self;
+    abstract public function setPublic($path, bool $public): self;
 
     /**
      * Проверяет признак скрытого файла.
@@ -348,7 +343,7 @@ abstract class AbstractFileStore extends Component
      * @throws StoreException
      * @noinspection PhpDocRedundantThrowsInspection
      */
-    public function isHidden($path) : bool
+    public function isHidden($path): bool
     {
         $path = $this->normalizePath($path);
         if (empty($path)) {
@@ -365,7 +360,7 @@ abstract class AbstractFileStore extends Component
      * @return string
      * @throws StoreException
      */
-    abstract public function readContents($path) : string;
+    abstract public function readContents($path): string;
 
     /**
      * Записывает содержимое файла из строки
@@ -375,7 +370,7 @@ abstract class AbstractFileStore extends Component
      * @return int размер записанных данных
      * @throws StoreException
      */
-    abstract public function writeContents($path, string $contents) : int;
+    abstract public function writeContents($path, string $contents): int;
 
     /**
      * Возвращает открытый поток файла.
@@ -431,7 +426,7 @@ abstract class AbstractFileStore extends Component
      * @return $this
      * @throws StoreException
      */
-    public function delete($path) : self
+    public function delete($path): self
     {
         $path = $this->filterPath($path);
         if (empty($path)) {
@@ -463,12 +458,7 @@ abstract class AbstractFileStore extends Component
     public function file($path): StoreFile
     {
         // конфиг файла
-        $fileConfig = $this->fileConfig ?: [];
-
-        // добавляем класс по-умолчанию
-        if (! isset($fileConfig['class'])) {
-            $fileConfig['class'] = StoreFile::class;
-        }
+        $fileConfig = ($this->fileConfig ?: []) + ['class' => StoreFile::class];
 
         // создаем файл
         /** @noinspection PhpIncompatibleReturnTypeInspection */
@@ -490,7 +480,7 @@ abstract class AbstractFileStore extends Component
      * @return StoreFile[]
      * @throws StoreException
      */
-    abstract public function list($path, array $filter = []) : array;
+    abstract public function list($path, array $filter = []): array;
 
     /**
      * Создает ThumbFile.
@@ -499,7 +489,7 @@ abstract class AbstractFileStore extends Component
      * @return ThumbFile ThumbFile
      * @throws InvalidConfigException
      */
-    protected function createThumb(array $config = []) : ThumbFile
+    protected function createThumb(array $config = []): ThumbFile
     {
         if (empty($this->thumbFileConfig)) {
             throw new InvalidConfigException('ThumbFile для создания превью не настроен');
@@ -523,16 +513,8 @@ abstract class AbstractFileStore extends Component
             }
         }
 
-        // добавляем конфиг по-умолчанию
-        $config = array_merge($this->thumbFileConfig ?: [], $config);
-
-        // добавляем класс по-умолчанию
-        if (empty($config['class'])) {
-            $config['class'] = ThumbFile::class;
-        }
-
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return Yii::createObject($config);
+        return Yii::createObject($config + $this->thumbFileConfig + ['class' => ThumbFile::class]);
     }
 
     /**
@@ -552,14 +534,10 @@ abstract class AbstractFileStore extends Component
             throw new InvalidArgumentException('file');
         }
 
-        if (! $file instanceof StoreFile) {
-            $file = $this->file($file);
-        }
+        $config['source'] = ($file instanceof StoreFile) ? $file : $this->file($file);
 
         // создаем превью
-        return $this->createThumb(array_merge($config, [
-            'source' => $file
-        ]));
+        return $this->createThumb($config);
     }
 
     /**
@@ -572,11 +550,7 @@ abstract class AbstractFileStore extends Component
     public function noimage(array $config = []): ThumbFile
     {
         // создаем превью для пустого файла
-        return $this->createThumb(array_merge([
-            'noimage' => true
-        ], $config, [
-            'source' => null,
-        ]));
+        return $this->createThumb(['source' => null] + $config + ['noimage' => true]);
     }
 
     /**
@@ -589,14 +563,9 @@ abstract class AbstractFileStore extends Component
      */
     public function clearThumb($file): self
     {
-        // проверяем аргументы
-        if (! $file instanceof StoreFile) {
-            $file = $this->file($file);
-        }
-
         // создаем ThumbFile
         $this->createThumb([
-            'source' => $file
+            'source' => $file instanceof StoreFile ? $file : $this->file($file)
         ])->clear();
 
         return $this;
@@ -616,10 +585,7 @@ abstract class AbstractFileStore extends Component
      */
     public function import($src, $path, array $options = []): self
     {
-        // проверяем аргументы
-        if (is_string($src) || is_array($src)) {
-            $src = LocalFileStore::root()->file($src);
-        }
+        $src = ($src instanceof StoreFile) ? $src : $this->file($src);
 
         // пропускаем существующие файлы более новой версии
         try {
@@ -642,8 +608,11 @@ abstract class AbstractFileStore extends Component
         try {
             $this->writeStream($path, $srcStream);
         } finally {
-            /** @scrutinizer ignore-unhandled */
-            fclose($srcStream);
+            try {
+                fclose($srcStream);
+            } catch (Throwable $ex) {
+                Yii::error($ex, __METHOD__);
+            }
         }
 
         return $this;
@@ -663,7 +632,11 @@ abstract class AbstractFileStore extends Component
         try {
             $this->writeStream($newpath, $stream);
         } finally {
-            fclose($stream);
+            try {
+                fclose($stream);
+            } catch (Throwable $ex) {
+                Yii::error($ex);
+            }
         }
 
         return $this;
@@ -677,7 +650,12 @@ abstract class AbstractFileStore extends Component
      */
     public function clearStatCache($path): self
     {
-        clearstatcache(true, $this->absolutePath($path));
+        try {
+            clearstatcache(true, $this->absolutePath($path));
+        } catch (Throwable $ex) {
+            Yii::error($ex);
+        }
+
         return $this;
     }
 
@@ -688,7 +666,7 @@ abstract class AbstractFileStore extends Component
      * @return string[]
      * @throws StoreException
      */
-    protected function filterRootPath($path) : array
+    protected function filterRootPath($path): array
     {
         $path = $this->filterPath($path);
         if (empty($path)) {
@@ -711,7 +689,7 @@ abstract class AbstractFileStore extends Component
      *     - callable|null $filter function(StoreFile $file) : bool фильтр элементов
      * @return bool
      */
-    protected function fileMatchFilter(StoreFile $file, array $filter) : bool
+    protected function fileMatchFilter(StoreFile $file, array $filter): bool
     {
         // ---- вначале быстрые фильтры --------
 
@@ -757,7 +735,7 @@ abstract class AbstractFileStore extends Component
      * @param string $absPath путь файла
      * @throws StoreException
      */
-    protected function throwLastError(string $op = '', string $absPath = '') : void
+    protected function throwLastError(string $op = '', string $absPath = ''): void
     {
         $messages = [];
 
@@ -773,6 +751,7 @@ abstract class AbstractFileStore extends Component
         // добавляем последнюю ошибку
         $err = error_get_last();
         error_clear_last();
+
         if (! empty($err['message'])) {
             $messages[] = $err['message'];
         }
@@ -787,7 +766,7 @@ abstract class AbstractFileStore extends Component
      * @param StoreFile[] $files
      * @return StoreFile[]
      */
-    protected static function sortByName(array $files) : array
+    protected static function sortByName(array $files): array
     {
         usort($files, static function(StoreFile $a, StoreFile $b) {
             return $a->path <=> $b->path;

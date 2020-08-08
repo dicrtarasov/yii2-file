@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 01:06:38
+ * @version 09.08.20 03:27:17
  */
 
 declare(strict_types = 1);
@@ -111,7 +111,7 @@ class UploadFile extends StoreFile
         try {
             return ArrayHelper::getValue($instances, $path);
         } catch (Exception $ex) {
-            throw new LogicException('Неожиданная ошибка', $ex);
+            throw new LogicException('Неожиданная ошибка', 0, $ex);
         }
     }
 
