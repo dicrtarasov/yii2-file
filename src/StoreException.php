@@ -3,10 +3,9 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 02.08.20 06:26:16
+ * @version 09.08.20 01:27:35
  */
 
-/** @noinspection PhpUsageOfSilenceOperatorInspection */
 declare(strict_types=1);
 namespace dicr\file;
 
@@ -27,9 +26,8 @@ class StoreException extends Exception
     public function __construct(string $msg = '', ?Throwable $prev = null)
     {
         if ($msg === '') {
-            $error = @error_get_last();
-            /** @scrutinizer ignore-unhandled */
-            @error_clear_last();
+            $error = error_get_last();
+            error_clear_last();
             $msg = $error['message'] ?? 'Неопределенная ошибка';
         }
 

@@ -3,13 +3,10 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 01:07:41
+ * @version 09.08.20 01:26:40
  */
 
-/** @noinspection SpellCheckingInspection */
-
 declare(strict_types = 1);
-
 namespace dicr\file;
 
 use Imagick;
@@ -38,7 +35,7 @@ use function substr;
  * Файл превью создается/обновляется при вызове getUrl. Если же необходимо получить файл превью без обращения к его url,
  * можно вызвать $thumbFile->generate()
  *
- * @property-read bool $isReady флаг сущесвования готового превью
+ * @property-read bool $isReady флаг существования готового превью
  */
 class ThumbFile extends StoreFile
 {
@@ -63,10 +60,10 @@ class ThumbFile extends StoreFile
     /** @var float прозрачность картинки watermark */
     public $watermarkOpacity = 0.7;
 
-    /** @var string путь каринки дисклеймера */
+    /** @var string путь картинки дисклеймера */
     public $disclaimer = '';
 
-    /** @var float качество сжаия каринки */
+    /** @var float качество сжатия картинки */
     public $quality = 0.8;
 
     /** @var string формат файла */
@@ -182,7 +179,7 @@ class ThumbFile extends StoreFile
         // путь файла в кэше
         $path = $this->isNoimage ? 'noimage/' . $this->noimage : $this->source->path;
 
-        // удаляем расшиение
+        // удаляем расширение
         $path = self::removeExtension($path);
 
         // добавляем размер
@@ -290,7 +287,7 @@ class ThumbFile extends StoreFile
     }
 
     /**
-     * Возвращает каринку.
+     * Возвращает картинку.
      *
      * @return Imagick
      * @throws StoreException
@@ -298,10 +295,10 @@ class ThumbFile extends StoreFile
     protected function image(): Imagick
     {
         if (! isset($this->_image)) {
-            // создаем каринку
+            // создаем картинку
             $this->_image = new Imagick();
 
-            // пытаемся прочитать исходную каринку
+            // пытаемся прочитать исходную картинку
             try {
                 $this->_image->readImageBlob($this->source->contents);
             } catch (ImagickException $ex) {
@@ -310,7 +307,7 @@ class ThumbFile extends StoreFile
                     throw new StoreException('Ошибка создания превью', $ex);
                 }
 
-                // читаем каринку noimage
+                // читаем картинку noimage
                 try {
                     $this->_image->readImage($this->noimage);
                 } catch (ImagickException $ex) {
@@ -341,13 +338,13 @@ class ThumbFile extends StoreFile
         try {
             // получаем размеры изображения
             $image = $this->image();
-            $iwidth = (int)$image->getImageWidth();
-            $iheight = (int)$image->getImageHeight();
+            $iWidth = (int)$image->getImageWidth();
+            $iHeight = (int)$image->getImageHeight();
 
             // создаем картинку для водяного знака
             $watermark = new Imagick($this->watermark);
-            $wwidth = (int)$watermark->getImageWidth();
-            $wheight = (int)$watermark->getImageHeight();
+            $wWidth = (int)$watermark->getImageWidth();
+            $wHeight = (int)$watermark->getImageHeight();
 
             // применяем opacity
             if (! empty($this->watermarkOpacity) && $this->watermarkOpacity < 1) {
@@ -355,15 +352,15 @@ class ThumbFile extends StoreFile
             }
 
             // масштабируем водяной знак
-            if ($wwidth !== $iwidth || $wheight !== $iheight) {
-                $watermark->scaleImage($iwidth, $iheight, true);
-                $wwidth = $watermark->getImageWidth();
-                $wheight = $watermark->getImageHeight();
+            if ($wWidth !== $iWidth || $wHeight !== $iHeight) {
+                $watermark->scaleImage($iWidth, $iHeight, true);
+                $wWidth = $watermark->getImageWidth();
+                $wHeight = $watermark->getImageHeight();
             }
 
             // накладываем на изображение
-            $image->compositeImage($watermark, Imagick::COMPOSITE_DEFAULT, (int)round(($iwidth - $wwidth) / 2),
-                (int)round(($iheight - $wheight) / 2));
+            $image->compositeImage($watermark, Imagick::COMPOSITE_DEFAULT, (int)round(($iWidth - $wWidth) / 2),
+                (int)round(($iHeight - $wHeight) / 2));
         } catch (ImagickException $ex) {
             throw new StoreException('Ошибка создания watermark: ' . $this->watermark, $ex);
         } finally {
@@ -392,23 +389,23 @@ class ThumbFile extends StoreFile
         try {
             // получаем картинку
             $image = $this->image();
-            $iwidth = $image->getImageWidth();
-            $iheight = $image->getImageHeight();
+            $iWidth = $image->getImageWidth();
+            $iHeight = $image->getImageHeight();
 
             // создаем изображение
             $disclaimer = new Imagick($this->disclaimer);
 
             // изменяем размер
-            $disclaimer->scaleImage((int)round($iwidth / 10), (int)round($iheight / 10), true);
-            $dwidth = $disclaimer->getImageWidth();
-            $dheight = $disclaimer->getImageHeight();
+            $disclaimer->scaleImage((int)round($iWidth / 10), (int)round($iHeight / 10), true);
+            $dWidth = $disclaimer->getImageWidth();
+            $dHeight = $disclaimer->getImageHeight();
 
             // добавляем прозрачность
             $disclaimer->evaluateImage(Imagick::EVALUATE_MULTIPLY, 0.65, Imagick::CHANNEL_OPACITY);
 
             // выполняем наложение
-            $image->compositeImage($disclaimer, Imagick::COMPOSITE_DEFAULT, (int)round($iwidth - $dwidth * 1.3),
-                (int)round($dheight * 0.3));
+            $image->compositeImage($disclaimer, Imagick::COMPOSITE_DEFAULT, (int)round($iWidth - $dWidth * 1.3),
+                (int)round($dHeight * 0.3));
         } catch (ImagickException $ex) {
             throw new StoreException('Ошибка наложения disclaimer: ' . $this->disclaimer, $ex);
         } finally {
@@ -473,7 +470,7 @@ class ThumbFile extends StoreFile
         $path = $this->isNoimage ? 'noimage/' . $this->noimage : $this->source->path;
         $dir = $this->store->file($path)->parent;
         if ($dir !== null) {
-            // удаляем расшиение
+            // удаляем расширение
             $files = $dir->getList([
                 'nameRegex' => '~^' .
                     preg_quote(self::removeExtension($path), '~') .

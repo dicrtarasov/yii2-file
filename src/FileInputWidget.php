@@ -3,11 +3,10 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 01:10:19
+ * @version 09.08.20 01:28:21
  */
 
 declare(strict_types = 1);
-
 namespace dicr\file;
 
 use Yii;

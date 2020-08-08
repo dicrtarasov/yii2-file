@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 00:59:00
+ * @version 09.08.20 01:30:00
  */
 
 declare(strict_types = 1);
@@ -151,8 +151,7 @@ use function usort;
  *
  * @property-read Model $owner
  * @property StoreFile|null $modelFilePath путь папки модели
- *
- * @noinspection MissingPropertyAnnotationsInspection
+ * @property StoreFile[]|StoreFile|null $fileAttributeValue
  */
 class FileAttributeBehavior extends Behavior
 {

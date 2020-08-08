@@ -3,11 +3,10 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 00:50:18
+ * @version 09.08.20 01:27:06
  */
 
 declare(strict_types = 1);
-
 namespace dicr\file;
 
 use InvalidArgumentException;

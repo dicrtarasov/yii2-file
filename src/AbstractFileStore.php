@@ -3,12 +3,10 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 01:14:10
+ * @version 09.08.20 01:30:45
  */
 
-/** @noinspection PhpUsageOfSilenceOperatorInspection */
 declare(strict_types = 1);
-
 namespace dicr\file;
 
 use InvalidArgumentException;
@@ -645,7 +643,7 @@ abstract class AbstractFileStore extends Component
             $this->writeStream($path, $srcStream);
         } finally {
             /** @scrutinizer ignore-unhandled */
-            @fclose($srcStream);
+            fclose($srcStream);
         }
 
         return $this;
@@ -665,8 +663,7 @@ abstract class AbstractFileStore extends Component
         try {
             $this->writeStream($newpath, $stream);
         } finally {
-            /** @scrutinizer ignore-unhandled */
-            @fclose($stream);
+            fclose($stream);
         }
 
         return $this;
@@ -680,8 +677,7 @@ abstract class AbstractFileStore extends Component
      */
     public function clearStatCache($path): self
     {
-        /** @scrutinizer ignore-unhandled */
-        @clearstatcache(true, $this->absolutePath($path));
+        clearstatcache(true, $this->absolutePath($path));
         return $this;
     }
 
@@ -775,9 +771,8 @@ abstract class AbstractFileStore extends Component
         }
 
         // добавляем последнюю ошибку
-        $err = @error_get_last();
-        /** @scrutinizer ignore-unhandled */
-        @error_clear_last();
+        $err = error_get_last();
+        error_clear_last();
         if (! empty($err['message'])) {
             $messages[] = $err['message'];
         }
