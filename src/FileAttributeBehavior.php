@@ -3,13 +3,14 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 02.08.20 06:23:16
+ * @version 09.08.20 00:59:00
  */
 
 declare(strict_types = 1);
 namespace dicr\file;
 
 use LogicException;
+use RuntimeException;
 use Yii;
 use yii\base\Behavior;
 use yii\base\Exception;
@@ -31,6 +32,7 @@ use function ksort;
 use function mt_rand;
 use function preg_quote;
 use function reset;
+use function str_replace;
 use function strnatcasecmp;
 use function usort;
 
@@ -191,7 +193,6 @@ class FileAttributeBehavior extends Behavior
         }
 
         unset($params);
-
         parent::init();
     }
 
@@ -283,7 +284,7 @@ class FileAttributeBehavior extends Behavior
      * @param string $attribute
      * @return bool
      */
-    public function hasFileAttribute(string $attribute) : bool
+    public function hasFileAttribute(string $attribute): bool
     {
         return array_key_exists($attribute, $this->attributes);
     }
@@ -293,12 +294,14 @@ class FileAttributeBehavior extends Behavior
      *
      * @param string $attribute
      * @return $this
-     * @throws Exception
      */
-    protected function checkIsFileAttribute(string $attribute) : self
+    protected function checkIsFileAttribute(string $attribute): self
     {
         if (! $this->hasFileAttribute($attribute)) {
-            throw new Exception('файловый аттрибут "' . $attribute . '" не существует');
+            throw new RuntimeException(
+                'Файловый аттрибут: ' . $attribute .
+                ' модели: ' . gettype($this->owner) . ' не существует'
+            );
         }
 
         return $this;
@@ -313,10 +316,10 @@ class FileAttributeBehavior extends Behavior
      * Путь модели в хранилище строится из:
      * {formName}/{primaryKeys}
      *
-     * @return StoreFile|null
+     * @return ?StoreFile (null если модель типа ActiveRecord еще не сохранена и поэтому не имеет значений primaryKey)
      * @throws InvalidConfigException
      */
-    public function getModelFilePath() : ?StoreFile
+    public function getModelFilePath(): ?StoreFile
     {
         if (! isset($this->_modelFilePath)) {
             // относительный путь
@@ -329,18 +332,22 @@ class FileAttributeBehavior extends Behavior
                 $relpath[] = $formName;
             }
 
-            // для элементов базы данных добавляем id
-            if ($this->owner instanceof ActiveRecord) {
+            // если это модель базы данных и имеется primaryKey
+            if (($this->owner instanceof ActiveRecord) && ! empty($this->owner::primaryKey())) {
+                // получаем значения ключей
                 $primaryKey = $this->owner->getPrimaryKey(true);
-                if (empty($primaryKey) || empty(reset($primaryKey))) {
-                    return null;
+
+                // если модель не сохранена и основные ключи не установлены, то возвращаем null
+                foreach ($primaryKey as $val) {
+                    if ($val === null) {
+                        return null;
+                    }
                 }
 
-                // добавляем ключ
-                $keyName = basename(implode('~', $primaryKey));
-                if ($keyName !== '') {
-                    $relpath[] = $keyName;
-                }
+                // добавляем ключи к пути
+                $relpath[] = str_replace(
+                    $this->store->pathSeparator, '_', implode('-', $primaryKey)
+                );
             }
 
             $this->_modelFilePath = $this->store->file($relpath);
@@ -356,7 +363,7 @@ class FileAttributeBehavior extends Behavior
      * @param StoreFile|null $path
      * @return $this
      */
-    public function setModelFilePath(StoreFile $path = null) : self
+    public function setModelFilePath(StoreFile $path = null): self
     {
         $this->_modelFilePath = $path;
 
@@ -371,11 +378,20 @@ class FileAttributeBehavior extends Behavior
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    public function deleteModelFilePath() : self
+    public function deleteModelFilePath(): self
     {
+        // путь папки модели
         $path = $this->getModelFilePath();
 
         if ($path !== null) {
+            // удаляем папку с кэшем картинок модели
+            try {
+                $this->store->thumb($path)->delete();
+            } catch (InvalidConfigException $ex) {
+                // у хранилища нет кэша картинок
+            }
+
+            // удаляем папку с файлами модели
             $path->delete();
         }
 
@@ -390,7 +406,7 @@ class FileAttributeBehavior extends Behavior
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    protected function listAttributeFiles(string $attribute) : array
+    protected function listAttributeFiles(string $attribute): array
     {
         // путь папки модели
         $modelPath = $this->getModelFilePath();
@@ -422,7 +438,8 @@ class FileAttributeBehavior extends Behavior
      * @param string $attribute
      * @param bool $refresh
      * @return StoreFile[]|StoreFile|null
-     * @throws Exception
+     * @throws InvalidConfigException
+     * @throws StoreException
      */
     public function getFileAttributeValue(string $attribute, bool $refresh = false)
     {
@@ -448,9 +465,8 @@ class FileAttributeBehavior extends Behavior
      * @param string $attribute
      * @param StoreFile[]|StoreFile|null $value
      * @return $this
-     * @throws Exception
      */
-    public function setFileAttributeValue(string $attribute, $value) : self
+    public function setFileAttributeValue(string $attribute, $value): self
     {
         $this->checkIsFileAttribute($attribute);
 
@@ -468,7 +484,9 @@ class FileAttributeBehavior extends Behavior
         // проверяем элементы массива
         foreach ($value as $file) {
             if (! $file instanceof StoreFile) {
-                throw new InvalidArgumentException('files: некорректный тип элемента');
+                throw new InvalidArgumentException(
+                    'Некорректный тип значения: ' . gettype($file) . ' аттрибута: ' . $attribute
+                );
             }
         }
 
@@ -488,13 +506,11 @@ class FileAttributeBehavior extends Behavior
      * Загружает значения аттрибута из данных в $_POST и $_FILES
      *
      * @param string $attribute имя загружаемого файлового аттрибута
-     * @param string|null $formName имя формы модели
+     * @param ?string $formName имя формы модели
      * @return bool true если значение было загружено (присутствуют отправленные данные)
-     * @throws Exception
      * @throws InvalidConfigException
-     * @throws \Exception
      */
-    public function loadFileAttribute(string $attribute, string $formName = null) : bool
+    public function loadFileAttribute(string $attribute, ?string $formName = null): bool
     {
         $this->checkIsFileAttribute($attribute);
 
@@ -552,10 +568,9 @@ class FileAttributeBehavior extends Behavior
      *
      * @param string|null $formName имя формы модели
      * @return bool true если данные некоторых атрибутов были загружены
-     * @throws Exception
      * @throws InvalidConfigException
      */
-    public function loadFileAttributes(?string $formName = null) : bool
+    public function loadFileAttributes(?string $formName = null): bool
     {
         $ret = false;
 
@@ -575,7 +590,7 @@ class FileAttributeBehavior extends Behavior
      * @param mixed $file
      * @return $this
      */
-    protected function validateFile(string $attribute, $file) : self
+    protected function validateFile(string $attribute, $file): self
     {
         // параметры аттрибута
         $params = $this->attributes[$attribute] ?? [];
@@ -609,10 +624,9 @@ class FileAttributeBehavior extends Behavior
      * Добавляет ошибки модели по addError
      *
      * @param string $attribute
-     * @return bool|null результаты проверки или null, если атрибут не инициализирован
-     * @throws Exception
+     * @return ?bool результаты проверки или null, если атрибут не инициализирован
      */
-    public function validateFileAttribute(string $attribute) : ?bool
+    public function validateFileAttribute(string $attribute): ?bool
     {
         $this->checkIsFileAttribute($attribute);
 
@@ -653,9 +667,8 @@ class FileAttributeBehavior extends Behavior
      * Добавляет ошибки модели по addError.
      *
      * @return bool true, если все проверки успешны
-     * @throws Exception
      */
-    public function validateFileAttributes() : bool
+    public function validateFileAttributes(): bool
     {
         $ret = true;
 
@@ -675,17 +688,16 @@ class FileAttributeBehavior extends Behavior
      * @param string $attribute
      * @return bool|null результат сохранения или null, если аттрибут не инициализирован
      * @throws StoreException
-     * @throws Exception
      * @throws InvalidConfigException
      */
-    public function saveFileAttribute(string $attribute) : ?bool
+    public function saveFileAttribute(string $attribute): ?bool
     {
         $this->checkIsFileAttribute($attribute);
         $modelPath = $this->getModelFilePath();
 
         // проверяем что модель сохранена перед тем как сохранять ее файлы
         if ($modelPath === null) {
-            throw new LogicException('модель еще не сохранена');
+            throw new LogicException('Модель еще не сохранена');
         }
 
         // текущее значение аттрибута
@@ -703,7 +715,7 @@ class FileAttributeBehavior extends Behavior
         foreach ($files as $pos => &$file) {
             // некорректный тип значения
             if (! $file instanceof StoreFile) {
-                throw new Exception('Неизвестный тип значения файлового аттрибута ' . $attribute);
+                throw new RuntimeException('Неизвестный тип значения файлового аттрибута ' . $attribute);
             }
 
             // если это загружаемый файл и содержит ошибку загрузки, то пропускаем
@@ -722,7 +734,7 @@ class FileAttributeBehavior extends Behavior
                 }
 
                 // выдаем ошибку
-                throw new Exception('Файл не существует: ' . $file->path);
+                throw new StoreException('Файл не существует: ' . $file->path);
             }
 
             // если файл в том же хранилище
@@ -752,6 +764,7 @@ class FileAttributeBehavior extends Behavior
 
         // удаляем оставшиеся старые файлы которых не было в списке для сохранения
         foreach ($oldFiles as $file) {
+            $file->clearThumb();
             $file->delete();
         }
 
@@ -764,7 +777,7 @@ class FileAttributeBehavior extends Behavior
             // добавляем индекс позиции
             $file->name = StoreFile::createStorePrefix($attribute, $pos, $file->name);
 
-            // обновляем время изменения для правильной генерации thumbnail
+            // обновляем время изменения для правильной регенерации thumbnail
             $file->touch();
 
             $value[$pos] = $file;
@@ -781,10 +794,9 @@ class FileAttributeBehavior extends Behavior
      *
      * @return bool результаты сохранения
      * @throws StoreException
-     * @throws Exception
      * @throws InvalidConfigException
      */
-    public function saveFileAttributes() : bool
+    public function saveFileAttributes(): bool
     {
         $ret = true;
         foreach (array_keys($this->attributes) as $attribute) {
@@ -797,20 +809,20 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
-     * Удаляет все файлы аттрибута
+     * Удаляет все файлы аттрибута.
      *
      * @param string $attribute
      * @return true
      * @throws StoreException
-     * @throws Exception
      * @throws InvalidConfigException
      */
-    public function deleteFileAttribute(string $attribute) : bool
+    public function deleteFileAttribute(string $attribute): bool
     {
         $this->checkIsFileAttribute($attribute);
 
         // удаляем файлы аттрибута
         foreach ($this->listAttributeFiles($attribute) as $file) {
+            $file->clearThumb();
             $file->delete();
         }
 
@@ -825,10 +837,9 @@ class FileAttributeBehavior extends Behavior
      *
      * @return bool
      * @throws StoreException
-     * @throws Exception
      * @throws InvalidConfigException
      */
-    public function deleteFileAttributes() : bool
+    public function deleteFileAttributes(): bool
     {
         $ret = true;
 
@@ -846,9 +857,9 @@ class FileAttributeBehavior extends Behavior
      *
      * @param StoreFile $file
      * @param StoreFile[] $files
-     * @return int|null
+     * @return ?int
      */
-    protected static function searchFileByName(StoreFile $file, array $files) : ?int
+    protected static function searchFileByName(StoreFile $file, array $files): ?int
     {
         $name = $file->name;
         foreach ($files as $i => $f) {

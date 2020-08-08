@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 02.08.20 06:25:52
+ * @version 09.08.20 01:06:38
  */
 
 declare(strict_types = 1);
@@ -11,6 +11,7 @@ namespace dicr\file;
 
 use Exception;
 use InvalidArgumentException;
+use LogicException;
 use yii\helpers\ArrayHelper;
 use function is_array;
 use function is_string;
@@ -51,7 +52,6 @@ class UploadFile extends StoreFile
      * Конструктор
      *
      * @param array|string $pathconfig
-     * @throws StoreException
      */
     public function __construct($pathconfig)
     {
@@ -71,7 +71,7 @@ class UploadFile extends StoreFile
     /**
      * @inheritdoc
      */
-    public function init() : void
+    public function init(): void
     {
         parent::init();
 
@@ -92,9 +92,8 @@ class UploadFile extends StoreFile
      * @param string $formName имя формы для которой возвращает аттрибуты
      * @param string $attribute если задан, то возвращает файлы только для аттрибута
      * @return UploadFile[]|null
-     * @throws Exception
      */
-    public static function instances(string $formName = '', string $attribute = '') : ?array
+    public static function instances(string $formName = '', string $attribute = ''): ?array
     {
         /** @var static[][] */
         static $instances;
@@ -108,16 +107,20 @@ class UploadFile extends StoreFile
             $path[] = $attribute;
         }
 
-        return ArrayHelper::getValue($instances, $path);
+        // маскируем странную \Exception функции getValue
+        try {
+            return ArrayHelper::getValue($instances, $path);
+        } catch (Exception $ex) {
+            throw new LogicException('Неожиданная ошибка', $ex);
+        }
     }
 
     /**
      * Парсит $_FILES и создает объекты.
      *
      * @return UploadFile[] файлы аттрибута
-     * @throws StoreException
      */
-    protected static function parseInstances() : array
+    protected static function parseInstances(): array
     {
         $instances = [];
 
@@ -144,7 +147,7 @@ class UploadFile extends StoreFile
      * @param array $data
      * @return bool true если данные формы
      */
-    protected static function isComplexFormData(array $data) : bool
+    protected static function isComplexFormData(array $data): bool
     {
         // если не установлен name, то ошибка формата данных
         if (! isset($data['name'])) {
@@ -213,9 +216,8 @@ class UploadFile extends StoreFile
      *
      * @param array $data данные аттрибута
      * @return UploadFile[] файлы аттрибута
-     * @throws StoreException
      */
-    protected static function parseSimpleData(array $data) : array
+    protected static function parseSimpleData(array $data): array
     {
         return static::instancesFromData(
             (array)($data['name'] ?? []),
@@ -294,9 +296,8 @@ class UploadFile extends StoreFile
      *
      * @param array $data array данные аттрибутов формы
      * @return UploadFile[] [$attribute => \dicr\file\UploadFile[]] аттрибуты формы с файлами
-     * @throws StoreException
      */
-    protected static function parseFormData(array $data) : array
+    protected static function parseFormData(array $data): array
     {
         $instances = [];
 
@@ -322,14 +323,13 @@ class UploadFile extends StoreFile
      * @param int[] $errors ошибки
      * @param string[] $paths пути
      * @return UploadFile[]
-     * @throws StoreException
      */
     protected static function instancesFromData(
         array $names,
         array $types,
         array $sizes,
         array $errors,
-        array $paths) : array
+        array $paths): array
     {
         $instances = [];
 
@@ -359,7 +359,7 @@ class UploadFile extends StoreFile
     /**
      * @inheritDoc
      */
-    public function getName(array $options = []) : string
+    public function getName(array $options = []): string
     {
         // если имя файла не задано то берем его из пути
         if (! isset($this->_name)) {
@@ -383,9 +383,8 @@ class UploadFile extends StoreFile
      *
      * @param string $name
      * @return $this
-     * @throws StoreException
      */
-    public function setName(string $name) : StoreFile
+    public function setName(string $name): StoreFile
     {
         $name = $this->_store->basename($name);
         if (empty($name)) {
@@ -402,19 +401,18 @@ class UploadFile extends StoreFile
      *
      * @return int
      */
-    public function getError() : int
+    public function getError(): int
     {
-        /** @noinspection UnnecessaryCastingInspection */
-        return (int)$this->_error;
+        return $this->_error;
     }
 
     /**
      * Устанавливает ошибку
      *
-     * @param int $error
+     * @param int|string $error
      * @return $this
      */
-    public function setError($error) : self
+    public function setError($error): self
     {
         $this->_error = (int)$error;
         return $this;
@@ -423,7 +421,7 @@ class UploadFile extends StoreFile
     /**
      * @inheritDoc
      */
-    public function getSize() : int
+    public function getSize(): int
     {
         if (! isset($this->_size)) {
             if (! empty($this->_error)) {
@@ -441,9 +439,8 @@ class UploadFile extends StoreFile
      *
      * @param int $size
      * @return UploadFile
-     * @throws InvalidArgumentException
      */
-    public function setSize($size) : self
+    public function setSize($size): self
     {
         if ($size < 0) {
             throw new InvalidArgumentException('size');
@@ -457,7 +454,7 @@ class UploadFile extends StoreFile
     /**
      * @inheritDoc
      */
-    public function getMimeType() : string
+    public function getMimeType(): string
     {
         if (! isset($this->_mimeType)) {
             if (! empty($this->_error)) {
@@ -476,7 +473,7 @@ class UploadFile extends StoreFile
      * @param string $type
      * @return UploadFile
      */
-    public function setMimeType(string $type) : self
+    public function setMimeType(string $type): self
     {
         $this->_mimeType = $type;
         return $this;

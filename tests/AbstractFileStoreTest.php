@@ -1,9 +1,9 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 26.07.20 06:13:22
+ * @version 09.08.20 01:13:18
  */
 
 declare(strict_types = 1);
@@ -52,14 +52,13 @@ abstract class AbstractFileStoreTest extends TestCase
     /**
      * Проверка на исключение когда путь выше родительского.
      *
-     * @throws StoreException
      * @throws InvalidConfigException
      */
     public function testNormalizeInvalidPath()
     {
         $store = static::store();
 
-        $this->expectException(StoreException::class);
+        $this->expectException(InvalidArgumentException::class);
 
         $store->normalizePath('/././../.');
     }
@@ -111,7 +110,6 @@ abstract class AbstractFileStoreTest extends TestCase
 
     /**
      * @throws InvalidConfigException
-     * @throws StoreException
      */
     public function testPathRelations()
     {
@@ -129,7 +127,7 @@ abstract class AbstractFileStoreTest extends TestCase
         // basename
         self::assertSame('3', $file->name);
 
-        $this->expectException(StoreException::class);
+        $this->expectException(InvalidArgumentException::class);
         $store->file('')->name;
 
         // child

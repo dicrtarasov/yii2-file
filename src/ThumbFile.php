@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 05.08.20 23:19:03
+ * @version 09.08.20 01:07:41
  */
 
 /** @noinspection SpellCheckingInspection */
@@ -25,7 +25,7 @@ use function is_readable;
 use function is_string;
 use function mb_strtolower;
 use function md5;
-use function preg_replace;
+use function preg_quote;
 use function round;
 use function substr;
 
@@ -34,6 +34,9 @@ use function substr;
  *
  * Для своих функций disclaimer и watermark можно наследовать класс и переопределить функции, дальше в конфиге store
  * указать свой класс в конфиге thumbFile.
+ *
+ * Файл превью создается/обновляется при вызове getUrl. Если же необходимо получить файл превью без обращения к его url,
+ * можно вызвать $thumbFile->generate()
  *
  * @property-read bool $isReady флаг сущесвования готового превью
  */
@@ -83,13 +86,11 @@ class ThumbFile extends StoreFile
      * Чтобы применить watermark, disclaimer по-умолчанию моно установить значения в true.
      *
      * @throws InvalidConfigException
-     * @throws StoreException
      */
     public function __construct(array $config = [])
     {
         $store = Instance::ensure(ArrayHelper::remove($config, 'store'), AbstractFileStore::class);
 
-        /** @noinspection PhpParamsInspection */
         parent::__construct($store, '', $config);
     }
 
@@ -97,7 +98,7 @@ class ThumbFile extends StoreFile
      * @inheritDoc
      * @throws InvalidConfigException
      */
-    public function init() : void
+    public function init(): void
     {
         parent::init();
 
@@ -176,13 +177,13 @@ class ThumbFile extends StoreFile
      *
      * @return string
      */
-    protected function createPath() : string
+    protected function createPath(): string
     {
         // путь файла в кэше
         $path = $this->isNoimage ? 'noimage/' . $this->noimage : $this->source->path;
 
         // удаляем расшиение
-        $path = preg_replace('~\.[^\.]+$~u', '', $path);
+        $path = self::removeExtension($path);
 
         // добавляем размер
         $path .= '~' . $this->width . 'x' . $this->height;
@@ -208,7 +209,7 @@ class ThumbFile extends StoreFile
      *
      * @return bool true если существует и дата изменения не раньше чем у исходного
      */
-    public function getIsReady() : bool
+    public function getIsReady(): bool
     {
         return $this->exists && $this->mtime >= $this->source->mtime;
     }
@@ -218,7 +219,7 @@ class ThumbFile extends StoreFile
      *
      * @throws StoreException
      */
-    public function update() : self
+    public function update(): self
     {
         $this->preprocessImage();
         $this->resizeImage();
@@ -227,14 +228,43 @@ class ThumbFile extends StoreFile
         $this->postprocessImage();
         $this->writeImage();
 
+        // сбрасываем кэш файловой системы
+        $this->_store->clearStatCache($this->path);
+
         return $this;
+    }
+
+    /**
+     * Генерирует превью.
+     *
+     * @throws StoreException
+     */
+    public function generate(): self
+    {
+        if (! $this->isReady) {
+            $this->update();
+        }
+
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     * @throws StoreException
+     */
+    public function getUrl(): string
+    {
+        // обновляем файл превью
+        $this->generate();
+
+        return parent::getUrl();
     }
 
     /**
      * Предварительная обработка картинки после загрузки.
      * (для дочерних классов)
      */
-    protected function preprocessImage() : self
+    protected function preprocessImage(): self
     {
         // NOOP
         return $this;
@@ -245,7 +275,7 @@ class ThumbFile extends StoreFile
      *
      * @throws StoreException
      */
-    protected function resizeImage() : self
+    protected function resizeImage(): self
     {
         // если заданы размеры, то делаем масштабирование
         if (! empty($this->width) || ! empty($this->height)) {
@@ -265,7 +295,7 @@ class ThumbFile extends StoreFile
      * @return Imagick
      * @throws StoreException
      */
-    protected function image() : Imagick
+    protected function image(): Imagick
     {
         if (! isset($this->_image)) {
             // создаем каринку
@@ -301,7 +331,7 @@ class ThumbFile extends StoreFile
      *
      * @throws StoreException
      */
-    protected function watermarkImage() : self
+    protected function watermarkImage(): self
     {
         if ($this->isNoimage || empty($this->watermark)) {
             return $this;
@@ -350,7 +380,7 @@ class ThumbFile extends StoreFile
      *
      * @throws StoreException
      */
-    protected function placeDisclaimer() : self
+    protected function placeDisclaimer(): self
     {
         if ($this->isNoimage || empty($this->disclaimer)) {
             return $this;
@@ -394,7 +424,7 @@ class ThumbFile extends StoreFile
      * После обработка перед сохранением.
      * (для дочерних классов)
      */
-    protected function postprocessImage() : self
+    protected function postprocessImage(): self
     {
         // NOOP
         return $this;
@@ -405,7 +435,7 @@ class ThumbFile extends StoreFile
      *
      * @throws StoreException
      */
-    protected function writeImage() : self
+    protected function writeImage(): self
     {
         $image = $this->image();
 
@@ -428,21 +458,26 @@ class ThumbFile extends StoreFile
     }
 
     /**
-     * Удаляет все превью для заданного файла.
+     * Удаляет директорию заданного файла.
      *
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    public function clear() : self
+    public function clear(): self
     {
         if (empty($this->source)) {
             throw new RuntimeException('empty source');
         }
 
-        $dir = $this->store->file($this->source->path)->parent;
+        // путь файла в кэше
+        $path = $this->isNoimage ? 'noimage/' . $this->noimage : $this->source->path;
+        $dir = $this->store->file($path)->parent;
         if ($dir !== null) {
+            // удаляем расшиение
             $files = $dir->getList([
-                'nameRegex' => '~^.+\~\d+x\d+(\~[wd0-9a-f])*\.[^\.]+$~',
+                'nameRegex' => '~^' .
+                    preg_quote(self::removeExtension($path), '~') .
+                    '\~\d+x\d+(\~[wd][0-9a-f])*\.[^\.]+$~ui',
                 'dir' => false
             ]);
 
@@ -457,7 +492,7 @@ class ThumbFile extends StoreFile
     /**
      * @inheritDoc
      */
-    public function __toString() : string
+    public function __toString(): string
     {
         return (string)$this->url;
     }

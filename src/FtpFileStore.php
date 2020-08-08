@@ -1,9 +1,9 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 26.07.20 07:53:44
+ * @version 09.08.20 01:11:00
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -155,7 +155,6 @@ class FtpFileStore extends LocalFileStore
      *
      * @param string|array $path
      * @return string
-     * @throws StoreException
      */
     public function relativePath($path) : string
     {

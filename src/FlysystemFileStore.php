@@ -1,9 +1,9 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 26.07.20 07:52:51
+ * @version 09.08.20 01:09:13
  */
 
 declare(strict_types = 1);
@@ -402,7 +402,6 @@ class FlysystemFileStore extends AbstractFileStore
     /**
      * @inheritdoc
      * @throws NotSupportedException
-     * @throws StoreException
      */
     public function absolutePath($path) : string
     {

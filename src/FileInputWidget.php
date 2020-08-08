@@ -1,9 +1,9 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 26.07.20 05:35:06
+ * @version 09.08.20 01:10:19
  */
 
 declare(strict_types = 1);
@@ -161,7 +161,6 @@ class FileInputWidget extends InputWidget
     /**
      * @inheritdoc
      * @throws InvalidConfigException
-     * @throws StoreException
      */
     public function run() : string
     {
@@ -191,7 +190,6 @@ class FileInputWidget extends InputWidget
      * Верстает блок файлов
      *
      * @return string
-     * @throws StoreException
      */
     protected function renderFiles() : string
     {
@@ -212,7 +210,6 @@ class FileInputWidget extends InputWidget
      * @param int $pos
      * @param StoreFile $file
      * @return string
-     * @throws StoreException
      */
     protected function renderFileBlock(int $pos, StoreFile $file) : string
     {
@@ -251,7 +248,6 @@ class FileInputWidget extends InputWidget
      *
      * @param StoreFile $file
      * @return string
-     * @throws StoreException
      */
     protected function renderImage(StoreFile $file) : string
     {

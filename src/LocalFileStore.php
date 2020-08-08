@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 02.08.20 06:27:23
+ * @version 09.08.20 01:11:28
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -199,7 +199,6 @@ class LocalFileStore extends AbstractFileStore
 
     /**
      * @inheritDoc
-     * @throws StoreException
      */
     public function absolutePath($path) : string
     {
@@ -549,7 +548,6 @@ class LocalFileStore extends AbstractFileStore
      * Конвертирует в строку
      *
      * @return string
-     * @throws StoreException
      */
     public function __toString() : string
     {
