@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 04:21:35
+ * @version 09.08.20 04:51:10
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -183,12 +183,12 @@ class LocalFileStore extends AbstractFileStore
                 continue;
             }
 
-            $item = $this->getRelPath($item->getPathname());
-            if ($item === false) {
+            $filePath = $this->getRelPath($item->getPathname());
+            if ($filePath === null) {
                 continue;
             }
 
-            $file = $this->file($item);
+            $file = $this->file($filePath);
             if ($this->fileMatchFilter($file, $filter)) {
                 $files[] = $file;
             }
@@ -209,7 +209,7 @@ class LocalFileStore extends AbstractFileStore
      * Возвращает относительный путь по полному.
      *
      * @param string $fullPath полный путь
-     * @return string|null относительный путь
+     * @return ?string относительный путь
      */
     public function getRelPath(string $fullPath): ?string
     {
