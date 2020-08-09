@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 04:05:19
+ * @version 09.08.20 20:13:58
  */
 
 declare(strict_types = 1);
@@ -17,6 +17,7 @@ use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
+
 use function array_merge;
 use function array_pop;
 use function call_user_func;
@@ -30,6 +31,7 @@ use function preg_split;
 use function sprintf;
 use function stream_is_local;
 use function usort;
+
 use const DIRECTORY_SEPARATOR;
 use const PREG_SPLIT_NO_EMPTY;
 
@@ -433,16 +435,14 @@ abstract class AbstractFileStore extends Component
             throw new StoreException('корневой каталог');
         }
 
-        if ($this->exists($path)) {
-            if ($this->isDir($path)) {
-                foreach ($this->list($path) as $file) {
-                    $this->delete($file->path);
-                }
-
-                $this->rmdir($path);
-            } else {
-                $this->unlink($path);
+        if ($this->isDir($path)) {
+            foreach ($this->list($path) as $file) {
+                $this->delete($file->path);
             }
+
+            $this->rmdir($path);
+        } else {
+            $this->unlink($path);
         }
 
         return $this;
