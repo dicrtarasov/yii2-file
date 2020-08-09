@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 01:27:06
+ * @version 09.08.20 20:07:31
  */
 
 declare(strict_types = 1);
@@ -12,6 +12,7 @@ namespace dicr\file;
 use InvalidArgumentException;
 use yii\base\BaseObject;
 use yii\base\InvalidConfigException;
+
 use function is_resource;
 use function preg_match;
 use function preg_replace;
@@ -546,14 +547,6 @@ class StoreFile extends BaseObject
     public function delete(): self
     {
         $this->_store->delete($this->_path);
-
-        // удаляем превью файла
-        try {
-            $this->_store->thumb($this)->clear();
-        } catch (InvalidConfigException $ex) {
-            // noop - превью не настроены для этого хранилища файлов
-        }
-
         return $this;
     }
 

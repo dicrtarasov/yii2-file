@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 01:30:00
+ * @version 09.08.20 20:06:39
  */
 
 declare(strict_types = 1);
@@ -19,6 +19,7 @@ use yii\base\InvalidConfigException;
 use yii\base\Model;
 use yii\db\ActiveRecord;
 use yii\di\Instance;
+
 use function array_key_exists;
 use function array_keys;
 use function array_slice;
@@ -204,7 +205,7 @@ class FileAttributeBehavior extends Behavior
             Model::EVENT_BEFORE_VALIDATE => 'validateFileAttributes',
             ActiveRecord::EVENT_AFTER_INSERT => 'saveFileAttributes',
             ActiveRecord::EVENT_AFTER_UPDATE => 'saveFileAttributes',
-            ActiveRecord::EVENT_AFTER_DELETE => 'deleteModelFilePath'
+            ActiveRecord::EVENT_AFTER_DELETE => 'deleteModelFilePath',
         ];
     }
 
@@ -370,6 +371,24 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
+     * Удаляет папку с кэшем картинок.
+     *
+     * @throws StoreException
+     */
+    public function deleteModelThumbs()
+    {
+        $modelPath = $this->modelFilePath;
+        if (! empty($modelPath)) {
+            // удаляем папку с кэшем картинок модели
+            try {
+                $this->store->thumb($modelPath)->delete();
+            } catch (InvalidConfigException $ex) {
+                // у хранилища нет кэша картинок
+            }
+        }
+    }
+
+    /**
      * Удаляет папку модели.
      * (нужен для обработчика событий модели).
      *
@@ -384,11 +403,7 @@ class FileAttributeBehavior extends Behavior
 
         if ($path !== null) {
             // удаляем папку с кэшем картинок модели
-            try {
-                $this->store->thumb($path)->delete();
-            } catch (InvalidConfigException $ex) {
-                // у хранилища нет кэша картинок
-            }
+            $this->deleteModelThumbs();
 
             // удаляем папку с файлами модели
             $path->delete();
@@ -417,11 +432,11 @@ class FileAttributeBehavior extends Behavior
 
         // получаем список файлов
         $files = $modelPath->getList([
-            'nameRegex' => '~^' . preg_quote($attribute, '~') . '\~\d+\~.+~ui'
+            'nameRegex' => '~^' . preg_quote($attribute, '~') . '\~\d+\~.+~ui',
         ]);
 
         // сортируем по полному пути (path/model/id/{attribute}-{pos}-{filename}.ext)
-        usort($files, static function(StoreFile $a, StoreFile $b) {
+        usort($files, static function (StoreFile $a, StoreFile $b) {
             return strnatcasecmp($a->path, $b->path);
         });
 
@@ -763,7 +778,6 @@ class FileAttributeBehavior extends Behavior
 
         // удаляем оставшиеся старые файлы которых не было в списке для сохранения
         foreach ($oldFiles as $file) {
-            $file->clearThumb();
             $file->delete();
         }
 
@@ -775,15 +789,15 @@ class FileAttributeBehavior extends Behavior
         foreach (array_values($files) as $pos => $file) {
             // добавляем индекс позиции
             $file->name = StoreFile::createStorePrefix($attribute, $pos, $file->name);
-
-            // обновляем время изменения для правильной регенерации thumbnail
-            $file->touch();
-
             $value[$pos] = $file;
         }
 
+        // очищаем все thumbnail
+        $this->deleteModelThumbs();
+
         // обновляем значение аттрибута модели
         $this->values[$attribute] = $value;
+
         return true;
     }
 
