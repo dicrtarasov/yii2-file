@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 03:27:17
+ * @version 09.08.20 19:32:49
  */
 
 declare(strict_types = 1);
@@ -13,6 +13,7 @@ use Exception;
 use InvalidArgumentException;
 use LogicException;
 use yii\helpers\ArrayHelper;
+
 use function is_array;
 use function is_string;
 
@@ -399,9 +400,9 @@ class UploadFile extends StoreFile
     /**
      * Возвращает ошибку
      *
-     * @return int
+     * @return ?int
      */
-    public function getError(): int
+    public function getError(): ?int
     {
         return $this->_error;
     }
