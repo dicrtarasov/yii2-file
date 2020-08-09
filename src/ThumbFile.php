@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 04:18:36
+ * @version 09.08.20 20:00:27
  */
 
 declare(strict_types = 1);
@@ -16,6 +16,7 @@ use Yii;
 use yii\base\InvalidConfigException;
 use yii\di\Instance;
 use yii\helpers\ArrayHelper;
+
 use function gettype;
 use function is_file;
 use function is_string;
@@ -469,13 +470,13 @@ class ThumbFile extends StoreFile
         $path = $this->isNoimage ? 'noimage/' . $this->noimage : $this->source->path;
 
         $dir = $this->store->file($path)->parent;
-        if ($dir !== null) {
+        if ($dir !== null && $dir->exists) {
             // удаляем расширение
             $files = $dir->getList([
                 'nameRegex' => '~^' .
                     preg_quote(self::removeExtension($path), '~') .
                     '\~\d+x\d+(\~[wd][0-9a-f])*\.[^\.]+$~ui',
-                'dir' => false
+                'dir' => false,
             ]);
 
             foreach ($files as $file) {
