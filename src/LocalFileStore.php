@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 04:51:10
+ * @version 12.08.20 03:50:53
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -19,6 +19,7 @@ use RecursiveIteratorIterator;
 use Throwable;
 use Yii;
 use yii\base\InvalidConfigException;
+
 use function in_array;
 use function is_array;
 use function is_dir;
@@ -43,9 +44,6 @@ use function is_string;
  */
 class LocalFileStore extends AbstractFileStore
 {
-    /** @var static instance for root "/" */
-    private static $_rootInstance;
-
     /** @var int флаги для записи file_put_contents (например LOCK_EX) */
     public $writeFlags = 0;
 
@@ -66,23 +64,6 @@ class LocalFileStore extends AbstractFileStore
 
     /** @var string корневой путь */
     protected $_path;
-
-    /**
-     * Возвращает экземпляр для корневой файловой системы "/"
-     *
-     * @return static
-     */
-    public static function root(): self
-    {
-        if (! isset(self::$_rootInstance)) {
-            self::$_rootInstance = new static([
-                'path' => '/',
-                'writeFlags' => LOCK_EX
-            ]);
-        }
-
-        return self::$_rootInstance;
-    }
 
     /**
      * @inheritDoc
@@ -109,6 +90,23 @@ class LocalFileStore extends AbstractFileStore
         if (! isset($this->perms['dir'], $this->perms['file']) || ! is_array($this->perms)) {
             throw new InvalidConfigException('perms');
         }
+    }
+
+    /**
+     * Возвращает экземпляр для корневой файловой системы "/"
+     *
+     * @return static
+     */
+    public static function root(): self
+    {
+        /** @var static instance for root "/" */
+        static $root;
+
+        if (! isset($root)) {
+            $root = new static(['path' => '/']);
+        }
+
+        return $root;
     }
 
     /**
@@ -152,6 +150,7 @@ class LocalFileStore extends AbstractFileStore
         // обрезаем слэши (корневой путь станет пустым "")
         $fullPath = rtrim($fullPath, $this->pathSeparator);
         $this->_path = $fullPath;
+
         return $this;
     }
 

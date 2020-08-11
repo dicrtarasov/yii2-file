@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 11.08.20 05:19:46
+ * @version 12.08.20 04:19:40
  */
 
 declare(strict_types = 1);
@@ -26,14 +26,11 @@ use function implode;
 use function is_array;
 use function is_callable;
 use function is_string;
-use function preg_quote;
-use function preg_split;
-use function sprintf;
+use function rtrim;
 use function stream_is_local;
 use function usort;
 
 use const DIRECTORY_SEPARATOR;
-use const PREG_SPLIT_NO_EMPTY;
 
 /**
  * Abstract Fle Store.
@@ -82,11 +79,14 @@ abstract class AbstractFileStore extends Component
      */
     public function splitPath($path): array
     {
-        if ($path === '') {
-            $path = [];
-        } elseif (! is_array($path)) {
-            $regex = sprintf('~[%s\\\/]+~ui', preg_quote($this->pathSeparator, '~'));
-            $path = (array)preg_split($regex, $path, - 1, PREG_SPLIT_NO_EMPTY);
+        if (! is_array($path)) {
+            if ($path === '' || $path === $this->pathSeparator) {
+                $path = [];
+            } else {
+                $path = (array)explode(
+                    $this->pathSeparator, trim((string)$path, $this->pathSeparator)
+                );
+            }
         }
 
         return $path;
@@ -102,8 +102,7 @@ abstract class AbstractFileStore extends Component
     {
         $filtered = [];
 
-        $path = $this->splitPath($path);
-        foreach ($path as $p) {
+        foreach ($this->splitPath($path) as $p) {
             if ($p === '..') {
                 if (empty($filtered)) {
                     throw new InvalidArgumentException('Invalid path: ' . $this->buildPath($path));
@@ -119,6 +118,21 @@ abstract class AbstractFileStore extends Component
     }
 
     /**
+     * Объединяет элементы пути в путь.
+     *
+     * @param string|string[] $path
+     * @return string
+     */
+    public function buildPath($path): string
+    {
+        if (is_array($path)) {
+            $path = implode($this->pathSeparator, $path);
+        }
+
+        return (string)$path;
+    }
+
+    /**
      * Нормализует относительный путь
      *
      * @param string|string[] $path
@@ -127,69 +141,6 @@ abstract class AbstractFileStore extends Component
     public function normalizePath($path): string
     {
         return $this->buildPath($this->filterPath($path));
-    }
-
-    /**
-     * Объединяет элементы пути в путь.
-     *
-     * @param string|string[] $path
-     * @return string
-     */
-    public function buildPath($path): string
-    {
-        return is_array($path) ? implode($this->pathSeparator, $path) : (string)$path;
-    }
-
-    /**
-     * Возвращает директорию пути
-     *
-     * @param string|string[] $path
-     * @return string
-     */
-    public function dirname($path): string
-    {
-        $path = $this->filterPath($path);
-        if (empty($path)) {
-            throw new InvalidArgumentException('Корневой каталог');
-        }
-
-        array_pop($path);
-        return $this->buildPath($path);
-    }
-
-    /**
-     * Возвращает имя файла из пути.
-     *
-     * @param string|string[] $path
-     * @return string
-     */
-    public function basename($path): string
-    {
-        $path = $this->splitPath($path);
-        if (empty($path)) {
-            throw new InvalidArgumentException('Корневой каталог');
-        }
-
-        return (string)array_pop($path);
-    }
-
-    /**
-     * Строит дочерний путь.
-     *
-     * @param string|string[] $parent родительский
-     * @param string|string[] $child дочерний
-     * @return string
-     */
-    public function childname($parent, $child): string
-    {
-        $parent = $this->splitPath($parent);
-
-        $child = $this->splitPath($child);
-        if (empty($child)) {
-            throw new InvalidArgumentException('child');
-        }
-
-        return $this->buildPath($this->filterPath(array_merge($parent, $child)));
     }
 
     /**
@@ -213,12 +164,57 @@ abstract class AbstractFileStore extends Component
             throw new InvalidConfigException('Не задан базовый URL хранилища');
         }
 
-        $url = $this->url;
-        if (is_array($url)) {
-            $url = Url::to($url);
+        if (is_array($this->url)) {
+            $this->url = Url::to($this->url);
         }
 
-        return rtrim($url, '/') . '/' . implode('/', $this->filterPath($path));
+        return rtrim($this->url, '/') . '/' . $this->normalizePath($path);
+    }
+
+    /**
+     * Возвращает директорию пути
+     *
+     * @param string|string[] $path
+     * @return string
+     * @throws StoreException
+     */
+    public function dirname($path): string
+    {
+        $path = $this->filterRootPath($path);
+        array_pop($path);
+        return $this->buildPath($path);
+    }
+
+    /**
+     * Возвращает имя файла из пути.
+     *
+     * @param string|string[] $path
+     * @return string
+     * @throws StoreException
+     */
+    public function basename($path): string
+    {
+        $path = $this->filterRootPath($path);
+        return (string)array_pop($path);
+    }
+
+    /**
+     * Строит дочерний путь.
+     *
+     * @param string|string[] $parent родительский
+     * @param string|string[] $child дочерний
+     * @return string
+     */
+    public function childname($parent, $child): string
+    {
+        $parent = $this->splitPath($parent);
+
+        $child = $this->splitPath($child);
+        if (empty($child)) {
+            throw new InvalidArgumentException('child');
+        }
+
+        return $this->normalizePath(array_merge($parent, $child));
     }
 
     /**
@@ -271,7 +267,7 @@ abstract class AbstractFileStore extends Component
             if (! $this->exists($path)) {
                 $this->mkdir($path);
             } elseif (! $this->isDir($path)) {
-                throw new StoreException('не является директорией: ' . $this->absolutePath($path));
+                throw new StoreException('Не является директорией: ' . $this->absolutePath($path));
             }
         }
 
@@ -343,15 +339,9 @@ abstract class AbstractFileStore extends Component
      * @param string|string[] $path
      * @return bool
      * @throws StoreException
-     * @noinspection PhpDocRedundantThrowsInspection
      */
     public function isHidden($path): bool
     {
-        $path = $this->normalizePath($path);
-        if (empty($path)) {
-            return false;
-        }
-
         return mb_strpos($this->basename($path), '.') === 0;
     }
 
@@ -430,21 +420,15 @@ abstract class AbstractFileStore extends Component
      */
     public function delete($path): self
     {
-        $path = $this->filterPath($path);
-        if (empty($path)) {
-            throw new StoreException('корневой каталог');
-        }
-
-        if ($this->exists($path)) {
-            if ($this->isDir($path)) {
-                foreach ($this->list($path) as $file) {
-                    $this->delete($file->path);
-                }
-
-                $this->rmdir($path);
-            } else {
-                $this->unlink($path);
+        $path = $this->filterRootPath($path);
+        if ($this->isFile($path)) {
+            $this->unlink($path);
+        } elseif ($this->isDir($path)) {
+            foreach ($this->list($path) as $file) {
+                $this->delete($file->path);
             }
+
+            $this->rmdir($path);
         }
 
         return $this;
@@ -463,6 +447,7 @@ abstract class AbstractFileStore extends Component
         $fileConfig = ($this->fileConfig ?: []) + ['class' => StoreFile::class];
 
         // создаем файл
+
         /** @noinspection PhpIncompatibleReturnTypeInspection */
         return Yii::createObject($fileConfig, [$this, $path]);
     }
@@ -499,10 +484,10 @@ abstract class AbstractFileStore extends Component
 
         // чтобы по-умолчанию не применялись функции watermark и disclaimer из конфига
         // устанавливаем значения в пустые
-        $config = array_merge([
+        $config += [
             'watermark' => '', // по-умолчанию не создавать watermark
             'disclaimer' => '' // по-умолчанию не применять disclaimer
-        ], $config);
+        ];
 
         // удаляем из параметров значения true, чтобы применились значения из конфига по-умолчанию
         foreach (['noimage', 'watermark', 'disclaimer'] as $field) {
@@ -770,7 +755,7 @@ abstract class AbstractFileStore extends Component
      */
     protected static function sortByName(array $files): array
     {
-        usort($files, static function(StoreFile $a, StoreFile $b) {
+        usort($files, static function (StoreFile $a, StoreFile $b) {
             return $a->path <=> $b->path;
         });
 

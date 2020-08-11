@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 01:09:13
+ * @version 12.08.20 04:28:19
  */
 
 declare(strict_types = 1);
@@ -14,6 +14,7 @@ use League\Flysystem\Filesystem;
 use Throwable;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
+
 use function call_user_func;
 use function is_array;
 use function is_callable;
@@ -467,7 +468,7 @@ class FlysystemFileStore extends AbstractFileStore
      */
     protected function unlink($path) : AbstractFileStore
     {
-        $path = $this->normalizePath($this->filterRootPath($path));
+        $path = $this->buildPath($this->filterRootPath($path));
 
         try {
             $ret = $this->flysystem->delete($path);
@@ -489,7 +490,7 @@ class FlysystemFileStore extends AbstractFileStore
      */
     protected function rmdir($path) : AbstractFileStore
     {
-        $path = $this->normalizePath($this->filterRootPath($path));
+        $path = $this->buildPath($this->filterRootPath($path));
 
         try {
             $ret = $this->flysystem->deleteDir($path);

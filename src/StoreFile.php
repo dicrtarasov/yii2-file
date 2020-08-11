@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 20:07:31
+ * @version 12.08.20 04:23:02
  */
 
 declare(strict_types = 1);
@@ -162,6 +162,7 @@ class StoreFile extends BaseObject
      * - removePrefix - удаляет служебный префикс позиции файла, если имеется
      * - removeExt - удаляет расширение если имеется
      * @return string
+     * @throws StoreException
      */
     public function getName(array $options = []): string
     {
@@ -410,6 +411,7 @@ class StoreFile extends BaseObject
      *
      * @return ?static
      * @throws InvalidConfigException
+     * @throws StoreException
      */
     public function getParent(): ?self
     {
