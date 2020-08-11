@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 20:06:39
+ * @version 11.08.20 05:46:53
  */
 
 declare(strict_types = 1);
@@ -151,7 +151,8 @@ use function usort;
  * ```
  *
  * @property-read Model $owner
- * @property StoreFile|null $modelFilePath путь папки модели
+ * @property ?StoreFile $modelFilePath путь папки модели
+ * @property-read ?StoreFile $modelThumbPath папка кэша картинок модели
  * @property StoreFile[]|StoreFile|null $fileAttributeValue
  */
 class FileAttributeBehavior extends Behavior
@@ -360,10 +361,10 @@ class FileAttributeBehavior extends Behavior
      * Устанавливает путь папки модели.
      * Если путь не установлен, то он рассчитывается автоматически.
      *
-     * @param StoreFile|null $path
+     * @param ?StoreFile $path
      * @return $this
      */
-    public function setModelFilePath(StoreFile $path = null): self
+    public function setModelFilePath(?StoreFile $path = null): self
     {
         $this->_modelFilePath = $path;
 
@@ -371,21 +372,37 @@ class FileAttributeBehavior extends Behavior
     }
 
     /**
-     * Удаляет папку с кэшем картинок.
+     * Папка модели с кэшем картинок.
      *
-     * @throws StoreException
+     * @return ?StoreFile
+     * @throws InvalidConfigException
      */
-    public function deleteModelThumbs()
+    public function getModelThumbPath(): ?StoreFile
     {
         $modelPath = $this->modelFilePath;
-        if (! empty($modelPath)) {
-            // удаляем папку с кэшем картинок модели
-            try {
-                $this->store->thumb($modelPath)->delete();
-            } catch (InvalidConfigException $ex) {
-                // у хранилища нет кэша картинок
+
+        return ! empty($modelPath) ? $modelPath->child('dummy.jpg')->thumb()->parent : null;
+    }
+
+    /**
+     * Удаляет папку с кэшем картинок.
+     *
+     * @return $this
+     * @throws StoreException
+     */
+    public function deleteModelThumbs(): self
+    {
+        // удаляем папку с кэшем картинок модели
+        try {
+            $thumbPath = $this->getModelThumbPath();
+            if (! empty($thumbPath)) {
+                $thumbPath->delete();
             }
+        } catch (InvalidConfigException $ex) {
+            // у хранилища нет кэша картинок
         }
+
+        return $this;
     }
 
     /**
@@ -580,7 +597,7 @@ class FileAttributeBehavior extends Behavior
     /**
      * Загружает файловые аттрибуты из $_POST и $FILES
      *
-     * @param string|null $formName имя формы модели
+     * @param ?string $formName имя формы модели
      * @return bool true если данные некоторых атрибутов были загружены
      * @throws InvalidConfigException
      */
@@ -700,7 +717,7 @@ class FileAttributeBehavior extends Behavior
      * Загружает новые файлы (UploadFiles) и удаляется старые Files, согласно текущему значению аттрибута.
      *
      * @param string $attribute
-     * @return bool|null результат сохранения или null, если аттрибут не инициализирован
+     * @return ?bool результат сохранения или null, если аттрибут не инициализирован
      * @throws StoreException
      * @throws InvalidConfigException
      */

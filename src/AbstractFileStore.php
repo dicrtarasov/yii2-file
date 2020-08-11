@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 20:13:58
+ * @version 11.08.20 05:19:46
  */
 
 declare(strict_types = 1);
@@ -435,14 +435,16 @@ abstract class AbstractFileStore extends Component
             throw new StoreException('корневой каталог');
         }
 
-        if ($this->isDir($path)) {
-            foreach ($this->list($path) as $file) {
-                $this->delete($file->path);
-            }
+        if ($this->exists($path)) {
+            if ($this->isDir($path)) {
+                foreach ($this->list($path) as $file) {
+                    $this->delete($file->path);
+                }
 
-            $this->rmdir($path);
-        } else {
-            $this->unlink($path);
+                $this->rmdir($path);
+            } else {
+                $this->unlink($path);
+            }
         }
 
         return $this;
