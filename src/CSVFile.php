@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 12.08.20 16:34:24
+ * @version 12.08.20 16:38:37
  */
 
 /**
@@ -15,7 +15,6 @@ declare(strict_types = 1);
 namespace dicr\file;
 
 use Iterator;
-use yii\base\Exception;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
 use yii\di\Instance;
@@ -131,14 +130,14 @@ class CSVFile extends StoreFile implements Iterator
      * Перематывает указатель в начальное состояние.
      *
      * @return $this
-     * @throws Exception
      * @noinspection PhpUsageOfSilenceOperatorInspection
+     * @throws StoreException
      */
     public function reset(): self
     {
         if (! empty($this->_handle) && @rewind($this->_handle) === false) {
             $err = @error_get_last();
-            throw new Exception('ошибка переметки файла: ' . $this->absolutePath . ': ' . $err['message']);
+            throw new StoreException('Ошибка перемотки файла: ' . $this->absolutePath . ': ' . $err['message']);
         }
 
         $this->_lineNo = null;
@@ -305,7 +304,7 @@ class CSVFile extends StoreFile implements Iterator
     /**
      * Отматывает указатель в начало и читает первую строку
      *
-     * @throws Exception
+     * @throws StoreException
      */
     public function rewind(): void
     {
@@ -326,7 +325,7 @@ class CSVFile extends StoreFile implements Iterator
     /**
      * Возвращает текущую прочитанную строку
      *
-     * @return string[]|null
+     * @return ?string[]
      */
     public function current(): ?array
     {
@@ -336,7 +335,7 @@ class CSVFile extends StoreFile implements Iterator
     /**
      * Читает следующую строку
      *
-     * @throws Exception
+     * @throws StoreException
      */
     public function next(): void
     {
@@ -355,14 +354,16 @@ class CSVFile extends StoreFile implements Iterator
 
     /**
      * Деструктор
+     *
+     * нельзя закрывать файл, потому что он используется дальше после удаления этого объекта,
+     * например в CSVResponseFormatter !!
      */
+    /*
     public function __destruct()
     {
-        // нельзя закрывать файл, потому что он используется дальше после удаления этого объекта,
-        // например в CSVResponseFormatter !!
-
-        /*if (!empty($this->handle)) {
+        if (!empty($this->handle)) {
             @fclose($this->handle);
-        }*/
+        }
     }
+    */
 }
