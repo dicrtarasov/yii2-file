@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 12.08.20 05:50:03
+ * @version 12.08.20 15:51:17
  */
 
 /**
@@ -187,9 +187,7 @@ class CSVResponseFormatter extends Component implements ResponseFormatterInterfa
     public function formatData($data): CSVFile
     {
         // CSV-файл для вывода
-        $csvFile = new CSVFile(
-            LocalFileStore::root(), '', $this->csvConfig ?: []
-        );
+        $csvFile = new CSVFile($this->csvConfig ?: []);
 
         if (! empty($data)) {
             // пишем заголовок

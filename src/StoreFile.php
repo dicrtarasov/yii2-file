@@ -3,13 +3,14 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 12.08.20 05:37:21
+ * @version 12.08.20 15:52:21
  */
 
 declare(strict_types = 1);
 namespace dicr\file;
 
 use InvalidArgumentException;
+use Yii;
 use yii\base\BaseObject;
 use yii\base\InvalidConfigException;
 
@@ -591,10 +592,16 @@ class StoreFile extends BaseObject
      *
      * @param array $config
      * @return CSVFile
+     * @throws InvalidConfigException
      */
     public function csv(array $config = []): CSVFile
     {
-        return new CSVFile($this->store, $this->path, $config);
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return Yii::createObject($config + [
+                'class' => CSVFile::class,
+                'store' => $this->store,
+                'path' => $this->path
+            ]);
     }
 
     /**

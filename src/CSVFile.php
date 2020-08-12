@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 12.08.20 05:55:22
+ * @version 12.08.20 15:52:21
  */
 
 /**
@@ -16,7 +16,10 @@ namespace dicr\file;
 
 use Iterator;
 use yii\base\Exception;
+use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
+use yii\di\Instance;
+use yii\helpers\ArrayHelper;
 
 use function error_clear_last;
 use function error_get_last;
@@ -70,6 +73,26 @@ class CSVFile extends StoreFile implements Iterator
 
     /** @var ?string[] текущие данные для Iterable */
     protected $_current;
+
+    /**
+     * CSVFile constructor.
+     *
+     * @param array $config
+     * @throws InvalidConfigException
+     */
+    public function __construct(array $config = [])
+    {
+        $store = ArrayHelper::remove($config, 'store');
+        if (empty($store)) {
+            $store = LocalFileStore::root();
+        } else {
+            $store = Instance::ensure($store, AbstractFileStore::class);
+        }
+
+        $path = ArrayHelper::remove($config, 'path', '');
+
+        parent::__construct($store, $path, $config);
+    }
 
     /**
      * @inheritdoc

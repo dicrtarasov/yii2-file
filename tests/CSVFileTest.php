@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 12.08.20 05:30:59
+ * @version 12.08.20 15:51:41
  */
 
 /**
@@ -15,7 +15,6 @@ declare(strict_types = 1);
 namespace dicr\tests;
 
 use dicr\file\CSVFile;
-use dicr\file\LocalFileStore;
 use PHPUnit\Framework\TestCase;
 use yii\base\Exception;
 
@@ -37,7 +36,7 @@ class CSVFileTest extends TestCase
      */
     public function testReadWrite()
     {
-        $csvFile = new CSVFile(LocalFileStore::root(), '', [
+        $csvFile = new CSVFile([
             'charset' => 'cp1251',
         ]);
 
