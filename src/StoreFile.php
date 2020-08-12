@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 12.08.20 04:23:02
+ * @version 12.08.20 05:37:21
  */
 
 declare(strict_types = 1);
@@ -162,7 +162,6 @@ class StoreFile extends BaseObject
      * - removePrefix - удаляет служебный префикс позиции файла, если имеется
      * - removeExt - удаляет расширение если имеется
      * @return string
-     * @throws StoreException
      */
     public function getName(array $options = []): string
     {
@@ -219,6 +218,7 @@ class StoreFile extends BaseObject
     public function getExtension(): string
     {
         $matches = null;
+
         return preg_match('~^.+\.([^.]+)$~u', $this->name, $matches) ? $matches[1] : '';
     }
 
@@ -298,6 +298,7 @@ class StoreFile extends BaseObject
     public function touch(?int $time = null): self
     {
         $this->_store->touch($this->_path, $time);
+
         return $this;
     }
 
@@ -321,6 +322,7 @@ class StoreFile extends BaseObject
     public function matchMimeType(string $type): bool
     {
         $regex = '~^' . str_replace(['/', '*'], ['\\/', '.+'], $type) . '$~uism';
+
         return (bool)preg_match($this->mimeType, $regex);
     }
 
@@ -345,18 +347,20 @@ class StoreFile extends BaseObject
     public function setContents(string $contents): self
     {
         $this->_store->writeContents($this->_path, $contents);
+
         return $this;
     }
 
     /**
      * Возвращает контент в виде потока.
      *
+     * @param ?string $mode режим открытия
      * @return resource
      * @throws StoreException
      */
-    public function getStream()
+    public function getStream(?string $mode = null)
     {
-        return $this->_store->readStream($this->_path);
+        return $this->_store->readStream($this->_path, $mode);
     }
 
     /**
@@ -411,7 +415,6 @@ class StoreFile extends BaseObject
      *
      * @return ?static
      * @throws InvalidConfigException
-     * @throws StoreException
      */
     public function getParent(): ?self
     {
@@ -451,7 +454,6 @@ class StoreFile extends BaseObject
      *
      * @throw \dicr\file\StoreException если не существует
      * @return bool
-     * @throws StoreException
      */
     public function getHidden(): bool
     {
@@ -496,6 +498,7 @@ class StoreFile extends BaseObject
     public function import($src, array $options = []): self
     {
         $this->_store->import($src, $this->_path, $options);
+
         return $this;
     }
 
@@ -549,6 +552,7 @@ class StoreFile extends BaseObject
     public function delete(): self
     {
         $this->_store->delete($this->_path);
+
         return $this;
     }
 
@@ -580,6 +584,17 @@ class StoreFile extends BaseObject
         }
 
         return $this;
+    }
+
+    /**
+     * CSVFile.
+     *
+     * @param array $config
+     * @return CSVFile
+     */
+    public function csv(array $config = []): CSVFile
+    {
+        return new CSVFile($this->store, $this->path, $config);
     }
 
     /**

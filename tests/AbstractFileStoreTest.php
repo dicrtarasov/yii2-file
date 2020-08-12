@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 01:13:18
+ * @version 12.08.20 05:38:43
  */
 
 declare(strict_types = 1);
@@ -11,9 +11,9 @@ namespace dicr\tests;
 
 use dicr\file\AbstractFileStore;
 use dicr\file\StoreException;
-use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Yii;
+use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
 
 /**

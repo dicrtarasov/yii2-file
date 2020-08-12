@@ -3,16 +3,16 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 12.08.20 04:19:40
+ * @version 12.08.20 05:55:22
  */
 
 declare(strict_types = 1);
 namespace dicr\file;
 
-use InvalidArgumentException;
 use Throwable;
 use Yii;
 use yii\base\Component;
+use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
 use yii\helpers\ArrayHelper;
@@ -176,12 +176,12 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return string
-     * @throws StoreException
      */
     public function dirname($path): string
     {
         $path = $this->filterRootPath($path);
         array_pop($path);
+
         return $this->buildPath($path);
     }
 
@@ -190,11 +190,11 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return string
-     * @throws StoreException
      */
     public function basename($path): string
     {
         $path = $this->filterRootPath($path);
+
         return (string)array_pop($path);
     }
 
@@ -338,10 +338,14 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return bool
-     * @throws StoreException
      */
     public function isHidden($path): bool
     {
+        $path = $this->filterPath($path);
+        if (empty($path)) {
+            return false;
+        }
+
         return mb_strpos($this->basename($path), '.') === 0;
     }
 
@@ -368,10 +372,11 @@ abstract class AbstractFileStore extends Component
      * Возвращает открытый поток файла.
      *
      * @param string|string[] $path
+     * @param ?string $mode режим открытия
      * @return resource
      * @throws StoreException
      */
-    abstract public function readStream($path);
+    abstract public function readStream($path, ?string $mode = null);
 
     /**
      * Записывает файл из потока.
@@ -501,7 +506,9 @@ abstract class AbstractFileStore extends Component
         }
 
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return Yii::createObject($config + $this->thumbFileConfig + ['class' => ThumbFile::class]);
+        return Yii::createObject($config + $this->thumbFileConfig + [
+                'class' => ThumbFile::class,
+            ]);
     }
 
     /**
@@ -651,13 +658,12 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return string[]
-     * @throws StoreException
      */
     protected function filterRootPath($path): array
     {
         $path = $this->filterPath($path);
         if (empty($path)) {
-            throw new StoreException('Корневой путь');
+            throw new InvalidArgumentException('Корневой путь');
         }
 
         return $path;

@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 12.08.20 03:50:53
+ * @version 12.08.20 04:43:47
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -435,12 +435,12 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    public function readStream($path)
+    public function readStream($path, ?string $mode = null)
     {
         $absPath = $this->absolutePath($path);
 
         $stream = @fopen(
-            $absPath, $this->readMode, false, /** @scrutinizer ignore-type */ $this->context
+            $absPath, $mode ?: $this->readMode, false, $this->context
         );
 
         if ($stream === false) {

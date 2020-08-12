@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 12.08.20 04:28:19
+ * @version 12.08.20 05:33:27
  */
 
 declare(strict_types = 1);
@@ -333,7 +333,7 @@ class FlysystemFileStore extends AbstractFileStore
     /**
      * @inheritdoc
      */
-    public function readStream($path)
+    public function readStream($path, string $mode = null)
     {
         $path = $this->normalizePath($path);
 

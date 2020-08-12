@@ -2,9 +2,11 @@
   <dictionary name="dicr">
     <words>
       <w>addinput</w>
+      <w>arrayable</w>
       <w>childname</w>
       <w>dicr</w>
       <w>earnq</w>
+      <w>fclose</w>
       <w>fileinfo</w>
       <w>filestore</w>
       <w>finfo</w>

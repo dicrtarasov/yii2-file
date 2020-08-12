@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 12.08.20 04:28:19
+ * @version 12.08.20 05:37:21
  */
 
 declare(strict_types = 1);
@@ -74,7 +74,7 @@ class FileInputWidget extends InputWidget
      * @inheritdoc
      * @throws InvalidConfigException
      */
-    public function init() : void
+    public function init(): void
     {
         parent::init();
 
@@ -161,9 +161,8 @@ class FileInputWidget extends InputWidget
     /**
      * @inheritdoc
      * @throws InvalidConfigException
-     * @throws StoreException
      */
-    public function run() : string
+    public function run(): string
     {
         // регистрируем ресурсы
         $this->view->registerAssetBundle(FileInputWidgetAsset::class);
@@ -191,9 +190,8 @@ class FileInputWidget extends InputWidget
      * Верстает блок файлов
      *
      * @return string
-     * @throws StoreException
      */
-    protected function renderFiles() : string
+    protected function renderFiles(): string
     {
         $content = '';
 
@@ -212,9 +210,8 @@ class FileInputWidget extends InputWidget
      * @param int $pos
      * @param StoreFile $file
      * @return string
-     * @throws StoreException
      */
-    protected function renderFileBlock(int $pos, StoreFile $file) : string
+    protected function renderFileBlock(int $pos, StoreFile $file): string
     {
         ob_start();
         echo Html::beginTag('div', ['class' => 'file']);
@@ -243,6 +240,7 @@ class FileInputWidget extends InputWidget
         ]);
 
         echo Html::endTag('div');
+
         return ob_get_clean();
     }
 
@@ -251,9 +249,8 @@ class FileInputWidget extends InputWidget
      *
      * @param StoreFile $file
      * @return string
-     * @throws StoreException
      */
-    protected function renderImage(StoreFile $file) : string
+    protected function renderImage(StoreFile $file): string
     {
         $img = $this->layout === self::LAYOUT_IMAGES ?
             Html::img(preg_match('~^image/.+~uism', $file->mimeType) ? $file->url : null, [
@@ -274,7 +271,7 @@ class FileInputWidget extends InputWidget
      *
      * @return string
      */
-    protected function renderAddButton() : string
+    protected function renderAddButton(): string
     {
         // id поля файла
         $fileId = $this->id . '-addinput-' . mt_rand();
