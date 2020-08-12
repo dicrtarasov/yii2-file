@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 12.08.20 15:52:21
+ * @version 12.08.20 16:34:24
  */
 
 /**
@@ -193,8 +193,8 @@ class CSVFile extends StoreFile implements Iterator
      * Если задан charset, то конвертирует кодировку.
      *
      * @return ?string[] текущую строку или null если конец файла
-     * @throws Exception ошибка открытия файла
      * @noinspection PhpUsageOfSilenceOperatorInspection
+     * @throws StoreException
      */
     public function readLine(): ?array
     {
@@ -246,8 +246,8 @@ class CSVFile extends StoreFile implements Iterator
      *
      * @param array $line
      * @return int длина записанной строки
-     * @throws Exception ошибка открытия/записи
      * @noinspection PhpUsageOfSilenceOperatorInspection
+     * @throws StoreException
      */
     public function writeLine(array $line): int
     {
@@ -287,7 +287,7 @@ class CSVFile extends StoreFile implements Iterator
         if ($length === false) {
             $err = error_get_last();
             @error_clear_last();
-            throw new Exception('Ошибка записи в файл: ' . $this->_path . ': ' . ($err['message'] ?? ''));
+            throw new StoreException('Ошибка записи в файл: ' . $this->_path . ': ' . ($err['message'] ?? ''));
         }
 
         // счетчик строк
