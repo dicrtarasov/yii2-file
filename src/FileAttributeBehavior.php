@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 11.08.20 05:46:53
+ * @version 12.08.20 12:37:45
  */
 
 declare(strict_types = 1);
@@ -768,24 +768,24 @@ class FileAttributeBehavior extends Behavior
                 throw new StoreException('Файл не существует: ' . $file->path);
             }
 
-            // если файл в том же хранилище
-            if ($file->store === $this->store) {
-                // ищем позицию в списке старых
-                $oldPos = self::searchFileByName($file, $oldFiles);
+            // ищем позицию файла в старых файлах модели
+            $oldPos = $this->searchModelFilePositionByName($file, $oldFiles);
 
-                // если файл найден в списке старых, то файл нужно сохранить как есть
-                if (isset($oldPos)) {
-                    // удаляем из списка старых на удаление
-                    unset($oldFiles[$oldPos]);
+            // если файл найден в списке старых, то файл нужно сохранить как есть
+            if (isset($oldPos)) {
+                // удаляем из списка старых на удаление
+                unset($oldFiles[$oldPos]);
 
-                    // переименовываем во временное имя
-                    $file->name = StoreFile::createStorePrefix('.' . $attribute, mt_rand(), $file->name);
-                    continue;
-                }
+                // переименовываем во временное имя
+                $file->name = StoreFile::createStorePrefix('.' . $attribute, mt_rand(), $file->name);
+                continue;
             }
 
             // импортируем файл под временным именем
-            $newFile = $modelPath->child(StoreFile::createStorePrefix('.' . $attribute, mt_rand(), $file->name));
+            $newFile = $modelPath->child(
+                StoreFile::createStorePrefix('.' . $attribute, mt_rand(), $file->name)
+            );
+
             $newFile->import($file);
             $file = $newFile;
         }
@@ -889,8 +889,24 @@ class FileAttributeBehavior extends Behavior
      * @param StoreFile[] $files
      * @return ?int
      */
-    protected static function searchFileByName(StoreFile $file, array $files): ?int
+    protected function searchModelFilePositionByName(StoreFile $file, array $files): ?int
     {
+        // если файл загружаемый, то не является старым
+        if ($file instanceof UploadFile) {
+            return null;
+        }
+
+        // если файл в другом хранилище, то не является файлом модели
+        if ($file->store !== $this->store) {
+            return null;
+        }
+
+        // если файл не в папке модели, то не является файлом модели
+        $modelPath = $this->modelFilePath;
+        if (! empty($modelPath) && $file->parent->path !== $modelPath->path) {
+            return null;
+        }
+
         $name = $file->name;
         foreach ($files as $i => $f) {
             if ($f->name === $name) {
