@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 04:43:27
+ * @version 17.08.20 22:22:52
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -12,6 +12,7 @@ declare(strict_types = 1);
 namespace dicr\file;
 
 use yii\base\InvalidConfigException;
+
 use function in_array;
 use function is_resource;
 use function ssh2_disconnect;
@@ -160,7 +161,7 @@ class SftpFileStore extends LocalFileStore
      * @param string|array $path
      * @return string
      */
-    public function relativePath($path)
+    public function relativePath($path): string
     {
         return parent::absolutePath($path);
     }

@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 09.08.20 04:21:45
+ * @version 17.08.20 22:22:52
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -11,6 +11,7 @@ declare(strict_types = 1);
 namespace dicr\file;
 
 use yii\base\InvalidConfigException;
+
 use function ftp_close;
 use function in_array;
 use function is_resource;
@@ -50,7 +51,7 @@ class FtpFileStore extends LocalFileStore
      * @inheritdoc
      * @throws StoreException
      */
-    public function init(): void
+    public function init()
     {
         $this->host = trim($this->host);
         if ($this->host === '') {

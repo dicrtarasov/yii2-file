@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 12.08.20 05:37:21
+ * @version 17.08.20 22:15:14
  */
 
 declare(strict_types = 1);
@@ -74,7 +74,7 @@ class FileInputWidget extends InputWidget
      * @inheritdoc
      * @throws InvalidConfigException
      */
-    public function init(): void
+    public function init()
     {
         parent::init();
 
@@ -162,7 +162,7 @@ class FileInputWidget extends InputWidget
      * @inheritdoc
      * @throws InvalidConfigException
      */
-    public function run(): string
+    public function run()
     {
         // регистрируем ресурсы
         $this->view->registerAssetBundle(FileInputWidgetAsset::class);

@@ -2,9 +2,9 @@
     "name": "dicr/yii2-file",
     "type": "yii2-extension",
     "license": "Apache-2.0",
-    "description": "Filesystem components for Yii2",
     "homepage": "https://gitlab.com/dicr/yii2-file",
-    "keywords": ["dicr", "php", "yii2", "filestore"],
+    "description": "Filesystem components for Yii2",
+    "keywords": ["dicr", "yii2", "file", "store"],
     "authors": [
         {
             "name": "Igor Tarasov",
@@ -31,21 +31,21 @@
         "bootstrap": "dicr\\file\\Bootstrap"
     },
     "require": {
-        "php": "~7.4",
+        "php": "~7.2",
         "ext-fileinfo": "*",
         "ext-ftp": "*",
         "ext-iconv": "*",
         "ext-imagick": "*",
         "ext-mbstring": "*",
         "yiisoft/yii2": "~2.0",
-        "dicr/yii2-asset": "~1.6"
+        "dicr/yii2-asset": "~1.7"
     },
     "require-dev": {
         "ext-ssh2": "*",
         "roave/security-advisories": "dev-master",
         "phpunit/phpunit": "~9.3",
         "yiisoft/yii2-debug": "~2.1",
-        "league/flysystem": "~1.0",
+        "league/flysystem": "~1.1",
         "yiisoft/yii2-bootstrap4": "~2.0"
     },
     "suggest": {

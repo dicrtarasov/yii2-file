@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 12.08.20 12:37:45
+ * @version 17.08.20 22:17:53
  */
 
 declare(strict_types = 1);
@@ -364,7 +364,7 @@ class FileAttributeBehavior extends Behavior
      * @param ?StoreFile $path
      * @return $this
      */
-    public function setModelFilePath(?StoreFile $path = null): self
+    public function setModelFilePath(?StoreFile $path): self
     {
         $this->_modelFilePath = $path;
 

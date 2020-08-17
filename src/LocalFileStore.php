@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 12.08.20 04:43:47
+ * @version 17.08.20 22:12:57
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -68,7 +68,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    public function init(): void
+    public function init()
     {
         parent::init();
 

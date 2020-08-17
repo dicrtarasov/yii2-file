@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 12.08.20 15:51:17
+ * @version 17.08.20 22:18:16
  */
 
 /**
@@ -19,7 +19,6 @@ use Traversable;
 use Yii;
 use yii\base\Arrayable;
 use yii\base\Component;
-use yii\base\Exception;
 use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
 use yii\base\Model;
@@ -182,7 +181,8 @@ class CSVResponseFormatter extends Component implements ResponseFormatterInterfa
      *
      * @param array|Traversable|Arrayable|Query|DataProviderInterface $data данные
      * @return CSVFile
-     * @throws Exception
+     * @throws InvalidConfigException
+     * @throws StoreException
      */
     public function formatData($data): CSVFile
     {
@@ -239,7 +239,8 @@ class CSVResponseFormatter extends Component implements ResponseFormatterInterfa
     /**
      * @inheritDoc
      * @noinspection ClassMethodNameMatchesFieldNameInspection
-     * @throws Exception
+     * @throws StoreException
+     * @throws InvalidConfigException
      */
     public function format($response = null)
     {

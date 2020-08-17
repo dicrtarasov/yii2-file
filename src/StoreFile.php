@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 12.08.20 15:52:21
+ * @version 17.08.20 22:11:30
  */
 
 declare(strict_types = 1);
@@ -453,7 +453,6 @@ class StoreFile extends BaseObject
     /**
      * Возвращает флаг скрытого файла
      *
-     * @throw \dicr\file\StoreException если не существует
      * @return bool
      */
     public function getHidden(): bool
@@ -561,12 +560,12 @@ class StoreFile extends BaseObject
      * Создает превью файла.
      *
      * @param array $config опции ThumbFile
-     * @return ThumbFile|null
+     * @return ThumbFile
      * - если thumbFileConfig не настроен, то false
      * - если файл не существует и не настроен noimage, то null
      * @throws InvalidConfigException
      */
-    public function thumb(array $config = []): ?ThumbFile
+    public function thumb(array $config = []): ThumbFile
     {
         return $this->store->thumb($this, $config);
     }
@@ -609,7 +608,7 @@ class StoreFile extends BaseObject
      *
      * @return string path
      */
-    public function __toString(): string
+    public function __toString()
     {
         return (string)$this->_path;
     }

@@ -1,9 +1,9 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 26.07.20 06:10:10
+ * @version 17.08.20 22:07:01
  */
 
 declare(strict_types = 1);
@@ -23,7 +23,7 @@ class FileInputWidgetAsset extends AssetBundle
 
     /** @inheritDoc */
     public $css = [
-        'file-input-widget.css'
+        'file-input-widget.scss'
     ];
 
     /** @inheritDoc */

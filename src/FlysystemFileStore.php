@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 12.08.20 05:33:27
+ * @version 17.08.20 22:14:13
  */
 
 declare(strict_types = 1);
@@ -35,7 +35,7 @@ class FlysystemFileStore extends AbstractFileStore
     /**
      * @inheritdoc
      */
-    public function init() : void
+    public function init()
     {
         if (is_callable($this->flysystem)) {
             $this->flysystem = call_user_func(/** @scrutinizer ignore-type */ $this->flysystem, $this);
@@ -67,7 +67,7 @@ class FlysystemFileStore extends AbstractFileStore
     /**
      * Возвращает адаптер
      *
-     * @return AdapterInterface|null
+     * @return ?AdapterInterface
      */
     public function getAdapter() : ?AdapterInterface
     {

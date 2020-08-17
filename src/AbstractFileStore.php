@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 12.08.20 05:55:22
+ * @version 17.08.20 22:13:12
  */
 
 declare(strict_types = 1);
@@ -56,7 +56,7 @@ abstract class AbstractFileStore extends Component
      * @inheritdoc
      * @throws InvalidConfigException
      */
-    public function init(): void
+    public function init()
     {
         parent::init();
 
