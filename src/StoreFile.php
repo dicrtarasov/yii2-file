@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 17.08.20 22:11:30
+ * @version 18.08.20 01:12:06
  */
 
 declare(strict_types = 1);
@@ -112,8 +112,11 @@ class StoreFile extends BaseObject
     {
         $path = $this->normalizePath($path);
 
-        if (! empty($this->_path) && $path !== $this->_path) {
-            $this->_store->rename($this->_path, $path);
+        if ($path !== $this->_path) {
+            if (! empty($this->_path)) {
+                $this->_store->rename($this->_path, $path);
+            }
+
             $this->_path = $path;
             $this->_absolutePath = null;
             $this->_absoluteUrl = null;
