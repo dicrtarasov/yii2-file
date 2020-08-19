@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL
- * @version 17.08.20 22:17:53
+ * @version 19.08.20 06:24:13
  */
 
 declare(strict_types = 1);
@@ -806,6 +806,11 @@ class FileAttributeBehavior extends Behavior
         foreach (array_values($files) as $pos => $file) {
             // добавляем индекс позиции
             $file->name = StoreFile::createStorePrefix($attribute, $pos, $file->name);
+
+            // измеряем отметку времени для регенирации thumb и для корректной работы mod_pagespeed
+            $file->touch();
+
+            // сохраняем в позиции
             $value[$pos] = $file;
         }
 
