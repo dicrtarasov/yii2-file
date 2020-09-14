@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 14.09.20 06:55:42
+ * @version 14.09.20 07:18:12
  */
 
 declare(strict_types = 1);
@@ -91,7 +91,7 @@ class ThumbFile extends StoreFile
      *
      * @throws InvalidConfigException
      */
-    public function __construct(array $config)
+    public function __construct(array $config = [])
     {
         /** @var AbstractFileStore $store */
         $store = Instance::ensure($config['store'] ?? '', AbstractFileStore::class);
