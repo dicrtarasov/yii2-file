@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 14.09.20 07:00:14
+ * @version 14.09.20 16:41:49
  */
 
 declare(strict_types = 1);
@@ -110,7 +110,9 @@ class FileInputWidget extends InputWidget
             $this->value = $this->hasModel() ? Html::getAttributeValue($this->model, $this->attribute) : [];
         } elseif (empty($this->value)) {
             $this->value = [];
-        } elseif (! is_array($this->value)) {
+        }
+
+        if (! is_array($this->value)) {
             $this->value = [$this->value]; // нельзя применять (array) потому как File::toArray
         }
 
