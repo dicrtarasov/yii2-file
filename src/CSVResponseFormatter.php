@@ -2,8 +2,8 @@
 /*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 17.08.20 22:18:16
+ * @license MIT
+ * @version 14.09.20 04:37:32
  */
 
 /**
@@ -161,7 +161,7 @@ class CSVResponseFormatter extends Component implements ResponseFormatterInterfa
 
         if (! empty($this->contentType)) {
             $mimeType = $this->contentType;
-            if (! empty($csv) && stripos($this->contentType, 'charset') === false) {
+            if ($csv !== null && stripos($this->contentType, 'charset') === false) {
                 $charset = $csv->charset;
 
                 // переводим cp1251 в window-1251
@@ -238,13 +238,13 @@ class CSVResponseFormatter extends Component implements ResponseFormatterInterfa
 
     /**
      * @inheritDoc
-     * @noinspection ClassMethodNameMatchesFieldNameInspection
      * @throws StoreException
      * @throws InvalidConfigException
+     * @noinspection ClassMethodNameMatchesFieldNameInspection
      */
-    public function format($response = null)
+    public function format($response = null) : Response
     {
-        if (empty($response)) {
+        if ($response === null) {
             /** @var Response $response */
             /** @noinspection CallableParameterUseCaseInTypeContextInspection */
             $response = Yii::$app->response;

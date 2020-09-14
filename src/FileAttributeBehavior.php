@@ -2,8 +2,8 @@
 /*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 19.08.20 06:24:13
+ * @license MIT
+ * @version 14.09.20 04:39:10
  */
 
 declare(strict_types = 1);
@@ -381,7 +381,7 @@ class FileAttributeBehavior extends Behavior
     {
         $modelPath = $this->modelFilePath;
 
-        return ! empty($modelPath) ? $modelPath->child('dummy.jpg')->thumb()->parent : null;
+        return $modelPath !== null ? $modelPath->child('dummy.jpg')->thumb()->parent : null;
     }
 
     /**
@@ -395,7 +395,7 @@ class FileAttributeBehavior extends Behavior
         // удаляем папку с кэшем картинок модели
         try {
             $thumbPath = $this->getModelThumbPath();
-            if (! empty($thumbPath)) {
+            if ($thumbPath !== null) {
                 $thumbPath->delete();
             }
         } catch (InvalidConfigException $ex) {
@@ -807,7 +807,7 @@ class FileAttributeBehavior extends Behavior
             // добавляем индекс позиции
             $file->name = StoreFile::createStorePrefix($attribute, $pos, $file->name);
 
-            // измеряем отметку времени для регенирации thumb и для корректной работы mod_pagespeed
+            // измеряем отметку времени для регенерации thumb и для корректной работы mod_pagespeed
             $file->touch();
 
             // сохраняем в позиции
@@ -908,7 +908,7 @@ class FileAttributeBehavior extends Behavior
 
         // если файл не в папке модели, то не является файлом модели
         $modelPath = $this->modelFilePath;
-        if (! empty($modelPath) && $file->parent->path !== $modelPath->path) {
+        if ($modelPath !== null && $file->parent->path !== $modelPath->path) {
             return null;
         }
 

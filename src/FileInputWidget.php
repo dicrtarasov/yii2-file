@@ -2,8 +2,8 @@
 /*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 17.08.20 22:15:14
+ * @license MIT
+ * @version 14.09.20 07:00:14
  */
 
 declare(strict_types = 1);
@@ -55,13 +55,13 @@ class FileInputWidget extends InputWidget
     /** @var int|null максимальное кол-во файлов */
     public $limit;
 
-    /** @var string|null mime-типы в input type=file, например image/* */
+    /** @var ?string mime-типы в input type=file, например image/* */
     public $accept;
 
-    /** @var bool|null удалять расширение файла при отображении (default true for horizontal) */
+    /** @var ?bool удалять расширение файла при отображении (default true for horizontal) */
     public $removeExt;
 
-    /** @var string|null название поля формы аттрибута */
+    /** @var ?string название поля формы аттрибута */
     public $inputName;
 
     /** @var array опции плагина */
@@ -74,7 +74,7 @@ class FileInputWidget extends InputWidget
      * @inheritdoc
      * @throws InvalidConfigException
      */
-    public function init()
+    public function init() : void
     {
         parent::init();
 
@@ -85,17 +85,17 @@ class FileInputWidget extends InputWidget
 
         // limit
         $this->limit = (int)$this->limit;
-        if (! empty($this->limit) && $this->limit < 0) {
+        if ($this->limit < 0) {
             throw new InvalidConfigException('limit: ' . $this->limit);
         }
 
         // removeExt
-        if (! isset($this->removeExt)) {
+        if ($this->removeExt === null) {
             $this->removeExt = $this->layout === 'files';
         }
 
         // получаем название поля ввода файлов
-        if (! isset($this->inputName)) {
+        if ($this->inputName === null) {
             $this->inputName = $this->hasModel() ? Html::getInputName($this->model, $this->attribute) : $this->name;
         }
 
@@ -106,11 +106,9 @@ class FileInputWidget extends InputWidget
         }
 
         // получаем файлы
-        if (! isset($this->value)) {
+        if ($this->value === null) {
             $this->value = $this->hasModel() ? Html::getAttributeValue($this->model, $this->attribute) : [];
-        }
-
-        if (empty($this->value)) {
+        } elseif (empty($this->value)) {
             $this->value = [];
         } elseif (! is_array($this->value)) {
             $this->value = [$this->value]; // нельзя применять (array) потому как File::toArray
@@ -162,7 +160,7 @@ class FileInputWidget extends InputWidget
      * @inheritdoc
      * @throws InvalidConfigException
      */
-    public function run()
+    public function run() : string
     {
         // регистрируем ресурсы
         $this->view->registerAssetBundle(FileInputWidgetAsset::class);
@@ -191,7 +189,7 @@ class FileInputWidget extends InputWidget
      *
      * @return string
      */
-    protected function renderFiles(): string
+    protected function renderFiles() : string
     {
         $content = '';
 
@@ -211,7 +209,7 @@ class FileInputWidget extends InputWidget
      * @param StoreFile $file
      * @return string
      */
-    protected function renderFileBlock(int $pos, StoreFile $file): string
+    protected function renderFileBlock(int $pos, StoreFile $file) : string
     {
         ob_start();
         echo Html::beginTag('div', ['class' => 'file']);
@@ -250,7 +248,7 @@ class FileInputWidget extends InputWidget
      * @param StoreFile $file
      * @return string
      */
-    protected function renderImage(StoreFile $file): string
+    protected function renderImage(StoreFile $file) : string
     {
         $img = $this->layout === self::LAYOUT_IMAGES ?
             Html::img(preg_match('~^image/.+~uism', $file->mimeType) ? $file->url : null, [
@@ -271,7 +269,7 @@ class FileInputWidget extends InputWidget
      *
      * @return string
      */
-    protected function renderAddButton(): string
+    protected function renderAddButton() : string
     {
         // id поля файла
         $fileId = $this->id . '-addinput-' . mt_rand();

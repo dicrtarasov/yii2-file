@@ -2,11 +2,11 @@
 /*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 09.08.20 01:27:35
+ * @license MIT
+ * @version 14.09.20 07:02:36
  */
 
-declare(strict_types=1);
+declare(strict_types = 1);
 namespace dicr\file;
 
 use Throwable;
@@ -20,8 +20,8 @@ class StoreException extends Exception
     /**
      * Конструктор
      *
-     * @param string|null $msg если не задано, то берется из error_get_last
-     * @param Throwable|null $prev
+     * @param string $msg если не задано, то берется из error_get_last
+     * @param ?Throwable $prev
      */
     public function __construct(string $msg = '', ?Throwable $prev = null)
     {

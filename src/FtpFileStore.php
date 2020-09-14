@@ -2,8 +2,8 @@
 /*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 17.08.20 22:22:52
+ * @license MIT
+ * @version 14.09.20 04:49:09
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -51,7 +51,7 @@ class FtpFileStore extends LocalFileStore
      * @inheritdoc
      * @throws StoreException
      */
-    public function init()
+    public function init() : void
     {
         $this->host = trim($this->host);
         if ($this->host === '') {

@@ -1,7 +1,7 @@
 {
     "name": "dicr/yii2-file",
     "type": "yii2-extension",
-    "license": "Apache-2.0",
+    "license": "MIT",
     "homepage": "https://gitlab.com/dicr/yii2-file",
     "description": "Filesystem components for Yii2",
     "keywords": ["dicr", "yii2", "file", "store"],
@@ -31,7 +31,7 @@
         "bootstrap": "dicr\\file\\Bootstrap"
     },
     "require": {
-        "php": "~7.2",
+        "php": "~7.4",
         "ext-fileinfo": "*",
         "ext-ftp": "*",
         "ext-iconv": "*",

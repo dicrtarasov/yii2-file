@@ -2,8 +2,8 @@
 /*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 09.08.20 20:00:27
+ * @license MIT
+ * @version 14.09.20 06:55:42
  */
 
 declare(strict_types = 1);
@@ -11,11 +11,11 @@ namespace dicr\file;
 
 use Imagick;
 use ImagickException;
+use ImagickPixel;
 use RuntimeException;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\di\Instance;
-use yii\helpers\ArrayHelper;
 
 use function gettype;
 use function is_file;
@@ -40,7 +40,7 @@ use function substr;
 class ThumbFile extends StoreFile
 {
     /**
-     * @var StoreFile|null исходный файл
+     * @var ?StoreFile исходный файл
      * Если пустой, то применяется noimage
      */
     public $source;
@@ -51,20 +51,26 @@ class ThumbFile extends StoreFile
     /** @var int */
     public $height = 0;
 
-    /** @var string|false путь картинки-заглушки или функция, которая возвращает путь */
+    /**
+     * @var ?string дополнять до заданных размеров заполняя пустое пространство одной из величин.
+     * Примеры: `rgb(255,255,255)`, `#fff`, ...
+     * Применяется только когда заданы оба размера (width и height).
+     * Картинка масштабируется всегда пропорционально. Если задан fill, то устанавливается в заданные размеры
+     * с заполнением пустого пространства цветом fill.
+     */
+    public $fill = '';
+
+    /** @var ?string путь картинки-заглушки или функция, которая возвращает путь */
     public $noimage = '@dicr/file/assets/noimage.png';
 
-    /** @var string путь картинки водяного знака */
+    /** @var string путь картинки водяного знака (полупрозрачный png) */
     public $watermark = '';
-
-    /** @var float прозрачность картинки watermark */
-    public $watermarkOpacity = 0.7;
 
     /** @var string путь картинки дисклеймера */
     public $disclaimer = '';
 
     /** @var float качество сжатия картинки */
-    public $quality = 0.8;
+    public $quality = 0.85;
 
     /** @var string формат файла */
     public $format = 'jpg';
@@ -72,21 +78,25 @@ class ThumbFile extends StoreFile
     /** @var bool файл является заглушкой noimage */
     protected $isNoimage = false;
 
-    /** @var Imagick сырое изображение */
+    /** @var ?Imagick сырое изображение */
     protected $_image;
 
     /**
      * Конструктор.
      *
      * @param array $config конфиг
+     * - обязательно значение store
      * Чтобы не применялись по-умолчанию, watermark и disclaimer сбрасываются в пустые значения.
      * Чтобы применить watermark, disclaimer по-умолчанию моно установить значения в true.
      *
      * @throws InvalidConfigException
      */
-    public function __construct(array $config = [])
+    public function __construct(array $config)
     {
-        $store = Instance::ensure(ArrayHelper::remove($config, 'store'), AbstractFileStore::class);
+        /** @var AbstractFileStore $store */
+        $store = Instance::ensure($config['store'] ?? '', AbstractFileStore::class);
+
+        unset($config['store']);
 
         parent::__construct($store, '', $config);
     }
@@ -95,7 +105,7 @@ class ThumbFile extends StoreFile
      * @inheritDoc
      * @throws InvalidConfigException
      */
-    public function init(): void
+    public function init() : void
     {
         parent::init();
 
@@ -109,10 +119,12 @@ class ThumbFile extends StoreFile
             throw new InvalidConfigException('height');
         }
 
+        $this->fill = (string)$this->fill;
+
         if (! empty($this->noimage)) {
             if (is_string($this->noimage)) {
                 $this->noimage = (string)Yii::getAlias($this->noimage);
-                if (! is_string($this->noimage) || ! is_file($this->noimage)) {
+                if (! is_file($this->noimage)) {
                     throw new InvalidConfigException('noimage недоступен: ' . $this->noimage);
                 }
             } else {
@@ -122,18 +134,13 @@ class ThumbFile extends StoreFile
 
         if (! empty($this->watermark)) {
             if (is_string($this->watermark)) {
-                $this->watermark = Yii::getAlias($this->watermark);
-                if (! is_string($this->watermark) || ! is_file($this->watermark)) {
+                $this->watermark = (string)Yii::getAlias($this->watermark);
+                if (! is_file($this->watermark)) {
                     throw new InvalidConfigException('watermark недоступен: ' . $this->watermark);
                 }
             } else {
                 throw new InvalidConfigException('watermark: ' . gettype($this->watermark));
             }
-        }
-
-        $this->watermarkOpacity = (float)$this->watermarkOpacity;
-        if ($this->watermarkOpacity < 0 || $this->watermarkOpacity > 1) {
-            throw new InvalidConfigException('watermarkOpacity: ' . $this->watermarkOpacity);
         }
 
         if (! empty($this->disclaimer)) {
@@ -174,7 +181,7 @@ class ThumbFile extends StoreFile
      *
      * @return string
      */
-    protected function createPath(): string
+    protected function createPath() : string
     {
         // путь файла в кэше
         $path = $this->isNoimage ? 'noimage/' . $this->noimage : $this->source->path;
@@ -195,6 +202,10 @@ class ThumbFile extends StoreFile
             if (! empty($this->disclaimer)) {
                 $path .= '~d' . substr(md5($this->watermark), 0, 4);
             }
+
+            if ($this->width > 0 && $this->height > 0 && ! empty($this->fill)) {
+                $path .= '~f';
+            }
         }
 
         // добавляем расширение
@@ -206,7 +217,7 @@ class ThumbFile extends StoreFile
      *
      * @return bool true если существует и дата изменения не раньше чем у исходного
      */
-    public function getIsReady(): bool
+    public function getIsReady() : bool
     {
         return $this->exists && $this->mtime >= $this->source->mtime;
     }
@@ -214,9 +225,10 @@ class ThumbFile extends StoreFile
     /**
      * Обновляет превью.
      *
+     * @return $this
      * @throws StoreException
      */
-    public function update(): self
+    public function update() : self
     {
         $this->preprocessImage();
         $this->resizeImage();
@@ -234,9 +246,10 @@ class ThumbFile extends StoreFile
     /**
      * Генерирует превью.
      *
+     * @return $this
      * @throws StoreException
      */
-    public function generate(): self
+    public function generate() : self
     {
         if (! $this->isReady) {
             $this->update();
@@ -249,7 +262,7 @@ class ThumbFile extends StoreFile
      * @inheritDoc
      * @throws StoreException
      */
-    public function getUrl(): string
+    public function getUrl() : string
     {
         // обновляем файл превью
         $this->generate();
@@ -258,41 +271,12 @@ class ThumbFile extends StoreFile
     }
 
     /**
-     * Предварительная обработка картинки после загрузки.
-     * (для дочерних классов)
-     */
-    protected function preprocessImage(): self
-    {
-        // NOOP
-        return $this;
-    }
-
-    /**
-     * Масштабирует картинку.
-     *
-     * @throws StoreException
-     */
-    protected function resizeImage(): self
-    {
-        // если заданы размеры, то делаем масштабирование
-        if (! empty($this->width) || ! empty($this->height)) {
-            $image = $this->image();
-            if (! $image->thumbnailImage($this->width, $this->height, $this->width && $this->height,
-                $this->width && $this->height)) {
-                throw new RuntimeException('error creating thumb');
-            }
-        }
-
-        return $this;
-    }
-
-    /**
      * Возвращает картинку.
      *
      * @return Imagick
      * @throws StoreException
      */
-    protected function image(): Imagick
+    protected function image() : Imagick
     {
         if (! isset($this->_image)) {
             // создаем картинку
@@ -324,11 +308,58 @@ class ThumbFile extends StoreFile
     }
 
     /**
+     * Предварительная обработка картинки после загрузки.
+     * (для дочерних классов)
+     */
+    protected function preprocessImage() : self
+    {
+        // NOOP
+        return $this;
+    }
+
+    /**
+     * Масштабирует картинку.
+     *
+     * @return $this
+     * @throws StoreException
+     */
+    protected function resizeImage() : self
+    {
+        // если заданы размеры, то делаем масштабирование
+        if (! empty($this->width) || ! empty($this->height)) {
+            $image = $this->image();
+
+            // масштабировать вписывая в заданную область
+            $bestFit = $this->width > 0 && $this->height > 0;
+
+            // качественное изменение размера с медленным фильтром и sharpness
+            if (! $image->resizeImage(
+                $this->width, $this->height, Imagick::FILTER_LANCZOS2SHARP, 0.5, $bestFit
+            )) {
+                Yii::error('Ошибка масштабирования картинки', __METHOD__);
+            }
+
+            // дополняем цветом заполнения до нужных размеров
+            $fill = $bestFit && ! empty($this->fill);
+            if ($fill && ! $image->setImageBackgroundColor(new ImagickPixel($this->fill))) {
+                Yii::error('Ошибка установки фона картинки: ' . $this->fill, __METHOD__);
+            }
+
+            // очищает профили и заполняет пустое пространство
+            if (! $image->thumbnailImage($this->width, $this->height, $bestFit, $fill)) {
+                Yii::error('Ошибка создания thumbnail', __METHOD__);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
      * Накладывает водяной знак.
      *
      * @throws StoreException
      */
-    protected function watermarkImage(): self
+    protected function watermarkImage() : self
     {
         if ($this->isNoimage || empty($this->watermark)) {
             return $this;
@@ -338,18 +369,13 @@ class ThumbFile extends StoreFile
         try {
             // получаем размеры изображения
             $image = $this->image();
-            $iWidth = (int)$image->getImageWidth();
-            $iHeight = (int)$image->getImageHeight();
+            $iWidth = $image->getImageWidth();
+            $iHeight = $image->getImageHeight();
 
             // создаем картинку для водяного знака
             $watermark = new Imagick($this->watermark);
-            $wWidth = (int)$watermark->getImageWidth();
-            $wHeight = (int)$watermark->getImageHeight();
-
-            // применяем opacity
-            if (! empty($this->watermarkOpacity) && $this->watermarkOpacity < 1) {
-                $watermark->evaluateImage(Imagick::EVALUATE_MULTIPLY, $this->watermarkOpacity, Imagick::CHANNEL_ALPHA);
-            }
+            $wWidth = $watermark->getImageWidth();
+            $wHeight = $watermark->getImageHeight();
 
             // масштабируем водяной знак
             if ($wWidth !== $iWidth || $wHeight !== $iHeight) {
@@ -359,12 +385,15 @@ class ThumbFile extends StoreFile
             }
 
             // накладываем на изображение
-            $image->compositeImage($watermark, Imagick::COMPOSITE_DEFAULT, (int)round(($iWidth - $wWidth) / 2),
-                (int)round(($iHeight - $wHeight) / 2));
+            $image->compositeImage(
+                $watermark, Imagick::COMPOSITE_DEFAULT,
+                (int)round(($iWidth - $wWidth) / 2), (int)round(($iHeight - $wHeight) / 2)
+            );
         } catch (ImagickException $ex) {
             throw new StoreException('Ошибка создания watermark: ' . $this->watermark, $ex);
         } finally {
-            if (! empty($watermark)) {
+            if ($watermark !== null) {
+                $watermark->clear();
                 $watermark->destroy();
             }
         }
@@ -375,9 +404,10 @@ class ThumbFile extends StoreFile
     /**
      * Накладывает пометку о возрастных ограничениях.
      *
+     * @return $this
      * @throws StoreException
      */
-    protected function placeDisclaimer(): self
+    protected function placeDisclaimer() : self
     {
         if ($this->isNoimage || empty($this->disclaimer)) {
             return $this;
@@ -401,15 +431,18 @@ class ThumbFile extends StoreFile
             $dHeight = $disclaimer->getImageHeight();
 
             // добавляем прозрачность
-            $disclaimer->evaluateImage(Imagick::EVALUATE_MULTIPLY, 0.65, Imagick::CHANNEL_OPACITY);
+            $disclaimer->evaluateImage(Imagick::EVALUATE_MULTIPLY, 0.7, Imagick::CHANNEL_OPACITY);
 
             // выполняем наложение
-            $image->compositeImage($disclaimer, Imagick::COMPOSITE_DEFAULT, (int)round($iWidth - $dWidth * 1.3),
-                (int)round($dHeight * 0.3));
+            $image->compositeImage(
+                $disclaimer, Imagick::COMPOSITE_DEFAULT,
+                (int)round($iWidth - $dWidth * 1.3), (int)round($dHeight * 0.3)
+            );
         } catch (ImagickException $ex) {
             throw new StoreException('Ошибка наложения disclaimer: ' . $this->disclaimer, $ex);
         } finally {
             if ($disclaimer !== null) {
+                $disclaimer->clear();
                 $disclaimer->destroy();
             }
         }
@@ -420,8 +453,10 @@ class ThumbFile extends StoreFile
     /**
      * После обработка перед сохранением.
      * (для дочерних классов)
+     *
+     * @return $this
      */
-    protected function postprocessImage(): self
+    protected function postprocessImage() : self
     {
         // NOOP
         return $this;
@@ -430,14 +465,12 @@ class ThumbFile extends StoreFile
     /**
      * Сохраняет картинку превью.
      *
+     * @return $this
      * @throws StoreException
      */
-    protected function writeImage(): self
+    protected function writeImage() : self
     {
         $image = $this->image();
-
-        // очищаем лишнюю информацию
-        $image->stripImage();
 
         // формат
         if ($image->setImageFormat($this->format) === false) {
@@ -449,18 +482,23 @@ class ThumbFile extends StoreFile
             throw new RuntimeException('Ошибка установки качества изображения: ' . $this->quality);
         }
 
+        // очищаем лишнюю информацию
+        $image->stripImage();
+
         // сохраняем
         $this->contents = $image->getImageBlob();
+
         return $this;
     }
 
     /**
      * Удаляет директорию заданного файла.
      *
+     * @return $this
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    public function clear(): self
+    public function clear() : self
     {
         if (empty($this->source)) {
             throw new RuntimeException('empty source');
@@ -475,7 +513,7 @@ class ThumbFile extends StoreFile
             $files = $dir->getList([
                 'nameRegex' => '~^' .
                     preg_quote(self::removeExtension($path), '~') .
-                    '\~\d+x\d+(\~[wd][0-9a-f])*\.[^\.]+$~ui',
+                    '\~\d+x\d+(\~w[0-9a-f]{4})?(\~d[0-9a-f]{4})?(\~f)?\.[^\.]+$~ui',
                 'dir' => false,
             ]);
 
@@ -489,8 +527,9 @@ class ThumbFile extends StoreFile
 
     /**
      * @inheritDoc
+     * @return string
      */
-    public function __toString(): string
+    public function __toString() : string
     {
         return (string)$this->url;
     }
@@ -500,9 +539,9 @@ class ThumbFile extends StoreFile
      */
     public function __destruct()
     {
-        if (! empty($this->_image)) {
+        if ($this->_image !== null) {
             $this->_image->destroy();
-            unset($this->_image);
+            $this->_image = null;
         }
     }
 }

@@ -2,8 +2,8 @@
 /*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 17.08.20 22:19:06
+ * @license MIT
+ * @version 14.09.20 04:48:25
  */
 
 /**
@@ -96,7 +96,7 @@ class CSVFile extends StoreFile implements Iterator
     /**
      * @inheritdoc
      */
-    public function init()
+    public function init() : void
     {
         parent::init();
 
@@ -306,7 +306,7 @@ class CSVFile extends StoreFile implements Iterator
      *
      * @throws StoreException
      */
-    public function rewind()
+    public function rewind() : void
     {
         $this->reset();
         $this->readLine();
@@ -317,7 +317,7 @@ class CSVFile extends StoreFile implements Iterator
      *
      * @return ?int номер строки, начиная с 1
      */
-    public function key()
+    public function key() : ?int
     {
         return $this->_lineNo;
     }
@@ -327,7 +327,7 @@ class CSVFile extends StoreFile implements Iterator
      *
      * @return ?string[]
      */
-    public function current()
+    public function current() : ?array
     {
         return $this->_current;
     }
