@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 14.09.20 07:18:12
+ * @version 14.09.20 07:46:02
  */
 
 declare(strict_types = 1);
@@ -322,6 +322,8 @@ class ThumbFile extends StoreFile
      *
      * @return $this
      * @throws StoreException
+     *
+     * @link https://urmaul.com/blog/imagick-filters-comparison/ FILTERS
      */
     protected function resizeImage() : self
     {
@@ -334,7 +336,7 @@ class ThumbFile extends StoreFile
 
             // качественное изменение размера с медленным фильтром и sharpness
             if (! $image->resizeImage(
-                $this->width, $this->height, Imagick::FILTER_LANCZOS2SHARP, 0.5, $bestFit
+                $this->width, $this->height, Imagick::FILTER_TRIANGLE, 0.5, $bestFit
             )) {
                 Yii::error('Ошибка масштабирования картинки', __METHOD__);
             }
