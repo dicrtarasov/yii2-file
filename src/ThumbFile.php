@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 14.09.20 07:46:02
+ * @version 21.09.20 20:11:56
  */
 
 declare(strict_types = 1);
@@ -70,7 +70,7 @@ class ThumbFile extends StoreFile
     public $disclaimer = '';
 
     /** @var float качество сжатия картинки */
-    public $quality = 0.85;
+    public $quality = 0.9;
 
     /** @var string формат файла */
     public $format = 'jpg';
