@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 21.09.20 20:11:56
+ * @version 22.09.20 11:54:14
  */
 
 declare(strict_types = 1);
@@ -54,11 +54,15 @@ class ThumbFile extends StoreFile
     /**
      * @var ?string дополнять до заданных размеров заполняя пустое пространство одной из величин.
      * Примеры: `rgb(255,255,255)`, `#fff`, ...
+     *
      * Применяется только когда заданы оба размера (width и height).
+     *
      * Картинка масштабируется всегда пропорционально. Если задан fill, то устанавливается в заданные размеры
      * с заполнением пустого пространства цветом fill.
+     *
+     * Если true, то принимается значение '#fff'
      */
-    public $fill = '';
+    public $fill;
 
     /** @var ?string путь картинки-заглушки или функция, которая возвращает путь */
     public $noimage = '@dicr/file/assets/noimage.png';
@@ -119,8 +123,10 @@ class ThumbFile extends StoreFile
             throw new InvalidConfigException('height');
         }
 
-        $this->fill = (string)$this->fill;
+        // fill конвертируем true в '#fff'
+        $this->fill = $this->fill ? ($this->fill === true ? '#fff' : (string)$this->fill) : null;
 
+        // noimage
         if (! empty($this->noimage)) {
             if (is_string($this->noimage)) {
                 $this->noimage = (string)Yii::getAlias($this->noimage);
