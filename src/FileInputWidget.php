@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 14.09.20 16:41:49
+ * @version 22.09.20 11:36:25
  */
 
 declare(strict_types = 1);
@@ -105,14 +105,15 @@ class FileInputWidget extends InputWidget
             $this->inputName = $matches[1];
         }
 
-        // получаем файлы
-        if ($this->value === null) {
-            $this->value = $this->hasModel() ? Html::getAttributeValue($this->model, $this->attribute) : [];
-        } elseif (empty($this->value)) {
-            $this->value = [];
+        // берем значение модели
+        if ($this->value === null && $this->hasModel()) {
+            $this->value = Html::getAttributeValue($this->model, $this->attribute);
         }
 
-        if (! is_array($this->value)) {
+        // конвертируем в массив
+        if (empty($this->value)) {
+            $this->value = [];
+        } elseif (! is_array($this->value)) {
             $this->value = [$this->value]; // нельзя применять (array) потому как File::toArray
         }
 
