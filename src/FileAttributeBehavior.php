@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 14.09.20 04:39:10
+ * @version 25.09.20 00:53:54
  */
 
 declare(strict_types = 1);
@@ -555,7 +555,7 @@ class FileAttributeBehavior extends Behavior
         $post = (Yii::$app->request->post())[$formName][$attribute] ?? null;
 
         /** @var array загруженные новые файлы с позициями $files */
-        $files = UploadFile::instances($formName, $attribute);
+        $files = UploadFile::instances($attribute, $formName);
         if (! isset($post) && ! isset($files)) {
             return false;
         }

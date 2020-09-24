@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 25.09.20 00:50:23
+ * @version 25.09.20 00:53:54
  */
 
 declare(strict_types = 1);
@@ -89,11 +89,11 @@ class UploadFile extends StoreFile
     /**
      * Возвращает файлы аттрибутов формы загруженные в $_FILES или null.
      *
-     * @param string $formName имя формы для которой возвращает аттрибуты
      * @param string $attribute если задан, то возвращает файлы только для аттрибута
+     * @param string $formName имя формы для которой возвращает аттрибуты
      * @return static[]|null
      */
-    public static function instances(string $formName = '', string $attribute = '') : ?array
+    public static function instances(string $attribute = '', string $formName = '') : ?array
     {
         /** @var static[][] */
         static $instances;
@@ -118,13 +118,13 @@ class UploadFile extends StoreFile
     /**
      * Файл аттрибута модели.
      *
-     * @param string $formName
      * @param string $attribute
+     * @param string $formName
      * @return ?static
      */
-    public static function instance(string $formName, string $attribute) : ?self
+    public static function instance(string $attribute, string $formName = '') : ?self
     {
-        $files = self::instances($formName, $attribute);
+        $files = self::instances($attribute, $formName);
 
         return empty($files) ? null : reset($files);
     }
