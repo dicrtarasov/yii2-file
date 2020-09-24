@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 14.09.20 04:43:57
+ * @version 25.09.20 00:50:23
  */
 
 declare(strict_types = 1);
@@ -33,7 +33,6 @@ use function is_string;
  * @property string $mimeType MIME-тип файла
  * @property int $error ошибка загрузки
  * @property int $size размер файла
- *
  */
 class UploadFile extends StoreFile
 {
@@ -92,7 +91,7 @@ class UploadFile extends StoreFile
      *
      * @param string $formName имя формы для которой возвращает аттрибуты
      * @param string $attribute если задан, то возвращает файлы только для аттрибута
-     * @return UploadFile[]|null
+     * @return static[]|null
      */
     public static function instances(string $formName = '', string $attribute = '') : ?array
     {
@@ -117,11 +116,25 @@ class UploadFile extends StoreFile
     }
 
     /**
+     * Файл аттрибута модели.
+     *
+     * @param string $formName
+     * @param string $attribute
+     * @return ?static
+     */
+    public static function instance(string $formName, string $attribute) : ?self
+    {
+        $files = self::instances($formName, $attribute);
+
+        return empty($files) ? null : reset($files);
+    }
+
+    /**
      * Парсит $_FILES и создает объекты.
      *
      * @return UploadFile[] файлы аттрибута
      */
-    protected static function parseInstances() : array
+    private static function parseInstances() : array
     {
         $instances = [];
 
@@ -148,7 +161,7 @@ class UploadFile extends StoreFile
      * @param array $data
      * @return bool true если данные формы
      */
-    protected static function isComplexFormData(array $data) : bool
+    private static function isComplexFormData(array $data) : bool
     {
         // если не установлен name, то ошибка формата данных
         if (! isset($data['name'])) {
@@ -218,7 +231,7 @@ class UploadFile extends StoreFile
      * @param array $data данные аттрибута
      * @return UploadFile[] файлы аттрибута
      */
-    protected static function parseSimpleData(array $data) : array
+    private static function parseSimpleData(array $data) : array
     {
         return static::instancesFromData(
             (array)($data['name'] ?? []),
@@ -298,7 +311,7 @@ class UploadFile extends StoreFile
      * @param array $data array данные аттрибутов формы
      * @return UploadFile[] [$attribute => \dicr\file\UploadFile[]] аттрибуты формы с файлами
      */
-    protected static function parseFormData(array $data) : array
+    private static function parseFormData(array $data) : array
     {
         $instances = [];
 
@@ -325,7 +338,7 @@ class UploadFile extends StoreFile
      * @param string[] $paths пути
      * @return self[]
      */
-    protected static function instancesFromData(
+    private static function instancesFromData(
         array $names,
         array $types,
         array $sizes,
