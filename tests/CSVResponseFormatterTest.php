@@ -2,8 +2,8 @@
 /*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 12.08.20 05:41:26
+ * @license MIT
+ * @version 28.09.20 02:41:58
  */
 
 /**
@@ -34,7 +34,7 @@ class CSVResponseFormatterTest extends TestCase
      */
     public static function setUpBeforeClass(): void
     {
-        self::$testData = array_map(static function (array $config) {
+        self::$testData = array_map(static function (array $config) : DynamicModel {
             return new DynamicModel($config);
         }, [
             ['name' => 'Иванов Иван Иванович', 'phone' => '+79996341261', 'Проверка'],
@@ -47,7 +47,7 @@ class CSVResponseFormatterTest extends TestCase
      *
      * @throws Exception
      */
-    public function testResponse()
+    public function testResponse() : void
     {
         $csvFormat = new CSVResponseFormatter([
             'contentType' => CSVResponseFormatter::CONTENT_TYPE_EXCEL,

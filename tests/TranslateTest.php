@@ -1,9 +1,9 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 11.07.20 09:42:25
+ * @license MIT
+ * @version 28.09.20 02:44:36
  */
 
 declare(strict_types = 1);
@@ -35,7 +35,7 @@ class TranslateTest extends TestCase
      *
      * @noinspection PhpMethodMayBeStaticInspection
      */
-    public function testTranslate()
+    public function testTranslate() : void
     {
         /** @noinspection SpellCheckingInspection */
         self::assertSame('Додати', Yii::t('dicr/file', 'Добавить'));

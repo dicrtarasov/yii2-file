@@ -1,9 +1,9 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 04.07.20 13:07:13
+ * @license MIT
+ * @version 28.09.20 02:43:14
  */
 
 declare(strict_types = 1);
@@ -35,7 +35,7 @@ class LocalFileStoreTest extends AbstractFileStoreTest
     /**
      * @throws InvalidConfigException
      */
-    public function testAbsolutePath()
+    public function testAbsolutePath() : void
     {
         $store = static::store();
 

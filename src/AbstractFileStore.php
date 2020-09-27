@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 14.09.20 04:45:42
+ * @version 28.09.20 02:44:53
  */
 
 declare(strict_types = 1);
@@ -761,7 +761,7 @@ abstract class AbstractFileStore extends Component
      */
     protected static function sortByName(array $files): array
     {
-        usort($files, static function (StoreFile $a, StoreFile $b) {
+        usort($files, static function (StoreFile $a, StoreFile $b) : int {
             return $a->path <=> $b->path;
         });
 

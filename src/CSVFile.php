@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 14.09.20 04:48:25
+ * @version 28.09.20 02:39:26
  */
 
 /**
@@ -337,7 +337,7 @@ class CSVFile extends StoreFile implements Iterator
      *
      * @throws StoreException
      */
-    public function next()
+    public function next() : void
     {
         $this->readLine();
     }

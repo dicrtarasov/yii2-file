@@ -1,9 +1,9 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 11.07.20 09:34:57
+ * @license MIT
+ * @version 28.09.20 02:45:27
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ class FlysystemFileStoreTest extends AbstractFileStoreTest
 
         Yii::$app->set(self::STORE_ID, [
             'class' => FlysystemFileStore::class,
-            'flysystem' => static function () {
+            'flysystem' => static function () : Filesystem {
                 $adapter = new Local(__DIR__ . '/files', LOCK_EX, Local::SKIP_LINKS);
 
                 return new Filesystem($adapter);

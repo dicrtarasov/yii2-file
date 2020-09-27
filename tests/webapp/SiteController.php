@@ -1,9 +1,9 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 11.07.20 09:25:11
+ * @license MIT
+ * @version 28.09.20 02:43:40
  */
 
 declare(strict_types = 1);
@@ -11,6 +11,7 @@ namespace dicr\tests\webapp;
 
 use Yii;
 use yii\web\Controller;
+use yii\web\Response;
 
 /**
  * Default test Controller
@@ -20,7 +21,7 @@ class SiteController extends Controller
     /**
      * Индекс
      *
-     * @return string
+     * @return string|Response
      */
     public function actionIndex()
     {

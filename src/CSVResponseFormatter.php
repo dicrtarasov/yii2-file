@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 14.09.20 04:37:32
+ * @version 28.09.20 02:45:15
  */
 
 /**
@@ -212,7 +212,7 @@ class CSVResponseFormatter extends Component implements ResponseFormatterInterfa
                         );
                     }
 
-                    $line = array_map(static function (string $field) use ($row) {
+                    $line = array_map(static function (string $field) use ($row) : string {
                         return $row[$field] ?? '';
                     }, array_keys($this->fields));
                 } else { // обходим все поля

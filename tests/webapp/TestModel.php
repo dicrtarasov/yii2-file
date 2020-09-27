@@ -1,12 +1,12 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 11.07.20 09:32:04
+ * @license MIT
+ * @version 28.09.20 02:44:26
  */
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace dicr\tests\webapp;
 
@@ -25,20 +25,17 @@ use yii\db\ActiveRecord;
 class TestModel extends ActiveRecord
 {
     /**
-     * Название таблицы
-     *
-     * @return string
+     * @inheritDoc
      */
-    public static function tableName()
+    public static function tableName() : string
     {
         return '{{test}}';
     }
 
     /**
      * {@inheritDoc}
-     * @see \yii\base\Model::attributeLabels()
      */
-    public function attributeLabels()
+    public function attributeLabels() : array
     {
         return [
             'icon' => 'Иконка',
@@ -49,9 +46,8 @@ class TestModel extends ActiveRecord
 
     /**
      * {@inheritDoc}
-     * @see \yii\base\Component::behaviors()
      */
-    public function behaviors()
+    public function behaviors() : array
     {
         return [
             'fileAttribute' => [

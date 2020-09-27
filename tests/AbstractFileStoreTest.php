@@ -2,8 +2,8 @@
 /*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 12.08.20 05:38:43
+ * @license MIT
+ * @version 28.09.20 02:41:31
  */
 
 declare(strict_types = 1);
@@ -29,10 +29,11 @@ abstract class AbstractFileStoreTest extends TestCase
      *
      * @throws InvalidConfigException
      */
-    public function testComponentExists()
+    public function testComponentExists() : void
     {
         $store = static::store();
 
+        /** @noinspection UnnecessaryAssertionInspection */
         self::assertInstanceOf(AbstractFileStore::class, $store);
         self::assertNotEmpty($store->file(''));
     }
@@ -43,7 +44,7 @@ abstract class AbstractFileStoreTest extends TestCase
      * @return AbstractFileStore
      * @throws InvalidConfigException
      */
-    protected static function store()
+    protected static function store() : AbstractFileStore
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
         return Yii::$app->get(self::STORE_ID);
@@ -54,7 +55,7 @@ abstract class AbstractFileStoreTest extends TestCase
      *
      * @throws InvalidConfigException
      */
-    public function testNormalizeInvalidPath()
+    public function testNormalizeInvalidPath() : void
     {
         $store = static::store();
 
@@ -66,18 +67,10 @@ abstract class AbstractFileStoreTest extends TestCase
     /**
      * Проверка нормализации путей
      *
-     * @throws InvalidConfigException
-     * @throws InvalidConfigException
-     * @throws InvalidConfigException
-     * @throws InvalidConfigException
-     * @throws InvalidConfigException
-     * @throws InvalidConfigException
-     * @throws InvalidConfigException
-     * @throws InvalidConfigException
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    public function testNormalizePath()
+    public function testNormalizePath() : void
     {
         $store = static::store();
 
@@ -111,7 +104,7 @@ abstract class AbstractFileStoreTest extends TestCase
     /**
      * @throws InvalidConfigException
      */
-    public function testPathRelations()
+    public function testPathRelations() : void
     {
         $store = static::store();
 
@@ -138,7 +131,7 @@ abstract class AbstractFileStoreTest extends TestCase
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    public function testType()
+    public function testType() : void
     {
         $store = static::store();
 
@@ -167,7 +160,7 @@ abstract class AbstractFileStoreTest extends TestCase
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    public function testPublic()
+    public function testPublic() : void
     {
         $store = static::store();
 
@@ -191,7 +184,7 @@ abstract class AbstractFileStoreTest extends TestCase
     /**
      * @throws InvalidConfigException
      */
-    public function testHidden()
+    public function testHidden() : void
     {
         $store = static::store();
 
@@ -207,7 +200,7 @@ abstract class AbstractFileStoreTest extends TestCase
      * @throws InvalidConfigException
      * @throws StoreException
      */
-    public function testSize()
+    public function testSize() : void
     {
         $store = static::store();
 
@@ -226,7 +219,7 @@ abstract class AbstractFileStoreTest extends TestCase
      * @throws InvalidConfigException
      * @throws StoreException
      */
-    public function testMtime()
+    public function testMtime() : void
     {
         $store = static::store();
 
@@ -240,7 +233,7 @@ abstract class AbstractFileStoreTest extends TestCase
     /**
      * @throws InvalidConfigException
      */
-    public function testMimeType()
+    public function testMimeType() : void
     {
         $store = static::store();
 
@@ -256,7 +249,7 @@ abstract class AbstractFileStoreTest extends TestCase
      * @throws InvalidConfigException
      * @throws StoreException
      */
-    public function testContents()
+    public function testContents() : void
     {
         $store = static::store();
 
@@ -276,7 +269,7 @@ abstract class AbstractFileStoreTest extends TestCase
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    public function testStream()
+    public function testStream() : void
     {
         $store = static::store();
 
@@ -302,7 +295,7 @@ abstract class AbstractFileStoreTest extends TestCase
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    public function testExistsDelete()
+    public function testExistsDelete() : void
     {
         $store = static::store();
 
@@ -334,7 +327,7 @@ abstract class AbstractFileStoreTest extends TestCase
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    public function testFileListChild()
+    public function testFileListChild() : void
     {
         $store = static::store();
 

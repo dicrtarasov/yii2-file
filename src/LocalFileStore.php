@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 14.09.20 04:49:18
+ * @version 28.09.20 02:46:04
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -434,6 +434,7 @@ class LocalFileStore extends AbstractFileStore
 
     /**
      * @inheritDoc
+     * @noinspection PhpMissingReturnTypeInspection
      */
     public function readStream($path, ?string $mode = null)
     {

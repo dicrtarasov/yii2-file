@@ -1,9 +1,9 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 11.07.20 09:38:42
+ * @license MIT
+ * @version 28.09.20 02:44:16
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ class Store200 extends BaseObject
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    public static function process(AbstractFileStore $store)
+    public static function process(AbstractFileStore $store) : void
     {
         // получаем список моделей
         foreach ($store->list('', ['dir' => true]) as $modelDir) {
@@ -49,7 +49,7 @@ class Store200 extends BaseObject
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    protected static function processModel(StoreFile $modelDir)
+    protected static function processModel(StoreFile $modelDir) : void
     {
         // получаем список директорий модели
         $dirs = $modelDir->getList(['dir' => true]);
@@ -89,7 +89,7 @@ class Store200 extends BaseObject
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    protected static function processAttribute(StoreFile $attrDir)
+    protected static function processAttribute(StoreFile $attrDir) : void
     {
         $parent = $attrDir->parent;
         if ($parent === null) {

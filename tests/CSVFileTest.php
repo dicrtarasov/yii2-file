@@ -2,8 +2,8 @@
 /*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 12.08.20 15:51:41
+ * @license MIT
+ * @version 28.09.20 02:41:49
  */
 
 /**
@@ -34,7 +34,7 @@ class CSVFileTest extends TestCase
      *
      * @throws Exception
      */
-    public function testReadWrite()
+    public function testReadWrite() : void
     {
         $csvFile = new CSVFile([
             'charset' => 'cp1251',
