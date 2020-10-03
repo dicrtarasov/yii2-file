@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 28.09.20 02:39:26
+ * @version 03.10.20 04:41:20
  */
 
 /**
@@ -20,9 +20,15 @@ use yii\base\NotSupportedException;
 use yii\di\Instance;
 use yii\helpers\ArrayHelper;
 
+use function array_map;
 use function error_clear_last;
 use function error_get_last;
+use function fgetcsv;
 use function fopen;
+use function fputcsv;
+use function preg_match;
+use function rewind;
+use function strpos;
 
 /**
  * CSV File.
@@ -111,7 +117,7 @@ class CSVFile extends StoreFile implements Iterator
      *
      * @return ?int
      */
-    public function getLineNo(): ?int
+    public function getLineNo() : ?int
     {
         return $this->_lineNo;
     }
@@ -133,7 +139,7 @@ class CSVFile extends StoreFile implements Iterator
      * @noinspection PhpUsageOfSilenceOperatorInspection
      * @throws StoreException
      */
-    public function reset(): self
+    public function reset() : self
     {
         if (! empty($this->_handle) && @rewind($this->_handle) === false) {
             $err = @error_get_last();
@@ -153,7 +159,7 @@ class CSVFile extends StoreFile implements Iterator
      * @return string[]
      * @noinspection PhpUsageOfSilenceOperatorInspection
      */
-    protected function decodeLine(array $line): array
+    protected function decodeLine(array $line) : array
     {
         if ($this->charset !== self::CHARSET_DEFAULT) {
             $line = array_map(function ($val) {
@@ -171,7 +177,7 @@ class CSVFile extends StoreFile implements Iterator
      * @return string[]
      * @noinspection PhpUsageOfSilenceOperatorInspection
      */
-    protected function encodeLine(array $line): array
+    protected function encodeLine(array $line) : array
     {
         if ($this->charset !== self::CHARSET_DEFAULT) {
             $charset = $this->charset;
@@ -195,7 +201,7 @@ class CSVFile extends StoreFile implements Iterator
      * @noinspection PhpUsageOfSilenceOperatorInspection
      * @throws StoreException
      */
-    public function readLine(): ?array
+    public function readLine() : ?array
     {
         // открываем файл
         if (empty($this->_handle)) {
@@ -248,7 +254,7 @@ class CSVFile extends StoreFile implements Iterator
      * @noinspection PhpUsageOfSilenceOperatorInspection
      * @throws StoreException
      */
-    public function writeLine(array $line): int
+    public function writeLine(array $line) : int
     {
         // запоминаем текущую строку
         $this->_current = $line;
@@ -266,11 +272,11 @@ class CSVFile extends StoreFile implements Iterator
             }
 
             /** @noinspection FopenBinaryUnsafeUsageInspection */
-            $this->_handle = @fopen($this->_path, 'wt+');
+            $this->_handle = @fopen($this->absolutePath, 'wt+');
             if ($this->_handle === false) {
                 $err = error_get_last();
                 @error_clear_last();
-                throw new StoreException('Ошибка создания файла: ' . $this->_path . ': ' . ($err['message'] ?? ''));
+                throw new StoreException('Ошибка создания файла: ' . $this->path . ': ' . ($err['message'] ?? ''));
             }
         }
 
@@ -347,7 +353,7 @@ class CSVFile extends StoreFile implements Iterator
      *
      * @return bool
      */
-    public function valid(): bool
+    public function valid() : bool
     {
         return $this->_current !== null;
     }
