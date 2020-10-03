@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 22.09.20 11:54:14
+ * @version 03.10.20 03:23:51
  */
 
 declare(strict_types = 1);
@@ -74,7 +74,7 @@ class ThumbFile extends StoreFile
     public $disclaimer = '';
 
     /** @var float качество сжатия картинки */
-    public $quality = 0.9;
+    public $quality = 0.95;
 
     /** @var string формат файла */
     public $format = 'jpg';
@@ -124,7 +124,9 @@ class ThumbFile extends StoreFile
         }
 
         // fill конвертируем true в '#fff'
-        $this->fill = $this->fill ? ($this->fill === true ? '#fff' : (string)$this->fill) : null;
+        if ($this->fill === true) {
+            $this->fill = '#fff';
+        }
 
         // noimage
         if (! empty($this->noimage)) {
@@ -291,6 +293,7 @@ class ThumbFile extends StoreFile
             // пытаемся прочитать исходную картинку
             try {
                 $this->_image->readImageBlob($this->source->contents);
+                $this->_image = $this->_image->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
             } catch (ImagickException $ex) {
                 // если уже noimage или не задан noimage, то выбрасываем исключение
                 if ($this->isNoimage || empty($this->noimage)) {
@@ -336,22 +339,16 @@ class ThumbFile extends StoreFile
         // если заданы размеры, то делаем масштабирование
         if (! empty($this->width) || ! empty($this->height)) {
             $image = $this->image();
+            $image->setOption('filter:support', '2.0');
+            $image->setColorspace(Imagick::COLORSPACE_SRGB);
+            $image->setImageBackgroundColor(new ImagickPixel($this->fill ?: '#fff'));
+            $image->setImageInterlaceScheme(Imagick::INTERLACE_JPEG);
 
             // масштабировать вписывая в заданную область
             $bestFit = $this->width > 0 && $this->height > 0;
 
-            // качественное изменение размера с медленным фильтром и sharpness
-            if (! $image->resizeImage(
-                $this->width, $this->height, Imagick::FILTER_TRIANGLE, 0.5, $bestFit
-            )) {
-                Yii::error('Ошибка масштабирования картинки', __METHOD__);
-            }
-
             // дополняем цветом заполнения до нужных размеров
             $fill = $bestFit && ! empty($this->fill);
-            if ($fill && ! $image->setImageBackgroundColor(new ImagickPixel($this->fill))) {
-                Yii::error('Ошибка установки фона картинки: ' . $this->fill, __METHOD__);
-            }
 
             // очищает профили и заполняет пустое пространство
             if (! $image->thumbnailImage($this->width, $this->height, $bestFit, $fill)) {
@@ -484,6 +481,8 @@ class ThumbFile extends StoreFile
         if ($image->setImageFormat($this->format) === false) {
             throw new RuntimeException('Ошибка установки формата картинки: ' . $this->format);
         }
+
+        $image->setImageCompression(Imagick::COMPRESSION_JPEG);
 
         // сжатие
         if ($image->setImageCompressionQuality((int)round($this->quality * 100)) === false) {
