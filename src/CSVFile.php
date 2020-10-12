@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 03.10.20 04:41:20
+ * @version 12.10.20 19:58:57
  */
 
 /**
@@ -267,12 +267,10 @@ class CSVFile extends StoreFile implements Iterator
             }
 
             // если не задан путь, то открываем временный файл
-            if (empty($this->_path)) {
-                $this->_path = 'php://temp';
-            }
+            $absolutePath = empty($this->_path) ? 'php://temp' : $this->absolutePath;
 
             /** @noinspection FopenBinaryUnsafeUsageInspection */
-            $this->_handle = @fopen($this->absolutePath, 'wt+');
+            $this->_handle = @fopen($absolutePath, 'wt+');
             if ($this->_handle === false) {
                 $err = error_get_last();
                 @error_clear_last();
