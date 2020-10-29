@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 28.09.20 02:44:53
+ * @version 30.10.20 02:02:23
  */
 
 declare(strict_types = 1);
@@ -40,16 +40,16 @@ abstract class AbstractFileStore extends Component
     /** @var string path separator */
     public $pathSeparator = DIRECTORY_SEPARATOR;
 
-    /** @var string|array $url */
+    /** @var string|array|null $url базовый URL хранилища */
     public $url;
 
     /** @var bool публичный доступ к файлам */
     public $public = true;
 
-    /** @var array|null конфиг для создания файлов */
+    /** @var ?array конфиг для создания файлов */
     public $fileConfig;
 
-    /** @var array|null конфиг файлов превью картинок ThumbFile */
+    /** @var ?array конфиг файлов превью картинок ThumbFile */
     public $thumbFileConfig;
 
     /**
@@ -72,7 +72,7 @@ abstract class AbstractFileStore extends Component
     }
 
     /**
-     * Разбивает путь на элементы
+     * Разбивает путь на элементы.
      *
      * @param string|string[] $path
      * @return string[]
@@ -93,7 +93,7 @@ abstract class AbstractFileStore extends Component
     }
 
     /**
-     * Фильтрует путь, заменяя специальные элементы ../
+     * Фильтрует путь, заменяя специальные элементы "../".
      *
      * @param string|string[] $path
      * @return string[]
@@ -160,7 +160,7 @@ abstract class AbstractFileStore extends Component
      */
     public function url($path): string
     {
-        if (empty($this->url)) {
+        if ($this->url === null) {
             throw new InvalidConfigException('Не задан базовый URL хранилища');
         }
 
