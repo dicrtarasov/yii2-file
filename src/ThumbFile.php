@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 03.10.20 03:23:51
+ * @version 19.11.20 20:09:13
  */
 
 declare(strict_types = 1);
@@ -319,6 +319,8 @@ class ThumbFile extends StoreFile
     /**
      * Предварительная обработка картинки после загрузки.
      * (для дочерних классов)
+     *
+     * @return $this
      */
     protected function preprocessImage() : self
     {
@@ -362,6 +364,7 @@ class ThumbFile extends StoreFile
     /**
      * Накладывает водяной знак.
      *
+     * @return $this
      * @throws StoreException
      */
     protected function watermarkImage() : self

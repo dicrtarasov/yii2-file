@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 14.09.20 07:01:54
+ * @version 19.11.20 20:09:25
  */
 
 declare(strict_types = 1);
@@ -576,6 +576,7 @@ class StoreFile extends BaseObject
     /**
      * Очищает все превью файла.
      *
+     * @return $this
      * @throws StoreException
      */
     public function clearThumb() : self
