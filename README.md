@@ -94,6 +94,7 @@ echo Html::img($file->thumb(['width' => 320, 'height' => 240])->url);
 ## Файловые аттрибуты модели
 
 Пример модели товара:
+
 ```php
 /**
  * @property-read ?StoreFile $image одна картинка
