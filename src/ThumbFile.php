@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 12.12.20 01:46:10
+ * @version 12.12.20 02:17:24
  */
 
 declare(strict_types = 1);
@@ -504,6 +504,19 @@ class ThumbFile extends StoreFile
     }
 
     /**
+     * Регулярное выражения для названий превью файла.
+     *
+     * @param string $name название файла
+     * @return string регулярное выражение для поиска превью
+     */
+    private static function createNameRegex(string $name) : string
+    {
+        return '~^' .
+            preg_quote(self::removeExtension($name), '~') .
+            '\~\d+x\d+(\~w[0-9a-f]{4})?(\~d[0-9a-f]{4})?(\~f)?\.[^\.]+$~ui';
+    }
+
+    /**
      * Удаляет превью заданного файла.
      *
      * @return $this
@@ -517,22 +530,19 @@ class ThumbFile extends StoreFile
         }
 
         // путь файла в кэше
-        $path = $this->isNoimage ? 'noimage/' . $this->noimage : $this->source->path;
+        $file = $this->store->file($this->isNoimage ? 'noimage/' . $this->noimage : $this->source->path);
 
         // директория файла в кеше
-        $dir = $this->store->file($path)->parent;
+        $dir = $file->parent;
         if ($dir !== null && $dir->exists) {
             // находим файлы по маске
             $files = $dir->getList([
-                'nameRegex' => '~^' .
-                    // удаляем расширение
-                    preg_quote(self::removeExtension($path), '~') .
-                    '\~\d+x\d+(\~w[0-9a-f]{4})?(\~d[0-9a-f]{4})?(\~f)?\.[^\.]+$~ui',
+                'nameRegex' => self::createNameRegex($file->name),
                 'dir' => false
             ]);
 
-            foreach ($files as $file) {
-                $file->delete();
+            foreach ($files as $thumbFile) {
+                $thumbFile->delete();
             }
         }
 
