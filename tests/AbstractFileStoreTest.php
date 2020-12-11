@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 28.09.20 02:41:31
+ * @version 12.12.20 01:48:00
  */
 
 declare(strict_types = 1);
@@ -46,7 +46,6 @@ abstract class AbstractFileStoreTest extends TestCase
      */
     protected static function store() : AbstractFileStore
     {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
         return Yii::$app->get(self::STORE_ID);
     }
 

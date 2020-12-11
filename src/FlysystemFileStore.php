@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 14.09.20 04:49:00
+ * @version 12.12.20 01:48:46
  */
 
 declare(strict_types = 1);
@@ -82,7 +82,7 @@ class FlysystemFileStore extends AbstractFileStore
      * @inheritdoc
      * @throws InvalidConfigException
      */
-    public function list($path, array $options = []) : array
+    public function list($path, array $filter = []) : array
     {
         $path = $this->normalizePath($path);
 
@@ -91,7 +91,7 @@ class FlysystemFileStore extends AbstractFileStore
         }
 
         try {
-            $items = $this->flysystem->listContents($path, $options['recursive'] ?? false);
+            $items = $this->flysystem->listContents($path, $filter['recursive'] ?? false);
         } catch (Throwable $ex) {
             throw new StoreException($path, $ex);
         }
@@ -103,7 +103,7 @@ class FlysystemFileStore extends AbstractFileStore
             $file = $this->file($item['path']);
 
             // фильтруем
-            if ($this->fileMatchFilter($file, $options)) {
+            if ($this->fileMatchFilter($file, $filter)) {
                 $files[] = $file;
             }
         }
@@ -153,9 +153,11 @@ class FlysystemFileStore extends AbstractFileStore
         }
 
         if (is_array($ret)) {
+            /** @var array $ret */
             $ret = $ret['type'] ?? false;
         }
 
+        /** @var string|false $ret */
         if (empty($ret)) {
             throw new StoreException('Ошибка получения типа файла: ' . $path);
         }

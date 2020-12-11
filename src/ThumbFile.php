@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 19.11.20 20:09:13
+ * @version 12.12.20 01:46:10
  */
 
 declare(strict_types = 1);
@@ -238,10 +238,12 @@ class ThumbFile extends StoreFile
      */
     public function update() : self
     {
+        /** @noinspection PhpExpressionResultUnusedInspection */
         $this->preprocessImage();
         $this->resizeImage();
         $this->watermarkImage();
         $this->placeDisclaimer();
+        /** @noinspection PhpExpressionResultUnusedInspection */
         $this->postprocessImage();
         $this->writeImage();
 
@@ -502,7 +504,7 @@ class ThumbFile extends StoreFile
     }
 
     /**
-     * Удаляет директорию заданного файла.
+     * Удаляет превью заданного файла.
      *
      * @return $this
      * @throws StoreException
@@ -517,14 +519,16 @@ class ThumbFile extends StoreFile
         // путь файла в кэше
         $path = $this->isNoimage ? 'noimage/' . $this->noimage : $this->source->path;
 
+        // директория файла в кеше
         $dir = $this->store->file($path)->parent;
         if ($dir !== null && $dir->exists) {
-            // удаляем расширение
+            // находим файлы по маске
             $files = $dir->getList([
                 'nameRegex' => '~^' .
+                    // удаляем расширение
                     preg_quote(self::removeExtension($path), '~') .
                     '\~\d+x\d+(\~w[0-9a-f]{4})?(\~d[0-9a-f]{4})?(\~f)?\.[^\.]+$~ui',
-                'dir' => false,
+                'dir' => false
             ]);
 
             foreach ($files as $file) {
