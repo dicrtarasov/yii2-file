@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 19.11.20 20:09:25
+ * @version 17.12.20 15:18:37
  */
 
 declare(strict_types = 1);
@@ -327,7 +327,7 @@ class StoreFile extends BaseObject
     {
         $regex = '~^' . str_replace(['/', '*'], ['\\/', '.+'], $type) . '$~uism';
 
-        return (bool)preg_match($this->mimeType, $regex);
+        return (bool)preg_match($regex, $this->mimeType);
     }
 
     /**

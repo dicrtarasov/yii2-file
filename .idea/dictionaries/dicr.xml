@@ -14,6 +14,7 @@
       <w>fopen</w>
       <w>inputmask</w>
       <w>mbstring</w>
+      <w>newimage</w>
       <w>newpath</w>
       <w>noimage</w>
       <w>pathconfig</w>
@@ -26,6 +27,7 @@
       <w>roave</w>
       <w>tarasov</w>
       <w>testapp</w>
+      <w>translit</w>
       <w>uism</w>
       <w>vals</w>
       <w>webroot</w>
@@ -39,7 +41,6 @@
       <w>дисклеймера</w>
       <w>дисклеймером</w>
       <w>конфиге</w>
-      <w>масштабируется</w>
       <w>нахрен</w>
       <w>парсит</w>
       <w>переиндексация</w>

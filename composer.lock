@@ -147,25 +147,25 @@
         },
         {
             "name": "dicr/yii2-asset",
-            "version": "1.7.12",
+            "version": "1.7.14",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.com/dicr/yii2-asset.git",
-                "reference": "068644af4966bf05628b407ef7d6ec99de7d0601"
+                "reference": "00c4ab98869ceaca454b2c62893248f50c8bcbb9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://gitlab.com/api/v4/projects/dicr%2Fyii2-asset/repository/archive.zip?sha=068644af4966bf05628b407ef7d6ec99de7d0601",
-                "reference": "068644af4966bf05628b407ef7d6ec99de7d0601",
+                "url": "https://gitlab.com/api/v4/projects/dicr%2Fyii2-asset/repository/archive.zip?sha=00c4ab98869ceaca454b2c62893248f50c8bcbb9",
+                "reference": "00c4ab98869ceaca454b2c62893248f50c8bcbb9",
                 "shasum": ""
             },
             "require": {
-                "php": "~7.2",
-                "scssphp/scssphp": "~1.2",
+                "php": "~7.3",
+                "scssphp/scssphp": "~v1.4",
                 "yiisoft/yii2": "~2.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "~9.4"
+                "phpunit/phpunit": "~9.5"
             },
             "type": "yii2-extension",
             "autoload": {
@@ -197,10 +197,9 @@
                 "yii2"
             ],
             "support": {
-                "source": "https://gitlab.com/dicr/yii2-asset.git",
-                "issues": "https://gitlab.com/api/v4/projects/10744876/issues"
+                "source": "https://gitlab.com/dicr/yii2-asset.git"
             },
-            "time": "2020-10-14T08:14:19+00:00"
+            "time": "2020-12-17T13:13:40+05:00"
         },
         {
             "name": "ezyang/htmlpurifier",
@@ -994,16 +993,16 @@
         },
         {
             "name": "phar-io/version",
-            "version": "3.0.3",
+            "version": "3.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phar-io/version.git",
-                "reference": "726c026815142e4f8677b7cb7f2249c9ffb7ecae"
+                "reference": "e4782611070e50613683d2b9a57730e9a3ba5451"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phar-io/version/zipball/726c026815142e4f8677b7cb7f2249c9ffb7ecae",
-                "reference": "726c026815142e4f8677b7cb7f2249c9ffb7ecae",
+                "url": "https://api.github.com/repos/phar-io/version/zipball/e4782611070e50613683d2b9a57730e9a3ba5451",
+                "reference": "e4782611070e50613683d2b9a57730e9a3ba5451",
                 "shasum": ""
             },
             "require": {
@@ -1039,9 +1038,9 @@
             "description": "Library for handling version information and constraints",
             "support": {
                 "issues": "https://github.com/phar-io/version/issues",
-                "source": "https://github.com/phar-io/version/tree/3.0.3"
+                "source": "https://github.com/phar-io/version/tree/3.0.4"
             },
-            "time": "2020-11-30T09:21:21+00:00"
+            "time": "2020-12-13T23:18:30+00:00"
         },
         {
             "name": "phpdocumentor/reflection-common",
