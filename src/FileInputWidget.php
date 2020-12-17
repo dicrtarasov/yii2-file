@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 22.09.20 11:36:25
+ * @version 17.12.20 15:56:05
  */
 
 declare(strict_types = 1);
@@ -254,7 +254,7 @@ class FileInputWidget extends InputWidget
     protected function renderImage(StoreFile $file) : string
     {
         $img = $this->layout === self::LAYOUT_IMAGES ?
-            Html::img(preg_match('~^image/.+~uism', $file->mimeType) ? $file->url : null, [
+            Html::img(preg_match('~^image/.+~uism', $file->mimeType) ? (string)$file->url : '', [
                 'alt' => '',
                 'class' => 'image'
             ]) : Html::tag('i', '', [

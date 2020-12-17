@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 12.12.20 02:17:24
+ * @version 17.12.20 15:51:36
  */
 
 declare(strict_types = 1);
@@ -272,7 +272,7 @@ class ThumbFile extends StoreFile
      * @inheritDoc
      * @throws StoreException
      */
-    public function getUrl() : string
+    public function getUrl() : ?string
     {
         // обновляем файл превью
         $this->generate();

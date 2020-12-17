@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 30.10.20 02:02:23
+ * @version 17.12.20 15:56:42
  */
 
 declare(strict_types = 1);
@@ -156,12 +156,11 @@ abstract class AbstractFileStore extends Component
      *
      * @param string|string[] $path
      * @return string URL файла
-     * @throws InvalidConfigException если не задан базовый url
      */
-    public function url($path): string
+    public function url($path) : ?string
     {
         if ($this->url === null) {
-            throw new InvalidConfigException('Не задан базовый URL хранилища');
+            return null;
         }
 
         if (is_array($this->url)) {

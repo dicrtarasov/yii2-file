@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 17.12.20 15:18:37
+ * @version 17.12.20 15:51:05
  */
 
 declare(strict_types = 1);
@@ -27,7 +27,7 @@ use function str_replace;
  *
  * @property string $path относительный путь файла
  * @property-read string $absolutePath абсолютный путь
- * @property-read string $url абсолютный URL
+ * @property-read ?string $url абсолютный URL
  * @property string $name имя файла без пути (basename)
  * @property-read string|null $extension расширение файла
  * @property-read StoreFile|null $parent родительский каталог (dirname)
@@ -57,7 +57,7 @@ class StoreFile extends BaseObject
     /** @var string кэш абсолютного пути */
     private $_absolutePath;
 
-    /** @var string кэш абсолютного URL */
+    /** @var ?string кэш абсолютного URL */
     private $_absoluteUrl;
 
     /**
@@ -402,16 +402,15 @@ class StoreFile extends BaseObject
     /**
      * Возвращает url.
      *
-     * @return string
-     * @throws InvalidConfigException не задан url хранилища
+     * @return ?string
      */
-    public function getUrl() : string
+    public function getUrl() : ?string
     {
-        if (! isset($this->_absoluteUrl)) {
-            $this->_absoluteUrl = $this->_store->url($this->_path);
+        if ($this->_absoluteUrl === null) {
+            $this->_absoluteUrl = $this->_store->url($this->_path) ?: false;
         }
 
-        return $this->_absoluteUrl;
+        return $this->_absoluteUrl ?: null;
     }
 
     /**
