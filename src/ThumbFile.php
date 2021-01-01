@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 17.12.20 15:51:36
+ * @version 01.01.21 08:38:17
  */
 
 declare(strict_types = 1);
@@ -374,6 +374,8 @@ class ThumbFile extends StoreFile
         if ($this->isNoimage || empty($this->watermark)) {
             return $this;
         }
+
+        $watermark = null;
 
         /** @noinspection BadExceptionsProcessingInspection */
         try {
