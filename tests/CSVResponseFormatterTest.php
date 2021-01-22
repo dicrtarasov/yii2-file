@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 28.09.20 02:41:58
+ * @version 22.01.21 16:12:37
  */
 
 /**
@@ -34,12 +34,12 @@ class CSVResponseFormatterTest extends TestCase
      */
     public static function setUpBeforeClass(): void
     {
-        self::$testData = array_map(static function (array $config) : DynamicModel {
-            return new DynamicModel($config);
-        }, [
-            ['name' => 'Иванов Иван Иванович', 'phone' => '+79996341261', 'Проверка'],
-            ['name' => "Имя\n", 'phone' => "\"\\;,-<>'", 'comment' => "\r\n\n "]
-        ]);
+        self::$testData = array_map(
+            static fn(array $config): DynamicModel => new DynamicModel($config), [
+                ['name' => 'Иванов Иван Иванович', 'phone' => '+79996341261', 'Проверка'],
+                ['name' => "Имя\n", 'phone' => "\"\\;,-<>'", 'comment' => "\r\n\n "]
+            ]
+        );
     }
 
     /**
@@ -47,7 +47,7 @@ class CSVResponseFormatterTest extends TestCase
      *
      * @throws Exception
      */
-    public function testResponse() : void
+    public function testResponse(): void
     {
         $csvFormat = new CSVResponseFormatter([
             'contentType' => CSVResponseFormatter::CONTENT_TYPE_EXCEL,

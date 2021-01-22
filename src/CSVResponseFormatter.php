@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 28.09.20 02:45:15
+ * @version 22.01.21 16:11:58
  */
 
 /**
@@ -212,9 +212,10 @@ class CSVResponseFormatter extends Component implements ResponseFormatterInterfa
                         );
                     }
 
-                    $line = array_map(static function (string $field) use ($row) : string {
-                        return $row[$field] ?? '';
-                    }, array_keys($this->fields));
+                    $line = array_map(
+                        static fn(string $field): string => $row[$field] ?? '',
+                        array_keys($this->fields)
+                    );
                 } else { // обходим все поля
                     // проверяем что данные доступны для обхода
                     if (! is_array($row) && ! ($row instanceof Traversable)) {
@@ -242,7 +243,7 @@ class CSVResponseFormatter extends Component implements ResponseFormatterInterfa
      * @throws InvalidConfigException
      * @noinspection ClassMethodNameMatchesFieldNameInspection
      */
-    public function format($response = null) : Response
+    public function format($response = null): Response
     {
         if ($response === null) {
             /** @var Response $response */

@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 28.09.20 02:43:05
+ * @version 22.01.21 16:13:10
  */
 
 declare(strict_types = 1);
@@ -172,7 +172,7 @@ class FileAttributeBehavior extends Behavior
      * {@inheritdoc}
      * @throws InvalidConfigException
      */
-    public function init() : void
+    public function init(): void
     {
         // owner не инициализирован пока не вызван attach
 
@@ -200,7 +200,7 @@ class FileAttributeBehavior extends Behavior
     /**
      * {@inheritdoc}
      */
-    public function events() : array
+    public function events(): array
     {
         return [
             Model::EVENT_BEFORE_VALIDATE => 'validateFileAttributes',
@@ -214,7 +214,7 @@ class FileAttributeBehavior extends Behavior
      * @inheritDoc
      * @throws InvalidConfigException
      */
-    public function attach($owner) : void
+    public function attach($owner): void
     {
         if (! $owner instanceof Model) {
             throw new InvalidConfigException('Некорректный тип владельца: ' . gettype($owner));
@@ -226,7 +226,7 @@ class FileAttributeBehavior extends Behavior
     /**
      * {@inheritdoc}
      */
-    public function __isset($name) : bool
+    public function __isset($name): bool
     {
         return $this->hasFileAttribute($name) ?
             isset($this->attributes[$name]) : parent::__isset($name);
@@ -258,7 +258,7 @@ class FileAttributeBehavior extends Behavior
     /**
      * {@inheritdoc}
      */
-    public function hasProperty($name, $checkVars = true) : bool
+    public function hasProperty($name, $checkVars = true): bool
     {
         return $this->hasFileAttribute($name) || parent::hasProperty($name, $checkVars);
     }
@@ -266,7 +266,7 @@ class FileAttributeBehavior extends Behavior
     /**
      * {@inheritdoc}
      */
-    public function canGetProperty($name, $checkVars = true) : bool
+    public function canGetProperty($name, $checkVars = true): bool
     {
         return $this->hasFileAttribute($name) || parent::canGetProperty($name, $checkVars);
     }
@@ -274,7 +274,7 @@ class FileAttributeBehavior extends Behavior
     /**
      * {@inheritdoc}
      */
-    public function canSetProperty($name, $checkVars = true) : bool
+    public function canSetProperty($name, $checkVars = true): bool
     {
         return $this->hasFileAttribute($name) || parent::canSetProperty($name, $checkVars);
     }
@@ -453,9 +453,10 @@ class FileAttributeBehavior extends Behavior
         ]);
 
         // сортируем по полному пути (path/model/id/{attribute}-{pos}-{filename}.ext)
-        usort($files, static function (StoreFile $a, StoreFile $b) : int {
-            return strnatcasecmp($a->path, $b->path);
-        });
+        usort(
+            $files,
+            static fn(StoreFile $a, StoreFile $b): int => strnatcasecmp($a->path, $b->path)
+        );
 
         return $files;
     }

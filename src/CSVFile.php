@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 12.10.20 19:58:57
+ * @version 22.01.21 16:11:33
  */
 
 /**
@@ -102,7 +102,7 @@ class CSVFile extends StoreFile implements Iterator
     /**
      * @inheritdoc
      */
-    public function init() : void
+    public function init(): void
     {
         parent::init();
 
@@ -117,7 +117,7 @@ class CSVFile extends StoreFile implements Iterator
      *
      * @return ?int
      */
-    public function getLineNo() : ?int
+    public function getLineNo(): ?int
     {
         return $this->_lineNo;
     }
@@ -139,7 +139,7 @@ class CSVFile extends StoreFile implements Iterator
      * @noinspection PhpUsageOfSilenceOperatorInspection
      * @throws StoreException
      */
-    public function reset() : self
+    public function reset(): self
     {
         if (! empty($this->_handle) && @rewind($this->_handle) === false) {
             $err = @error_get_last();
@@ -159,12 +159,12 @@ class CSVFile extends StoreFile implements Iterator
      * @return string[]
      * @noinspection PhpUsageOfSilenceOperatorInspection
      */
-    protected function decodeLine(array $line) : array
+    protected function decodeLine(array $line): array
     {
         if ($this->charset !== self::CHARSET_DEFAULT) {
-            $line = array_map(function ($val) {
-                return @iconv($this->charset, 'utf-8//TRANSLIT', (string)$val);
-            }, $line);
+            $line = array_map(fn($val) => @iconv(
+                $this->charset, 'utf-8//TRANSLIT', (string)$val), $line
+            );
         }
 
         return $line;
@@ -177,7 +177,7 @@ class CSVFile extends StoreFile implements Iterator
      * @return string[]
      * @noinspection PhpUsageOfSilenceOperatorInspection
      */
-    protected function encodeLine(array $line) : array
+    protected function encodeLine(array $line): array
     {
         if ($this->charset !== self::CHARSET_DEFAULT) {
             $charset = $this->charset;
@@ -185,9 +185,9 @@ class CSVFile extends StoreFile implements Iterator
                 $charset .= '//TRANSLIT';
             }
 
-            $line = array_map(static function ($val) use ($charset) {
-                return @iconv('utf-8', $charset, (string)$val);
-            }, $line);
+            $line = array_map(static fn($val) => @iconv(
+                'utf-8', $charset, (string)$val), $line
+            );
         }
 
         return $line;
@@ -201,7 +201,7 @@ class CSVFile extends StoreFile implements Iterator
      * @noinspection PhpUsageOfSilenceOperatorInspection
      * @throws StoreException
      */
-    public function readLine() : ?array
+    public function readLine(): ?array
     {
         // открываем файл
         if (empty($this->_handle)) {
@@ -254,7 +254,7 @@ class CSVFile extends StoreFile implements Iterator
      * @noinspection PhpUsageOfSilenceOperatorInspection
      * @throws StoreException
      */
-    public function writeLine(array $line) : int
+    public function writeLine(array $line): int
     {
         // запоминаем текущую строку
         $this->_current = $line;
@@ -310,7 +310,7 @@ class CSVFile extends StoreFile implements Iterator
      *
      * @throws StoreException
      */
-    public function rewind() : void
+    public function rewind(): void
     {
         $this->reset();
         $this->readLine();
@@ -321,7 +321,7 @@ class CSVFile extends StoreFile implements Iterator
      *
      * @return ?int номер строки, начиная с 1
      */
-    public function key() : ?int
+    public function key(): ?int
     {
         return $this->_lineNo;
     }
@@ -331,7 +331,7 @@ class CSVFile extends StoreFile implements Iterator
      *
      * @return ?string[]
      */
-    public function current() : ?array
+    public function current(): ?array
     {
         return $this->_current;
     }
@@ -341,7 +341,7 @@ class CSVFile extends StoreFile implements Iterator
      *
      * @throws StoreException
      */
-    public function next() : void
+    public function next(): void
     {
         $this->readLine();
     }
@@ -351,7 +351,7 @@ class CSVFile extends StoreFile implements Iterator
      *
      * @return bool
      */
-    public function valid() : bool
+    public function valid(): bool
     {
         return $this->_current !== null;
     }

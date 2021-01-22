@@ -18,8 +18,7 @@
     },
     "autoload": {
         "psr-4": {
-            "dicr\\file\\": "src/",
-            "dicr\\file\\migrate\\": "migrate/"
+            "dicr\\file\\": "src/"
         }
     },
     "autoload-dev": {
@@ -31,7 +30,7 @@
         "bootstrap": "dicr\\file\\Bootstrap"
     },
     "require": {
-        "php": "~7.3",
+        "php": "~7.4 || ~8.0.1",
         "ext-fileinfo": "*",
         "ext-ftp": "*",
         "ext-iconv": "*",
@@ -43,7 +42,6 @@
         "dicr/yii2-asset": "~1.7"
     },
     "require-dev": {
-        "ext-ssh2": "*",
         "phpunit/phpunit": "~9.5",
         "roave/security-advisories": "dev-master",
         "league/flysystem": "~1.1"

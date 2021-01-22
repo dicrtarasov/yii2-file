@@ -1,8 +1,8 @@
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 26.07.20 06:08:19
+ * @license MIT
+ * @version 22.01.21 16:10:42
  */
 
 (function (window, $) {
@@ -57,12 +57,14 @@
                 $files.each(function (pos, $item) {
                     // устанавливаем имя ввода файла с индексом
                     // noinspection JSUnresolvedVariable
-                    $('input', $item).attr('name', options.inputName + '[' + pos + ']');
+                    $('input', $item).attr('name', `${options.inputName}[${pos}]`);
                 });
 
                 // отображаем/скрываем кнопку при достижении лимита
                 // noinspection JSUnresolvedVariable
-                $btnAdd.css('display', !options.limit || options.limit < 1 || $files.length < options.limit ? 'flex' : 'none');
+                $btnAdd.css({
+                    display: !options.limit || options.limit < 1 || $files.length < options.limit ? 'flex' : 'none'
+                });
             }
 
             // добавление файла
