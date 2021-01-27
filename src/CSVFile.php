@@ -3,12 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 22.01.21 16:11:33
- */
-
-/**
- * @author Igor A Tarasov <develop@dicr.org>
- * @version 08.07.20 07:43:33
+ * @version 27.01.21 19:10:35
  */
 
 declare(strict_types = 1);
@@ -38,7 +33,7 @@ use function strpos;
  * @property-read ?int $lineNo номер текущей строки
  * @property-read ?resource $handle указатель файла
  */
-class CSVFile extends StoreFile implements Iterator
+class CSVFile extends File implements Iterator
 {
     /** @var string кодировка Excel */
     public const CHARSET_EXCEL = 'cp1251';
@@ -91,7 +86,7 @@ class CSVFile extends StoreFile implements Iterator
         if (empty($store)) {
             $store = LocalFileStore::root();
         } else {
-            $store = Instance::ensure($store, AbstractFileStore::class);
+            $store = Instance::ensure($store, FileStore::class);
         }
 
         $path = ArrayHelper::remove($config, 'path', '');

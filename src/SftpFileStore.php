@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 17.08.20 22:22:52
+ * @license MIT
+ * @version 27.01.21 19:27:00
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -169,7 +169,7 @@ class SftpFileStore extends LocalFileStore
     /**
      * @inheritDoc
      */
-    public function setPublic($path, bool $public) : AbstractFileStore
+    public function setPublic($path, bool $public): FileStore
     {
         $path = $this->filterRootPath($path);
         $absPath = $this->absolutePath($path);
@@ -192,7 +192,7 @@ class SftpFileStore extends LocalFileStore
     /**
      * @inheritDoc
      */
-    public function rename($path, $newpath) : AbstractFileStore
+    public function rename($path, $newpath): FileStore
     {
         $path = $this->filterRootPath($path);
         $newpath = $this->filterRootPath($newpath);
@@ -217,7 +217,7 @@ class SftpFileStore extends LocalFileStore
     /**
      * @inheritDoc
      */
-    public function mkdir($path) : AbstractFileStore
+    public function mkdir($path): FileStore
     {
         $path = $this->filterRootPath($path);
 
@@ -237,7 +237,7 @@ class SftpFileStore extends LocalFileStore
     /**
      * @inheritDoc
      */
-    protected function unlink($path) : AbstractFileStore
+    protected function unlink($path): FileStore
     {
         $this->filterRootPath($path);
 
@@ -246,13 +246,14 @@ class SftpFileStore extends LocalFileStore
         }
 
         $this->clearStatCache($path);
+
         return $this;
     }
 
     /**
      * @inheritDoc
      */
-    protected function rmdir($path) : AbstractFileStore
+    protected function rmdir($path): FileStore
     {
         $this->filterRootPath($path);
 
@@ -261,6 +262,7 @@ class SftpFileStore extends LocalFileStore
         }
 
         $this->clearStatCache($path);
+
         return $this;
     }
 

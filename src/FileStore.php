@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 22.01.21 16:13:58
+ * @version 27.01.21 19:26:24
  */
 
 declare(strict_types = 1);
@@ -35,7 +35,7 @@ use const DIRECTORY_SEPARATOR;
 /**
  * Abstract Fle Store.
  */
-abstract class AbstractFileStore extends Component
+abstract class FileStore extends Component
 {
     /** @var string path separator */
     public $pathSeparator = DIRECTORY_SEPARATOR;
@@ -442,13 +442,13 @@ abstract class AbstractFileStore extends Component
      * Создает объект файла с заданным путем.
      *
      * @param string|string[] $path
-     * @return StoreFile
+     * @return File
      * @throws InvalidConfigException
      */
-    public function file($path): StoreFile
+    public function file($path): File
     {
         // конфиг файла
-        $fileConfig = ($this->fileConfig ?: []) + ['class' => StoreFile::class];
+        $fileConfig = ($this->fileConfig ?: []) + ['class' => File::class];
 
         // создаем файл
 
@@ -467,8 +467,8 @@ abstract class AbstractFileStore extends Component
      *  - bool|null $hidden - true - скрытые файлы, false - открытые
      *  - string|null $pathRegex - регулярное выражение пути
      *  - string|null $nameRegex - регулярное выражение имени файла
-     *  - callable|null $filter function(StoreFile $file) : bool фильтр элементов
-     * @return StoreFile[]
+     *  - callable|null $filter function(File $file) : bool фильтр элементов
+     * @return File[]
      * @throws StoreException
      */
     abstract public function list($path, array $filter = []): array;
@@ -513,7 +513,7 @@ abstract class AbstractFileStore extends Component
     /**
      * Создает файл предпросмотра картинки.
      *
-     * @param string|array|StoreFile $file
+     * @param string|array|File $file
      * @param array $config
      * @return ThumbFile превью
      * - если thumbFileConfig не настроен, то false
@@ -527,7 +527,7 @@ abstract class AbstractFileStore extends Component
             throw new InvalidArgumentException('file');
         }
 
-        $config['source'] = ($file instanceof StoreFile) ? $file : $this->file($file);
+        $config['source'] = ($file instanceof File) ? $file : $this->file($file);
 
         // создаем превью
         return $this->createThumb($config);
@@ -549,7 +549,7 @@ abstract class AbstractFileStore extends Component
     /**
      * Очищает превью для заданного файла.
      *
-     * @param string|array|StoreFile $file
+     * @param string|array|File $file
      * @return $this
      * @throws StoreException
      * @throws InvalidConfigException
@@ -558,7 +558,7 @@ abstract class AbstractFileStore extends Component
     {
         // создаем ThumbFile
         $this->createThumb([
-            'source' => $file instanceof StoreFile ? $file : $this->file($file)
+            'source' => $file instanceof File ? $file : $this->file($file)
         ])->clear();
 
         return $this;
@@ -567,7 +567,7 @@ abstract class AbstractFileStore extends Component
     /**
      * Импорт файла в хранилище.
      *
-     * @param string|string[]|StoreFile $src импортируемый файл
+     * @param string|string[]|File $src импортируемый файл
      *  Если путь задан строкой или массивом, то считается абсолютным путем локального файла.
      * @param string|string[] $path относительный путь в хранилище для импорта
      * @param array $options опции
@@ -578,7 +578,7 @@ abstract class AbstractFileStore extends Component
      */
     public function import($src, $path, array $options = []): self
     {
-        $src = ($src instanceof StoreFile) ? $src : $this->file($src);
+        $src = ($src instanceof File) ? $src : $this->file($src);
 
         // пропускаем существующие файлы более новой версии
         try {
@@ -671,17 +671,17 @@ abstract class AbstractFileStore extends Component
     /**
      * Проверяет соответствие файла фильтру.
      *
-     * @param StoreFile $file
+     * @param File $file
      * @param array $filter
      *     - string|null $dir - true - только директории, false - только файлы
      *     - string|null $public - true - публичный доступ, false - приватный доступ
      *     - bool|null $hidden - true - скрытые файлы, false - открытые
      *     - string|null $pathRegex - регулярное выражение пути
      *     - string|null $nameRegex - регулярное выражение имени файла
-     *     - callable|null $filter function(StoreFile $file) : bool фильтр элементов
+     *     - callable|null $filter function(File $file) : bool фильтр элементов
      * @return bool
      */
-    protected function fileMatchFilter(StoreFile $file, array $filter): bool
+    protected function fileMatchFilter(File $file, array $filter): bool
     {
         // ---- вначале быстрые фильтры --------
 
@@ -755,12 +755,12 @@ abstract class AbstractFileStore extends Component
     /**
      * Сортировка файлов по имени.
      *
-     * @param StoreFile[] $files
-     * @return StoreFile[]
+     * @param File[] $files
+     * @return File[]
      */
     protected static function sortByName(array $files): array
     {
-        usort($files, static fn(StoreFile $a, StoreFile $b): int => $a->path <=> $b->path);
+        usort($files, static fn(File $a, File $b): int => $a->path <=> $b->path);
 
         return $files;
     }

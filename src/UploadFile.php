@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 25.09.20 00:53:54
+ * @version 27.01.21 19:27:00
  */
 
 declare(strict_types = 1);
@@ -20,7 +20,7 @@ use function is_string;
 /**
  * Загруженный файл.
  *
- * Так как хранится в LocalFileStore, то наследует StoreFile, добавляя
+ * Так как хранится в LocalFileStore, то наследует File, добавляя
  * отдельное от path имя файла name. Также добавляет возможность
  * установить error, size, и mimeType
  *
@@ -34,7 +34,7 @@ use function is_string;
  * @property int $error ошибка загрузки
  * @property int $size размер файла
  */
-class UploadFile extends StoreFile
+class UploadFile extends File
 {
     /** @var ?string наименование файла */
     private $_name;
@@ -398,7 +398,7 @@ class UploadFile extends StoreFile
      * @param string $name
      * @return $this
      */
-    public function setName(string $name) : StoreFile
+    public function setName(string $name): File
     {
         $name = $this->_store->basename($name);
         if (empty($name)) {

@@ -1,15 +1,15 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 12.12.20 01:48:00
+ * @version 27.01.21 19:27:00
  */
 
 declare(strict_types = 1);
 namespace dicr\tests;
 
-use dicr\file\AbstractFileStore;
+use dicr\file\FileStore;
 use dicr\file\StoreException;
 use PHPUnit\Framework\TestCase;
 use Yii;
@@ -19,7 +19,7 @@ use yii\base\InvalidConfigException;
 /**
  * LocalStore Test
  */
-abstract class AbstractFileStoreTest extends TestCase
+abstract class FileStoreTest extends TestCase
 {
     /** @var string id компонента тестового файлового хранилища */
     public const STORE_ID = 'fileStore';
@@ -29,22 +29,22 @@ abstract class AbstractFileStoreTest extends TestCase
      *
      * @throws InvalidConfigException
      */
-    public function testComponentExists() : void
+    public function testComponentExists(): void
     {
         $store = static::store();
 
         /** @noinspection UnnecessaryAssertionInspection */
-        self::assertInstanceOf(AbstractFileStore::class, $store);
+        self::assertInstanceOf(FileStore::class, $store);
         self::assertNotEmpty($store->file(''));
     }
 
     /**
      * Возвращает тестовое хранилище.
      *
-     * @return AbstractFileStore
+     * @return FileStore
      * @throws InvalidConfigException
      */
-    protected static function store() : AbstractFileStore
+    protected static function store(): FileStore
     {
         return Yii::$app->get(self::STORE_ID);
     }

@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 22.01.21 16:13:10
+ * @version 27.01.21 19:26:24
  */
 
 declare(strict_types = 1);
@@ -43,7 +43,7 @@ use function usort;
  * Добавляет следующие свойства модели:
  * -method bool loadFileAttributes($formName = null)
  * -method saveFileAttributes()
- * -method StoreFile|StoreFile[]|null getFileAttribute(string $attribute, bool $refresh = false)
+ * -method File|File[]|null getFileAttribute(string $attribute, bool $refresh = false)
  *
  * ```php
  * class TestModel extends Model {
@@ -78,13 +78,13 @@ use function usort;
  * Если значение не массив, то оно принимается в качестве limit.
  *
  * Типы значения аттрибутов:
- *    \dicr\file\StoreFile - для аттрибутов с limit = 1;
- *    \dicr\file\StoreFile[] - для аттрибутов с limit != 1;
+ *    \dicr\file\File - для аттрибутов с limit = 1;
+ *    \dicr\file\File[] - для аттрибутов с limit != 1;
  *
  * Данный behavior реализует get/set методы для заданных аттрибутов,
  * поэтому эти методы не должны быть определены в модели.
  *
- * Для установки значений нужно либо присвоить новые значения типа StoreFile:
+ * Для установки значений нужно либо присвоить новые значения типа File:
  *
  * ```php
  * $model->icon = new UploadFile('/tmp/new_file.jpg');
@@ -138,26 +138,26 @@ use function usort;
  *
  * Для вывода картинок можно использовать такой сценарий. Если загрузка файлов не удалась
  * или validate модели содержит ошибки и модель не сохранена, то UploadFiles не импортировались,
- * а значит из нужно пропустить при выводе модели:
+ * а значит их нужно пропустить при выводе модели:
  *
  * ```php
- * echo $model->icon instanceof StoreFile ? Html::img($model->icon->url) : '';
+ * echo $model->icon instanceof File ? Html::img($model->icon->url) : '';
  *
  * foreach ($model->pics as $pic) {
- *     if ($pic instanceof StoreFile) {
+ *     if ($pic instanceof File) {
  *         echo Html::img($pic->url);
  *     }
  * }
  * ```
  *
  * @property-read Model $owner
- * @property ?StoreFile $modelFilePath путь папки модели
- * @property-read ?StoreFile $modelThumbPath папка кэша картинок модели
- * @property StoreFile[]|StoreFile|null $fileAttributeValue
+ * @property ?File $modelFilePath путь папки модели
+ * @property-read ?File $modelThumbPath папка кэша картинок модели
+ * @property File[]|File|null $fileAttributeValue
  */
 class FileAttributeBehavior extends Behavior
 {
-    /** @var AbstractFileStore|string|array хранилище файлов */
+    /** @var FileStore|string|array хранилище файлов */
     public $store = 'fileStore';
 
     /**
@@ -177,7 +177,7 @@ class FileAttributeBehavior extends Behavior
         // owner не инициализирован пока не вызван attach
 
         // получаем store
-        $this->store = Instance::ensure($this->store, AbstractFileStore::class);
+        $this->store = Instance::ensure($this->store, FileStore::class);
 
         // проверяем наличие аттрибутов
         if (empty($this->attributes) || ! is_array($this->attributes)) {
@@ -308,7 +308,7 @@ class FileAttributeBehavior extends Behavior
         return $this;
     }
 
-    /** @var StoreFile путь папки модели */
+    /** @var File путь папки модели */
     private $_modelFilePath;
 
     /**
@@ -317,10 +317,10 @@ class FileAttributeBehavior extends Behavior
      * Путь модели в хранилище строится из:
      * {formName}/{primaryKeys}
      *
-     * @return ?StoreFile (null если модель типа ActiveRecord еще не сохранена и поэтому не имеет значений primaryKey)
+     * @return ?File (null если модель типа ActiveRecord еще не сохранена и поэтому не имеет значений primaryKey)
      * @throws InvalidConfigException
      */
-    public function getModelFilePath(): ?StoreFile
+    public function getModelFilePath(): ?File
     {
         if (! isset($this->_modelFilePath)) {
             // относительный путь
@@ -361,10 +361,10 @@ class FileAttributeBehavior extends Behavior
      * Устанавливает путь папки модели.
      * Если путь не установлен, то он рассчитывается автоматически.
      *
-     * @param ?StoreFile $path
+     * @param ?File $path
      * @return $this
      */
-    public function setModelFilePath(?StoreFile $path): self
+    public function setModelFilePath(?File $path): self
     {
         $this->_modelFilePath = $path;
 
@@ -374,10 +374,10 @@ class FileAttributeBehavior extends Behavior
     /**
      * Папка модели с кэшем картинок.
      *
-     * @return ?StoreFile
+     * @return ?File
      * @throws InvalidConfigException
      */
-    public function getModelThumbPath(): ?StoreFile
+    public function getModelThumbPath(): ?File
     {
         $modelPath = $this->modelFilePath;
 
@@ -433,7 +433,7 @@ class FileAttributeBehavior extends Behavior
      * Получает список файлов аттрибута модели.
      *
      * @param string $attribute аттрибут
-     * @return StoreFile[] файлы
+     * @return File[] файлы
      * @throws StoreException
      * @throws InvalidConfigException
      */
@@ -455,13 +455,13 @@ class FileAttributeBehavior extends Behavior
         // сортируем по полному пути (path/model/id/{attribute}-{pos}-{filename}.ext)
         usort(
             $files,
-            static fn(StoreFile $a, StoreFile $b): int => strnatcasecmp($a->path, $b->path)
+            static fn(File $a, File $b): int => strnatcasecmp($a->path, $b->path)
         );
 
         return $files;
     }
 
-    /** @var StoreFile[][] текущие значения аттрибутов [attributeName => \dicr\file\StoreFile[]] */
+    /** @var File[][] текущие значения аттрибутов [attributeName => \dicr\file\File[]] */
     private $values = [];
 
     /**
@@ -469,7 +469,7 @@ class FileAttributeBehavior extends Behavior
      *
      * @param string $attribute
      * @param bool $refresh
-     * @return StoreFile[]|StoreFile|null
+     * @return File[]|File|null
      * @throws InvalidConfigException
      * @throws StoreException
      */
@@ -495,7 +495,7 @@ class FileAttributeBehavior extends Behavior
      * Устанавливает значение файлового аттрибута
      *
      * @param string $attribute
-     * @param StoreFile[]|StoreFile|null $value
+     * @param File[]|File|null $value
      * @return $this
      */
     public function setFileAttributeValue(string $attribute, $value): self
@@ -515,7 +515,7 @@ class FileAttributeBehavior extends Behavior
 
         // проверяем элементы массива
         foreach ($value as $file) {
-            if (! $file instanceof StoreFile) {
+            if (! $file instanceof File) {
                 throw new InvalidArgumentException(
                     'Некорректный тип значения: ' . gettype($file) . ' аттрибута: ' . $attribute
                 );
@@ -630,7 +630,7 @@ class FileAttributeBehavior extends Behavior
         // проверяем на пустое значение
         if (empty($file)) {
             $this->owner->addError($attribute, 'Пустое значение файла');
-        } elseif (! $file instanceof StoreFile) {
+        } elseif (! $file instanceof File) {
             $this->owner->addError($attribute, 'Некорректный тип значения: ' . gettype($file));
         } elseif (! $file->exists) {
             $this->owner->addError($attribute, 'Загружаемый файл не существует: ' . $file->path);
@@ -746,7 +746,7 @@ class FileAttributeBehavior extends Behavior
         // импортируем новые и переименовываем старые во временные имена с точкой
         foreach ($files as $pos => &$file) {
             // некорректный тип значения
-            if (! $file instanceof StoreFile) {
+            if (! $file instanceof File) {
                 throw new RuntimeException('Неизвестный тип значения файлового аттрибута ' . $attribute);
             }
 
@@ -778,13 +778,13 @@ class FileAttributeBehavior extends Behavior
                 unset($oldFiles[$oldPos]);
 
                 // переименовываем во временное имя
-                $file->name = StoreFile::createStorePrefix('.' . $attribute, mt_rand(), $file->name);
+                $file->name = File::createStorePrefix('.' . $attribute, mt_rand(), $file->name);
                 continue;
             }
 
             // импортируем файл под временным именем
             $newFile = $modelPath->child(
-                StoreFile::createStorePrefix('.' . $attribute, mt_rand(), $file->name)
+                File::createStorePrefix('.' . $attribute, mt_rand(), $file->name)
             );
 
             $newFile->import($file);
@@ -806,7 +806,7 @@ class FileAttributeBehavior extends Behavior
         $value = [];
         foreach (array_values($files) as $pos => $file) {
             // добавляем индекс позиции
-            $file->name = StoreFile::createStorePrefix($attribute, $pos, $file->name);
+            $file->name = File::createStorePrefix($attribute, $pos, $file->name);
 
             // измеряем отметку времени для регенерации thumb и для корректной работы mod_pagespeed
             $file->touch();
@@ -891,11 +891,11 @@ class FileAttributeBehavior extends Behavior
     /**
      * Находит позицию файла в списке файлов по имени.
      *
-     * @param StoreFile $file
-     * @param StoreFile[] $files
+     * @param File $file
+     * @param File[] $files
      * @return ?int
      */
-    protected function searchModelFilePositionByName(StoreFile $file, array $files): ?int
+    protected function searchModelFilePositionByName(File $file, array $files): ?int
     {
         // если файл загружаемый, то не является старым
         if ($file instanceof UploadFile) {

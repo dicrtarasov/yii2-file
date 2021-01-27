@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 14.09.20 04:49:09
+ * @version 27.01.21 19:27:00
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -190,7 +190,7 @@ class FtpFileStore extends LocalFileStore
     /**
      * @inheritdoc
      */
-    public function rename($path, $newpath): AbstractFileStore
+    public function rename($path, $newpath): FileStore
     {
         $path = $this->filterRootPath($path);
         $newpath = $this->filterRootPath($newpath);
@@ -216,7 +216,7 @@ class FtpFileStore extends LocalFileStore
     /**
      * @inheritdoc
      */
-    public function mkdir($path): AbstractFileStore
+    public function mkdir($path): FileStore
     {
         $path = $this->filterRootPath($path);
 
@@ -235,7 +235,7 @@ class FtpFileStore extends LocalFileStore
     /**
      * @inheritdoc
      */
-    public function setPublic($path, bool $public): AbstractFileStore
+    public function setPublic($path, bool $public): FileStore
     {
         $path = $this->filterRootPath($path);
         $perms = $this->permsByPublic($this->isDir($path), $public);
@@ -245,13 +245,14 @@ class FtpFileStore extends LocalFileStore
         }
 
         $this->clearStatCache($path);
+
         return $this;
     }
 
     /**
      * @inheritdoc
      */
-    protected function unlink($path): AbstractFileStore
+    protected function unlink($path): FileStore
     {
         $this->filterRootPath($path);
 
@@ -260,13 +261,14 @@ class FtpFileStore extends LocalFileStore
         }
 
         $this->clearStatCache($path);
+
         return $this;
     }
 
     /**
      * @inheritdoc
      */
-    protected function rmdir($path): AbstractFileStore
+    protected function rmdir($path): FileStore
     {
         $this->filterRootPath($path);
 
@@ -275,6 +277,7 @@ class FtpFileStore extends LocalFileStore
         }
 
         $this->clearStatCache($path);
+
         return $this;
     }
 

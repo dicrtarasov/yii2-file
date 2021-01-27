@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 12.12.20 01:48:46
+ * @version 27.01.21 19:27:00
  */
 
 declare(strict_types = 1);
@@ -27,7 +27,7 @@ use function strlen;
  * @property-read AdapterInterface|null $adapter
  * @see http://flysystem.thephpleague.com/docs/
  */
-class FlysystemFileStore extends AbstractFileStore
+class FlysystemFileStore extends FileStore
 {
     /** @var Filesystem|callable */
     public $flysystem;
@@ -35,7 +35,7 @@ class FlysystemFileStore extends AbstractFileStore
     /**
      * @inheritdoc
      */
-    public function init() : void
+    public function init(): void
     {
         if (is_callable($this->flysystem)) {
             $this->flysystem = call_user_func(/** @scrutinizer ignore-type */ $this->flysystem, $this);
@@ -96,7 +96,7 @@ class FlysystemFileStore extends AbstractFileStore
             throw new StoreException($path, $ex);
         }
 
-        /** @var StoreFile[] $files */
+        /** @var File[] $files */
         $files = [];
         foreach ($items as $item) {
             // создаем файл
@@ -207,7 +207,7 @@ class FlysystemFileStore extends AbstractFileStore
     /**
      * @inheritdoc
      */
-    public function setPublic($path, bool $public) : AbstractFileStore
+    public function setPublic($path, bool $public): FileStore
     {
         $path = $this->normalizePath($path);
         $visibility = self::access2visibility($public);
@@ -378,7 +378,7 @@ class FlysystemFileStore extends AbstractFileStore
      * @inheritdoc
      * @throws NotSupportedException
      */
-    public function copy($path, $newpath) : AbstractFileStore
+    public function copy($path, $newpath): FileStore
     {
         $path = $this->normalizePath($path);
         $newpath = $this->normalizePath($newpath);
@@ -421,7 +421,7 @@ class FlysystemFileStore extends AbstractFileStore
     /**
      * @inheritdoc
      */
-    public function rename($path, $newpath) : AbstractFileStore
+    public function rename($path, $newpath): FileStore
     {
         $path = $this->normalizePath($path);
         $newpath = $this->normalizePath($newpath);
@@ -448,7 +448,7 @@ class FlysystemFileStore extends AbstractFileStore
     /**
      * @inheritdoc
      */
-    public function mkdir($path) : AbstractFileStore
+    public function mkdir($path): FileStore
     {
         $path = $this->normalizePath($path);
 
@@ -468,7 +468,7 @@ class FlysystemFileStore extends AbstractFileStore
     /**
      * @inheritdoc
      */
-    protected function unlink($path) : AbstractFileStore
+    protected function unlink($path): FileStore
     {
         $path = $this->buildPath($this->filterRootPath($path));
 
@@ -490,7 +490,7 @@ class FlysystemFileStore extends AbstractFileStore
     /**
      * @inheritdoc
      */
-    protected function rmdir($path) : AbstractFileStore
+    protected function rmdir($path): FileStore
     {
         $path = $this->buildPath($this->filterRootPath($path));
 

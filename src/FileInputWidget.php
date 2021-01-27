@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 17.12.20 15:56:05
+ * @version 27.01.21 19:27:00
  */
 
 declare(strict_types = 1);
@@ -39,7 +39,7 @@ use function preg_match;
  *
  * Чтобы не было привязки к версии bootstrap, виджет наследует базовый yii\widgets\InputWidget
  *
- * @property StoreFile[]|null $value файлы
+ * @property File[]|null $value файлы
  */
 class FileInputWidget extends InputWidget
 {
@@ -117,9 +117,9 @@ class FileInputWidget extends InputWidget
             $this->value = [$this->value]; // нельзя применять (array) потому как File::toArray
         }
 
-        // проверяем все значения на StoreFile
+        // проверяем все значения на File
         foreach ($this->value as $file) {
-            if (! ($file instanceof StoreFile)) {
+            if (! ($file instanceof File)) {
                 throw new InvalidConfigException('value file: ' . gettype($file));
             }
         }
@@ -197,7 +197,7 @@ class FileInputWidget extends InputWidget
         $content = '';
 
         foreach ($this->value as $pos => $file) {
-            if ($file instanceof StoreFile) {
+            if ($file instanceof File) {
                 $content .= $this->renderFileBlock((int)$pos, $file);
             }
         }
@@ -209,10 +209,10 @@ class FileInputWidget extends InputWidget
      * Верстает блок файла
      *
      * @param int $pos
-     * @param StoreFile $file
+     * @param File $file
      * @return string
      */
-    protected function renderFileBlock(int $pos, StoreFile $file) : string
+    protected function renderFileBlock(int $pos, File $file): string
     {
         ob_start();
         echo Html::beginTag('div', ['class' => 'file']);
@@ -248,10 +248,10 @@ class FileInputWidget extends InputWidget
     /**
      * Верстает блок картинки
      *
-     * @param StoreFile $file
+     * @param File $file
      * @return string
      */
-    protected function renderImage(StoreFile $file) : string
+    protected function renderImage(File $file): string
     {
         $img = $this->layout === self::LAYOUT_IMAGES ?
             Html::img(preg_match('~^image/.+~uism', $file->mimeType) ? (string)$file->url : '', [

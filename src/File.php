@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 17.12.20 15:51:05
+ * @version 27.01.21 19:27:00
  */
 
 declare(strict_types = 1);
@@ -23,15 +23,15 @@ use function str_replace;
  * Файл хранилища файлов.
  * Все операции выполняются через перенаправления к AbstractStore.
  *
- * @property-read AbstractFileStore $store хранилище
+ * @property-read FileStore $store хранилище
  *
  * @property string $path относительный путь файла
  * @property-read string $absolutePath абсолютный путь
  * @property-read ?string $url абсолютный URL
  * @property string $name имя файла без пути (basename)
  * @property-read string|null $extension расширение файла
- * @property-read StoreFile|null $parent родительский каталог (dirname)
- * @property-read StoreFile[] $list
+ * @property-read File|null $parent родительский каталог (dirname)
+ * @property-read File[] $list
  * @property-read bool $exists существует
  * @property-read bool $isDir поддерживает листинг
  * @property-read bool $isFile поддерживает получение содержимого
@@ -43,12 +43,12 @@ use function str_replace;
  * @property string $contents содержимое в виде строки
  * @property resource $stream содержимое в виде потока
  */
-class StoreFile extends BaseObject
+class File extends BaseObject
 {
     /** @var string регулярное выражение имени файла со служебным префиксом */
     protected const STORE_PREFIX_REGEX = '~^\.?([^\~]+)\~(\d+)\~(.+)$~u';
 
-    /** @var AbstractFileStore */
+    /** @var FileStore */
     protected $_store;
 
     /** @var string путь файла */
@@ -63,11 +63,11 @@ class StoreFile extends BaseObject
     /**
      * Конструктор
      *
-     * @param AbstractFileStore $store
+     * @param FileStore $store
      * @param string|array $path относительный путь
      * @param array $config
      */
-    public function __construct(AbstractFileStore $store, $path, array $config = [])
+    public function __construct(FileStore $store, $path, array $config = [])
     {
         if ($store === null) {
             throw new InvalidArgumentException('store');
@@ -84,9 +84,9 @@ class StoreFile extends BaseObject
     /**
      * Возвращает хранилище
      *
-     * @return AbstractFileStore
+     * @return FileStore
      */
-    public function getStore() : AbstractFileStore
+    public function getStore(): FileStore
     {
         return $this->_store;
     }
@@ -443,7 +443,7 @@ class StoreFile extends BaseObject
     /**
      * Возвращает список файлов директории
      *
-     * @param array $options опции и фильтры {@link AbstractFileStore::list}
+     * @param array $options опции и фильтры {@link FileStore::list}
      * @return static[]
      * @throws StoreException
      */
@@ -490,7 +490,7 @@ class StoreFile extends BaseObject
     /**
      * Импорт файла в хранилище
      *
-     * @param string|string[]|StoreFile $src импортируемый файл
+     * @param string|string[]|File $src импортируемый файл
      * @param array $options опции
      *  - bool $ifModified - импортировать файл только если время новее или размер отличается (по-умолчанию true)
      * @return $this

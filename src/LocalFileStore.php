@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 27.12.20 03:38:34
+ * @version 27.01.21 19:27:00
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -42,7 +42,7 @@ use function is_string;
  *
  * @property string $path путь корня файлового хранилища
  */
-class LocalFileStore extends AbstractFileStore
+class LocalFileStore extends FileStore
 {
     /** @var int флаги для записи file_put_contents (например LOCK_EX) */
     public $writeFlags = 0;
@@ -175,7 +175,7 @@ class LocalFileStore extends AbstractFileStore
             throw new StoreException($fullPath, $ex);
         }
 
-        /** @var StoreFile[] $files */
+        /** @var File[] $files */
         $files = [];
         foreach ($iterator as $item) {
             if (in_array($item->getBasename(), ['.', '..', ''], true)) {
@@ -400,7 +400,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    public function setPublic($path, bool $public) : AbstractFileStore
+    public function setPublic($path, bool $public): FileStore
     {
         // фильтруем и проверяем путь
         $path = $this->filterRootPath($path);
@@ -464,7 +464,7 @@ class LocalFileStore extends AbstractFileStore
      *
      * Более эффективная версия абстрактного копирования.
      */
-    public function copy($path, $newpath) : AbstractFileStore
+    public function copy($path, $newpath): FileStore
     {
         // проверяем аргументы
         $path = $this->filterRootPath($path);
@@ -491,7 +491,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    public function rename($path, $newpath) : AbstractFileStore
+    public function rename($path, $newpath): FileStore
     {
         // фильтруем и проверяем пути
         $path = $this->filterRootPath($path);
@@ -521,7 +521,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    public function mkdir($path) : AbstractFileStore
+    public function mkdir($path): FileStore
     {
         // фильтруем и проверяем путь
         $path = $this->filterRootPath($path);
@@ -563,7 +563,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    protected function unlink($path) : AbstractFileStore
+    protected function unlink($path): FileStore
     {
         // фильтруем и проверяем путь
         $path = $this->filterRootPath($path);
@@ -584,7 +584,7 @@ class LocalFileStore extends AbstractFileStore
     /**
      * @inheritDoc
      */
-    protected function rmdir($path) : AbstractFileStore
+    protected function rmdir($path): FileStore
     {
         // фильтруем и проверяем путь
         $path = $this->filterRootPath($path);

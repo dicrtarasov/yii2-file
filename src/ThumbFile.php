@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 01.01.21 08:38:17
+ * @version 27.01.21 19:10:35
  */
 
 declare(strict_types = 1);
@@ -37,10 +37,10 @@ use function substr;
  *
  * @property-read bool $isReady флаг существования готового превью
  */
-class ThumbFile extends StoreFile
+class ThumbFile extends File
 {
     /**
-     * @var ?StoreFile исходный файл
+     * @var ?File исходный файл
      * Если пустой, то применяется noimage
      */
     public $source;
@@ -97,8 +97,8 @@ class ThumbFile extends StoreFile
      */
     public function __construct(array $config = [])
     {
-        /** @var AbstractFileStore $store */
-        $store = Instance::ensure($config['store'] ?? '', AbstractFileStore::class);
+        /** @var FileStore $store */
+        $store = Instance::ensure($config['store'] ?? '', FileStore::class);
 
         unset($config['store']);
 
@@ -169,7 +169,7 @@ class ThumbFile extends StoreFile
 
         // проверяем источник
         if (! empty($this->source)) {
-            if (! ($this->source instanceof StoreFile)) {
+            if (! ($this->source instanceof File)) {
                 throw new InvalidConfigException('source: ' . gettype($this->source));
             }
         } elseif (! empty($this->noimage)) {
