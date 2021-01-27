@@ -1,9 +1,9 @@
 <?php
-/**
- * @copyright 2019-2020 Dicr http://dicr.org
+/*
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 11.07.20 09:34:57
+ * @license MIT
+ * @version 27.01.21 19:24:14
  */
 
 declare(strict_types = 1);
@@ -16,7 +16,7 @@ use yii\base\InvalidConfigException;
 /**
  * FtpFileStore Test
  */
-class FtpFileStoreTest extends AbstractFileStoreTest
+class FtpFileStoreTest extends FileStoreTest
 {
     /**
      * @inheritdoc

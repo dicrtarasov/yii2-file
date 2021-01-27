@@ -2,13 +2,13 @@
 
 Содержит следующий функционал:
 
-- `AbstractFileStore` - абстракция файлового хранилища;
+- `FileStore` - абстракция файлового хранилища;
     - `LocaFileStore` - реализация хранилища в локальной файловой системе;
     - `FtpFileStore` - хранилище файлов на FTP;
     - `SftpFileStore` - хранилище файлов через SFTP;
     - `FlysystemFileStore` - хранилище через библиотеку Flysystem;
 
-- `StoreFile` - абстракция файла, поддержка операций с файлом;
+- `File` - абстракция файла, поддержка операций с файлом;
     - `UploadFile` - загрузка файлов в хранилище из другого файла или данных `$_FILES`;
     - `ThumbFile` - создание превью картинок с кешем на диске;
     - `CSVFile` - абстракция для работы с CSV-файлами;
@@ -23,12 +23,14 @@
 Конфигурация компонента на примере локального хранилища файлов:
 
 ```php
-'components' => [
-    // хранилище файлов
-    'fileStore' => [
-        'class' => dicr\file\LocalFileStore::class,
-        'path' => '@webroot/files', // базовый путь на диске
-        'url' => '@web/files' // базовый URL для скачивания (опционально)
+$config = [
+    'components' => [
+        // хранилище файлов
+        'fileStore' => [
+            'class' => dicr\file\LocalFileStore::class,
+            'path' => '@webroot/files', // базовый путь на диске
+            'url' => '@web/files' // базовый URL для скачивания (опционально)
+        ]
     ]
 ];
 ```
@@ -36,7 +38,10 @@
 Использование:
 
 ```php
-// получаем настроенный компонент хранилища
+use dicr\file\FileStore;
+use dicr\file\LocalFileStore;
+
+/** @var FileStore $store получаем настроенный компонент хранилища */
 $store = Yii::$app->get('fileStore');
 
 // или например хранилище в локальной файловой системе
@@ -60,22 +65,24 @@ echo $file->url;
 Для работы с превью нужно настроить кеш картинок в локальной файловой системе:
 
 ```php
-'components' => [
-    // хранилище для превью картинок
-    'thumbStore' => [
-        'class' => dicr\file\LocalFileStore::class,
-        'path' => '@webroot/thumb',
-        'url' => '@web/thumb',
-    ],
-
-    // основное хранилище файлов
-    'fileStore' => [
-        'class' => dicr\file\LocalFileStore::class,
-        'path' => '@webroot/files',
-        // конфигурация компонента для создания превью
-        'thumbFileConfig' => [
-            'store' => 'thumbStore', // компонент хранилища для кэша картинок
-            'noimage' => '@webroot/res/img/noimage.png' // заглушка для создания превью несуществующих файлов моделей
+$config = [
+    'components' => [
+        // хранилище для превью картинок
+        'thumbStore' => [
+            'class' => dicr\file\LocalFileStore::class,
+            'path' => '@webroot/thumb',
+            'url' => '@web/thumb',
+        ],
+    
+        // основное хранилище файлов
+        'fileStore' => [
+            'class' => dicr\file\LocalFileStore::class,
+            'path' => '@webroot/files',
+            // конфигурация компонента для создания превью
+            'thumbFileConfig' => [
+                'store' => 'thumbStore', // компонент хранилища для кэша картинок
+                'noimage' => '@webroot/res/img/noimage.png' // заглушка для создания превью несуществующих файлов моделей
+            ]
         ]
     ]
 ];
@@ -84,6 +91,12 @@ echo $file->url;
 Использование превью:
 
 ```php
+use yii\helpers\Html;
+use dicr\file\FileStore;
+
+/** @var FileStore $store */
+$store = Yii::$app->get('fileStore');
+
 // получаем файл из хранилища
 $file = $store->file('images/image.jpg');
 
@@ -96,9 +109,19 @@ echo Html::img($file->thumb(['width' => 320, 'height' => 240])->url);
 Пример модели товара:
 
 ```php
+use yii\db\ActiveRecord;
+use dicr\file\File;
+use dicr\file\FileAttributeBehavior;
+
 /**
- * @property-read ?StoreFile $image одна картинка
- * @property-read StoreFile[] $docs набор файлов документов
+ * @property-read ?File $image одна картинка
+ * @property-read File[] $docs набор файлов документов
+ * 
+ * FileAttributeBehavior
+ * 
+ * @method bool loadFileAttributes($formName = null)
+ * @method saveFileAttributes()
+ * @method File|File[]|null getFileAttribute(string $attribute, bool $refresh = false)
  */
 class Product extends ActiveRecord
 {

@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 28.09.20 02:45:27
+ * @version 27.01.21 19:24:14
  */
 
 declare(strict_types=1);
@@ -18,7 +18,7 @@ use yii\base\InvalidConfigException;
 /**
  * Flysystem file store test
  */
-class FlysystemFileStoreTest extends AbstractFileStoreTest
+class FlysystemFileStoreTest extends FileStoreTest
 {
     /**
      * @inheritdoc
