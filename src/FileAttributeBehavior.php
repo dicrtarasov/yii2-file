@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 27.03.21 21:20:57
+ * @version 27.03.21 21:36:39
  */
 
 declare(strict_types = 1);
@@ -515,13 +515,18 @@ class FileAttributeBehavior extends Behavior
         $value = array_values($value);
 
         // проверяем элементы массива
-        foreach ($value as $file) {
-            if (! $file instanceof File) {
+        foreach ($value as &$file) {
+            // конвертируем из yii\web\UploadedFile
+            if ($file instanceof UploadedFile) {
+                $file = UploadFile::fromUploadedFile($file);
+            } elseif (! $file instanceof File) {
                 throw new InvalidArgumentException(
                     'Некорректный тип значения: ' . gettype($file) . ' аттрибута: ' . $attribute
                 );
             }
         }
+
+        unset($file);
 
         // ограничиваем размер по limit
         $limit = $this->attributes[$attribute]['limit'];
@@ -746,10 +751,7 @@ class FileAttributeBehavior extends Behavior
 
         // импортируем новые и переименовываем старые во временные имена с точкой
         foreach ($files as $pos => &$file) {
-            // конвертируем из yii UploadedFile в UploadFile
-            if ($file instanceof UploadedFile) {
-                $file = UploadFile::fromUploadedFile($file);
-            } elseif (! $file instanceof File) {
+            if (! $file instanceof File) {
                 // некорректный тип значения
                 throw new RuntimeException('Неизвестный тип значения файлового аттрибута ' . $attribute);
             }
