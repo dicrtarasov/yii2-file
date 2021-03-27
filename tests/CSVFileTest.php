@@ -1,14 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 28.09.20 02:41:49
- */
-
-/**
- * @author Igor A Tarasov <develop@dicr.org>
- * @version 08.07.20 07:04:43
+ * @version 27.03.21 12:02:33
  */
 
 declare(strict_types = 1);
@@ -33,6 +28,7 @@ class CSVFileTest extends TestCase
      * Тест
      *
      * @throws Exception
+     * @noinspection PhpUnitMissingTargetForTestInspection
      */
     public function testReadWrite() : void
     {
