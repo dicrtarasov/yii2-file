@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 27.01.21 19:27:00
+ * @version 27.03.21 21:19:52
  */
 
 declare(strict_types = 1);
@@ -13,6 +13,7 @@ use Exception;
 use InvalidArgumentException;
 use LogicException;
 use yii\helpers\ArrayHelper;
+use yii\web\UploadedFile;
 
 use function is_array;
 use function is_string;
@@ -71,7 +72,7 @@ class UploadFile extends File
     /**
      * @inheritdoc
      */
-    public function init() : void
+    public function init(): void
     {
         parent::init();
 
@@ -93,7 +94,7 @@ class UploadFile extends File
      * @param string $formName имя формы для которой возвращает аттрибуты
      * @return static[]|null
      */
-    public static function instances(string $attribute = '', string $formName = '') : ?array
+    public static function instances(string $attribute = '', string $formName = ''): ?array
     {
         /** @var static[][] */
         static $instances;
@@ -122,7 +123,7 @@ class UploadFile extends File
      * @param string $formName
      * @return ?static
      */
-    public static function instance(string $attribute, string $formName = '') : ?self
+    public static function instance(string $attribute, string $formName = ''): ?self
     {
         $files = self::instances($attribute, $formName);
 
@@ -134,7 +135,7 @@ class UploadFile extends File
      *
      * @return UploadFile[] файлы аттрибута
      */
-    private static function parseInstances() : array
+    private static function parseInstances(): array
     {
         $instances = [];
 
@@ -161,7 +162,7 @@ class UploadFile extends File
      * @param array $data
      * @return bool true если данные формы
      */
-    private static function isComplexFormData(array $data) : bool
+    private static function isComplexFormData(array $data): bool
     {
         // если не установлен name, то ошибка формата данных
         if (! isset($data['name'])) {
@@ -231,7 +232,7 @@ class UploadFile extends File
      * @param array $data данные аттрибута
      * @return UploadFile[] файлы аттрибута
      */
-    private static function parseSimpleData(array $data) : array
+    private static function parseSimpleData(array $data): array
     {
         return static::instancesFromData(
             (array)($data['name'] ?? []),
@@ -311,7 +312,7 @@ class UploadFile extends File
      * @param array $data array данные аттрибутов формы
      * @return UploadFile[] [$attribute => \dicr\file\UploadFile[]] аттрибуты формы с файлами
      */
-    private static function parseFormData(array $data) : array
+    private static function parseFormData(array $data): array
     {
         $instances = [];
 
@@ -344,7 +345,7 @@ class UploadFile extends File
         array $sizes,
         array $errors,
         array $paths
-    ) : array {
+    ): array {
         $instances = [];
 
         foreach ($names as $pos => $name) {
@@ -371,9 +372,26 @@ class UploadFile extends File
     }
 
     /**
+     * Конвертирует из yii\web\UploadedFile.
+     *
+     * @param UploadedFile $file
+     * @return static
+     */
+    public static function fromUploadedFile(UploadedFile $file): self
+    {
+        return new self([
+            'path' => $file->tempName,
+            'name' => $file->name,
+            'mimeType' => $file->type,
+            'size' => $file->size,
+            'error' => $file->error
+        ]);
+    }
+
+    /**
      * @inheritDoc
      */
-    public function getName(array $options = []) : string
+    public function getName(array $options = []): string
     {
         // если имя файла не задано то берем его из пути
         if (! isset($this->_name)) {
@@ -415,7 +433,7 @@ class UploadFile extends File
      *
      * @return ?int
      */
-    public function getError() : ?int
+    public function getError(): ?int
     {
         return $this->_error;
     }
@@ -426,7 +444,7 @@ class UploadFile extends File
      * @param int|string $error
      * @return $this
      */
-    public function setError($error) : self
+    public function setError($error): self
     {
         $this->_error = (int)$error;
 
@@ -436,7 +454,7 @@ class UploadFile extends File
     /**
      * @inheritDoc
      */
-    public function getSize() : int
+    public function getSize(): int
     {
         if (! isset($this->_size)) {
             if (! empty($this->_error)) {
@@ -455,7 +473,7 @@ class UploadFile extends File
      * @param int|string $size
      * @return $this
      */
-    public function setSize($size) : self
+    public function setSize($size): self
     {
         if ($size < 0) {
             throw new InvalidArgumentException('size');
@@ -469,7 +487,7 @@ class UploadFile extends File
     /**
      * @inheritDoc
      */
-    public function getMimeType() : string
+    public function getMimeType(): string
     {
         if (! isset($this->_mimeType)) {
             if (! empty($this->_error)) {
@@ -488,7 +506,7 @@ class UploadFile extends File
      * @param string $type
      * @return $this
      */
-    public function setMimeType(string $type) : self
+    public function setMimeType(string $type): self
     {
         $this->_mimeType = $type;
 

@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 27.01.21 19:26:24
+ * @version 27.03.21 21:20:57
  */
 
 declare(strict_types = 1);
@@ -19,6 +19,7 @@ use yii\base\InvalidConfigException;
 use yii\base\Model;
 use yii\db\ActiveRecord;
 use yii\di\Instance;
+use yii\web\UploadedFile;
 
 use function array_key_exists;
 use function array_keys;
@@ -745,8 +746,11 @@ class FileAttributeBehavior extends Behavior
 
         // импортируем новые и переименовываем старые во временные имена с точкой
         foreach ($files as $pos => &$file) {
-            // некорректный тип значения
-            if (! $file instanceof File) {
+            // конвертируем из yii UploadedFile в UploadFile
+            if ($file instanceof UploadedFile) {
+                $file = UploadFile::fromUploadedFile($file);
+            } elseif (! $file instanceof File) {
+                // некорректный тип значения
                 throw new RuntimeException('Неизвестный тип значения файлового аттрибута ' . $attribute);
             }
 
