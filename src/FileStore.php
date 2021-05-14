@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 14.05.21 11:36:54
+ * @version 14.05.21 12:06:33
  */
 
 declare(strict_types = 1);
@@ -56,7 +56,7 @@ abstract class FileStore extends Component
      * @inheritdoc
      * @throws InvalidConfigException
      */
-    public function init() : void
+    public function init(): void
     {
         parent::init();
 
@@ -157,7 +157,7 @@ abstract class FileStore extends Component
      * @param string|string[] $path
      * @return string URL файла
      */
-    public function url($path) : ?string
+    public function url($path): ?string
     {
         if ($this->url === null) {
             return null;
@@ -485,6 +485,15 @@ abstract class FileStore extends Component
             throw new InvalidConfigException('ThumbFile для создания превью не настроен');
         }
 
+        // конвертируем в int (из float)
+        if (isset($config['width'])) {
+            $config['width'] = (int)$config['width'];
+        }
+
+        if (isset($config['height'])) {
+            $config['height'] = (int)$config['height'];
+        }
+
         // чтобы по-умолчанию не применялись функции watermark и disclaimer из конфига
         // устанавливаем значения в пустые
         $config += [
@@ -504,9 +513,7 @@ abstract class FileStore extends Component
         }
 
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return Yii::createObject($config + $this->thumbFileConfig + [
-                'class' => ThumbFile::class,
-            ]);
+        return Yii::createObject($config + $this->thumbFileConfig + ['class' => ThumbFile::class,]);
     }
 
     /**
