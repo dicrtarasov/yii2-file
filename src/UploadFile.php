@@ -2,8 +2,8 @@
 /*
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license MIT
- * @version 27.03.21 21:19:52
+ * @license GPL-3.0-or-later
+ * @version 14.05.21 11:37:57
  */
 
 declare(strict_types = 1);
@@ -56,7 +56,6 @@ class UploadFile extends File
      */
     public function __construct($pathconfig)
     {
-        $path = null;
         $config = [];
 
         if (is_string($pathconfig)) {
@@ -78,11 +77,13 @@ class UploadFile extends File
 
         if (isset($this->_error)) {
             /** @noinspection UnnecessaryCastingInspection */
+            /** @noinspection PhpCastIsUnnecessaryInspection */
             $this->_error = (int)$this->_error;
         }
 
         if (isset($this->_size)) {
             /** @noinspection UnnecessaryCastingInspection */
+            /** @noinspection PhpCastIsUnnecessaryInspection */
             $this->_size = (int)$this->_size;
         }
     }

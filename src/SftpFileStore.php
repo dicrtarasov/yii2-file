@@ -2,8 +2,8 @@
 /*
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license MIT
- * @version 27.01.21 19:27:00
+ * @license GPL-3.0-or-later
+ * @version 14.05.21 11:48:55
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -14,7 +14,9 @@ namespace dicr\file;
 use yii\base\InvalidConfigException;
 
 use function in_array;
+use function is_int;
 use function is_resource;
+use function readdir;
 use function ssh2_disconnect;
 
 /**
@@ -54,19 +56,18 @@ class SftpFileStore extends LocalFileStore
      * @inheritDoc
      * @throws StoreException
      */
-    public function init() : void
+    public function init(): void
     {
         $this->host = trim($this->host);
         if ($this->host === '') {
             throw new InvalidConfigException('host');
         }
 
-        $this->port = (int)$this->port;
-        if (empty($this->port)) {
+        if (! is_int($this->port) || $this->port < 1) {
             throw new InvalidConfigException('port');
         }
 
-        $this->session = @ssh2_connect($this->host, $this->port);
+        $this->session = ssh2_connect($this->host, $this->port);
         if (! is_resource($this->session)) {
             throw new StoreException('ошибка подключения к серверу', new StoreException());
         }
@@ -101,9 +102,10 @@ class SftpFileStore extends LocalFileStore
      *
      * Переопределяем родительский метод для отмены проверок пути.
      */
-    public function setPath(string $path) : LocalFileStore
+    public function setPath(string $path): LocalFileStore
     {
         $this->_path = '/' . $this->normalizePath($path);
+
         return $this;
     }
 
@@ -111,7 +113,7 @@ class SftpFileStore extends LocalFileStore
      * @inheritDoc
      * @throws InvalidConfigException
      */
-    public function list($path, array $filter = []) : array
+    public function list($path, array $filter = []): array
     {
         $absPath = $this->absolutePath($path);
 
@@ -123,7 +125,12 @@ class SftpFileStore extends LocalFileStore
         $files = [];
 
         try {
-            while (($item = readdir($dir)) !== false) {
+            while (true) {
+                $item = readdir($dir);
+                if ($item === false) {
+                    break;
+                }
+
                 if (in_array($item, ['', '.', '..'], true)) {
                     continue;
                 }
@@ -140,7 +147,7 @@ class SftpFileStore extends LocalFileStore
             }
         } finally {
             if (! empty($dir)) {
-                @closedir($dir);
+                closedir($dir);
             }
         }
 
@@ -150,7 +157,7 @@ class SftpFileStore extends LocalFileStore
     /**
      * @inheritDoc
      */
-    public function absolutePath($path) : string
+    public function absolutePath($path): string
     {
         return 'ssh2.sftp://' . (int)$this->sftp . $this->relativePath($path);
     }
@@ -186,6 +193,7 @@ class SftpFileStore extends LocalFileStore
         }
 
         $this->clearStatCache($path);
+
         return $this;
     }
 
@@ -211,6 +219,7 @@ class SftpFileStore extends LocalFileStore
         }
 
         $this->clearStatCache($path);
+
         return $this;
     }
 

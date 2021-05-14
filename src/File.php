@@ -2,8 +2,8 @@
 /*
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license MIT
- * @version 27.01.21 19:27:00
+ * @license GPL-3.0-or-later
+ * @version 14.05.21 11:36:54
  */
 
 declare(strict_types = 1);
@@ -613,6 +613,6 @@ class File extends BaseObject
      */
     public function __toString() : string
     {
-        return (string)$this->_path;
+        return $this->_path;
     }
 }

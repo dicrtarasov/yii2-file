@@ -2,8 +2,8 @@
 /*
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license MIT
- * @version 27.01.21 19:27:00
+ * @license GPL-3.0-or-later
+ * @version 14.05.21 11:48:06
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -11,10 +11,13 @@ declare(strict_types = 1);
 namespace dicr\file;
 
 use yii\base\InvalidConfigException;
+use yii\base\NotSupportedException;
 
 use function ftp_close;
 use function in_array;
+use function is_int;
 use function is_resource;
+use function is_string;
 
 /**
  * Файловая система FTP.
@@ -24,8 +27,6 @@ use function is_resource;
  * @see http://php.net/manual/en/context.ftp.php
  * @see http://php.net/manual/ru/wrappers.ftp.php
  * @see http://php.net/manual/ru/ref.ftp.php
- * @todo isPublic not supported
- * @todo mimeType not supported
  */
 class FtpFileStore extends LocalFileStore
 {
@@ -51,15 +52,13 @@ class FtpFileStore extends LocalFileStore
      * @inheritdoc
      * @throws StoreException
      */
-    public function init() : void
+    public function init(): void
     {
-        $this->host = trim($this->host);
-        if ($this->host === '') {
+        if (! is_string($this->host) || $this->host === '') {
             throw new InvalidConfigException('host');
         }
 
-        $this->port = (int)$this->port;
-        if (empty($this->port)) {
+        if (! is_int($this->port) || $this->port < 1) {
             throw new InvalidConfigException('port');
         }
 
@@ -94,6 +93,7 @@ class FtpFileStore extends LocalFileStore
     public function setPath(string $path): LocalFileStore
     {
         $this->_path = '/' . $this->normalizePath($path);
+
         return $this;
     }
 
@@ -117,7 +117,12 @@ class FtpFileStore extends LocalFileStore
         $files = [];
 
         try {
-            while (($item = readdir($dir)) !== false) {
+            while (true) {
+                $item = readdir($dir);
+                if ($item === false) {
+                    break;
+                }
+
                 if (in_array($item, ['', '.', '..'], true)) {
                     continue;
                 }
@@ -134,7 +139,7 @@ class FtpFileStore extends LocalFileStore
             }
         } finally {
             if (! empty($dir)) {
-                @closedir($dir);
+                closedir($dir);
             }
         }
 
@@ -188,6 +193,15 @@ class FtpFileStore extends LocalFileStore
     }
 
     /**
+     * @inheritDoc
+     * @throws NotSupportedException
+     */
+    public function mimeType($path): string
+    {
+        throw new NotSupportedException('mimeType');
+    }
+
+    /**
      * @inheritdoc
      */
     public function rename($path, $newpath): FileStore
@@ -229,6 +243,7 @@ class FtpFileStore extends LocalFileStore
         }
 
         $this->setPublic($path, $this->public);
+
         return $this;
     }
 
@@ -247,6 +262,15 @@ class FtpFileStore extends LocalFileStore
         $this->clearStatCache($path);
 
         return $this;
+    }
+
+    /**
+     * @inheritDoc
+     * @throws NotSupportedException
+     */
+    public function isPublic($path): bool
+    {
+        throw new NotSupportedException('isPublic');
     }
 
     /**

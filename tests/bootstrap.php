@@ -1,18 +1,18 @@
 <?php
-/**
- * @copyright 2019-2020 Dicr http://dicr.org
+/*
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license GPL
- * @version 29.07.20 08:24:33
+ * @license GPL-3.0-or-later
+ * @version 14.05.21 11:36:54
  */
 
 /** @noinspection PhpUnhandledExceptionInspection */
 declare(strict_types = 1);
 
 /** */
-define('YII_DEBUG', true);
+const YII_DEBUG = true;
 /** */
-define('YII_ENV', 'dev');
+const YII_ENV = 'dev';
 
 require_once(dirname(__DIR__) . '/vendor/autoload.php');
 require_once(dirname(__DIR__) . '/vendor/yiisoft/yii2/Yii.php');

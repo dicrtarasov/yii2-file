@@ -2,8 +2,8 @@
 /*
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license MIT
- * @version 27.01.21 19:26:24
+ * @license GPL-3.0-or-later
+ * @version 14.05.21 11:36:54
  */
 
 declare(strict_types = 1);
@@ -306,7 +306,6 @@ abstract class FileStore extends Component
      * @param string[]|string $path
      * @param ?int $time время, если не задано, то time()
      * @throws StoreException
-     * @noinspection PhpUnusedParameterInspection
      */
     public function touch($path, ?int $time = null): void
     {
@@ -703,17 +702,17 @@ abstract class FileStore extends Component
         // ----- медленные фильтры
 
         // фильтруем по типу
-        if (isset($filter['dir']) && (bool)$file->isDir !== (bool)$filter['dir']) {
+        if (isset($filter['dir']) && $file->isDir !== (bool)$filter['dir']) {
             return false;
         }
 
         // фильтруем по доступности
-        if (isset($filter['public']) && (bool)$file->public !== (bool)$filter['public']) {
+        if (isset($filter['public']) && $file->public !== (bool)$filter['public']) {
             return false;
         }
 
         // фильтруем скрытые
-        if (isset($filter['hidden']) && (bool)$file->hidden !== (bool)$filter['hidden']) {
+        if (isset($filter['hidden']) && $file->hidden !== (bool)$filter['hidden']) {
             return false;
         }
 

@@ -2,8 +2,8 @@
 /*
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license MIT
- * @version 27.01.21 19:27:00
+ * @license GPL-3.0-or-later
+ * @version 14.05.21 11:47:13
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -72,15 +72,14 @@ class LocalFileStore extends FileStore
     {
         parent::init();
 
-        if (! isset($this->_path)) {
+        if ($this->_path === null) {
             throw new InvalidConfigException('path');
         }
 
-        $this->writeFlags = (int)$this->writeFlags;
-
-        $this->readMode = trim($this->readMode);
-        if (empty($this->readMode)) {
+        if ($this->readMode === null) {
             $this->readMode = 'rb';
+        } elseif (! is_string($this->readMode)) {
+            throw new InvalidConfigException('readMode');
         }
 
         if (! is_resource($this->context)) {
@@ -163,7 +162,6 @@ class LocalFileStore extends FileStore
     {
         $fullPath = $this->absolutePath($path);
 
-        $iterator = null;
         try {
             if (! empty($filter['recursive'])) {
                 $dirIterator = new RecursiveDirectoryIterator($fullPath, FilesystemIterator::CURRENT_AS_FILEINFO);
@@ -308,7 +306,8 @@ class LocalFileStore extends FileStore
         $absPath = $this->absolutePath($path);
 
         $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $type = @$finfo->file($absPath, FILEINFO_NONE, /** @scrutinizer ignore-type */ $this->context);
+        $type = $finfo->file($absPath, FILEINFO_NONE, /** @scrutinizer ignore-type */ $this->context);
+        /** @noinspection PhpStrictComparisonWithOperandsOfDifferentTypesInspection */
         if ($type === false) {
             $this->throwLastError('Получение mime-типа', $absPath);
         }
@@ -434,7 +433,6 @@ class LocalFileStore extends FileStore
 
     /**
      * @inheritDoc
-     * @noinspection PhpMissingReturnTypeInspection
      */
     public function readStream($path, ?string $mode = null)
     {

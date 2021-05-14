@@ -1,10 +1,10 @@
 {
     "name": "dicr/yii2-file",
     "type": "yii2-extension",
-    "license": "MIT",
-    "homepage": "https://gitlab.com/dicr/yii2-file",
+    "license": "GPL-3.0-or-later",
     "description": "Filesystem components for Yii2",
     "keywords": ["dicr", "yii2", "file", "store"],
+    "homepage": "https://gitlab.com/dicr/yii2-file",
     "authors": [
         {
             "name": "Igor Tarasov",
@@ -29,6 +29,7 @@
     "extra": {
         "bootstrap": "dicr\\file\\Bootstrap"
     },
+
     "require": {
         "php": "~7.4 || ~8.0.1",
         "ext-fileinfo": "*",
@@ -39,13 +40,15 @@
 
         "yiisoft/yii2": "~2.0",
 
-        "dicr/yii2-asset": "~1.7"
+        "dicr/yii2-asset": "~1.8"
     },
+
     "require-dev": {
         "phpunit/phpunit": "~9.5",
         "roave/security-advisories": "dev-latest",
         "league/flysystem": "~1.1"
     },
+
     "suggest": {
         "ext-ssh2": "for LocalFileStore with ssh2.sftp:// wrapper",
         "ext-ftp": "for LocalFileStore with ftp:// wrapper",
@@ -53,6 +56,7 @@
         "ext-imagick": "for creating thumbnails",
         "league/flysystem": "for FlysystemFileStore"
     },
+
     "repositories": [
         {"type": "composer", "url": "https://asset-packagist.org"},
         {"type": "gitlab", "url": "https://gitlab.com/dicr/yii2-asset.git"}

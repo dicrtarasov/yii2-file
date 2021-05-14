@@ -2,8 +2,8 @@
 /*
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license MIT
- * @version 27.03.21 21:36:39
+ * @license GPL-3.0-or-later
+ * @version 14.05.21 11:55:31
  */
 
 declare(strict_types = 1);
@@ -186,7 +186,7 @@ class FileAttributeBehavior extends Behavior
         }
 
         // конвертируем упрощенный формат аттрибутов в полный
-        foreach ($this->attributes as $attribute => &$params) {
+        foreach ($this->attributes as &$params) {
             if (is_array($params)) {
                 $params['limit'] = (int)($params['limit'] ?? 0);
             } else {
