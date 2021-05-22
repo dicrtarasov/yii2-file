@@ -147,21 +147,21 @@
         },
         {
             "name": "dicr/yii2-asset",
-            "version": "1.8.1",
+            "version": "1.8.3",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.com/dicr/yii2-asset.git",
-                "reference": "bd88ec069467136ed128f3a29f51b4441caf1f1e"
+                "reference": "882ffe50c548ce122d07f0af1449a7c280ee633b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://gitlab.com/api/v4/projects/dicr%2Fyii2-asset/repository/archive.zip?sha=bd88ec069467136ed128f3a29f51b4441caf1f1e",
-                "reference": "bd88ec069467136ed128f3a29f51b4441caf1f1e",
+                "url": "https://gitlab.com/api/v4/projects/dicr%2Fyii2-asset/repository/archive.zip?sha=882ffe50c548ce122d07f0af1449a7c280ee633b",
+                "reference": "882ffe50c548ce122d07f0af1449a7c280ee633b",
                 "shasum": ""
             },
             "require": {
                 "php": "~7.4 || ~8.0.0",
-                "scssphp/scssphp": "~v1.4",
+                "scssphp/scssphp": "~v1.5",
                 "yiisoft/yii2": "~2.0"
             },
             "require-dev": {
@@ -198,10 +198,9 @@
                 "yii2"
             ],
             "support": {
-                "source": "https://gitlab.com/dicr/yii2-asset.git",
-                "issues": "https://gitlab.com/api/v4/projects/10744876/issues"
+                "source": "https://gitlab.com/dicr/yii2-asset.git"
             },
-            "time": "2021-05-11T06:01:15+05:00"
+            "time": "2021-05-17T03:24:59+05:00"
         },
         {
             "name": "ezyang/htmlpurifier",
@@ -259,16 +258,16 @@
         },
         {
             "name": "scssphp/scssphp",
-            "version": "v1.4.1",
+            "version": "v1.5.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/scssphp/scssphp.git",
-                "reference": "ba86c963b94ec7ebd6e19d90cdab90d89667dbf7"
+                "reference": "6fe16f169f55f5e793474fb210aac0a4481619e5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/scssphp/scssphp/zipball/ba86c963b94ec7ebd6e19d90cdab90d89667dbf7",
-                "reference": "ba86c963b94ec7ebd6e19d90cdab90d89667dbf7",
+                "url": "https://api.github.com/repos/scssphp/scssphp/zipball/6fe16f169f55f5e793474fb210aac0a4481619e5",
+                "reference": "6fe16f169f55f5e793474fb210aac0a4481619e5",
                 "shasum": ""
             },
             "require": {
@@ -277,12 +276,18 @@
                 "php": ">=5.6.0"
             },
             "require-dev": {
+                "bamarni/composer-bin-plugin": "^1.4",
                 "phpunit/phpunit": "^5.7 || ^6.5 || ^7.5 || ^8.3 || ^9.4",
-                "sass/sass-spec": "2020.12.29",
+                "sass/sass-spec": "*",
                 "squizlabs/php_codesniffer": "~3.5",
                 "symfony/phpunit-bridge": "^5.1",
-                "twbs/bootstrap": "~4.3",
+                "twbs/bootstrap": "~5.0",
+                "twbs/bootstrap4": "4.6.0",
                 "zurb/foundation": "~6.5"
+            },
+            "suggest": {
+                "ext-iconv": "Can be used as fallback when ext-mbstring is not available",
+                "ext-mbstring": "For best performance, mbstring should be installed as it is faster than ext-iconv"
             },
             "bin": [
                 "bin/pscss"
@@ -320,9 +325,9 @@
             ],
             "support": {
                 "issues": "https://github.com/scssphp/scssphp/issues",
-                "source": "https://github.com/scssphp/scssphp/tree/v1.4.1"
+                "source": "https://github.com/scssphp/scssphp/tree/v1.5.2"
             },
-            "time": "2021-01-04T13:23:23+00:00"
+            "time": "2021-05-18T00:05:58+00:00"
         },
         {
             "name": "yiisoft/yii2",
@@ -1620,12 +1625,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Roave/SecurityAdvisories.git",
-                "reference": "5ffdb87f627ff16cc392e30515a1fe069cddc3e2"
+                "reference": "b690895fa1530e85397d5070517e45e098be6d18"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/5ffdb87f627ff16cc392e30515a1fe069cddc3e2",
-                "reference": "5ffdb87f627ff16cc392e30515a1fe069cddc3e2",
+                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/b690895fa1530e85397d5070517e45e098be6d18",
+                "reference": "b690895fa1530e85397d5070517e45e098be6d18",
                 "shasum": ""
             },
             "conflict": {
@@ -1733,7 +1738,7 @@
                 "laravel/framework": "<6.20.26|>=7,<8.40",
                 "laravel/socialite": ">=1,<1.0.99|>=2,<2.0.10",
                 "league/commonmark": "<0.18.3",
-                "lexik/jwt-authentication-bundle": ">=2,<2.10.7|>=2.11,<2.11.3",
+                "lexik/jwt-authentication-bundle": "<2.10.7|>=2.11,<2.11.3",
                 "librenms/librenms": "<21.1",
                 "livewire/livewire": ">2.2.4,<2.2.6",
                 "magento/community-edition": ">=2,<2.2.10|>=2.3,<2.3.3",
@@ -1809,7 +1814,7 @@
                 "shopware/core": "<=6.3.5.2",
                 "shopware/platform": "<=6.3.5.2",
                 "shopware/production": "<=6.3.5.2",
-                "shopware/shopware": "<5.6.9",
+                "shopware/shopware": "<=5.6.9",
                 "silverstripe/admin": ">=1.0.3,<1.0.4|>=1.1,<1.1.1",
                 "silverstripe/assets": ">=1,<1.4.7|>=1.5,<1.5.2",
                 "silverstripe/cms": "<4.3.6|>=4.4,<4.4.4",
@@ -1854,21 +1859,21 @@
                 "symfony/http-foundation": ">=2,<2.8.52|>=3,<3.4.35|>=4,<4.2.12|>=4.3,<4.3.8|>=4.4,<4.4.7|>=5,<5.0.7",
                 "symfony/http-kernel": ">=2,<2.8.52|>=3,<3.4.35|>=4,<4.2.12|>=4.3,<4.4.13|>=5,<5.1.5",
                 "symfony/intl": ">=2.7,<2.7.38|>=2.8,<2.8.31|>=3,<3.2.14|>=3.3,<3.3.13",
-                "symfony/maker-bundle": ">=1.27,<1.31.1",
+                "symfony/maker-bundle": ">=1.27,<1.29.2|>=1.30,<1.31.1",
                 "symfony/mime": ">=4.3,<4.3.8",
                 "symfony/phpunit-bridge": ">=2.8,<2.8.50|>=3,<3.4.26|>=4,<4.1.12|>=4.2,<4.2.7",
                 "symfony/polyfill": ">=1,<1.10",
                 "symfony/polyfill-php55": ">=1,<1.10",
                 "symfony/proxy-manager-bridge": ">=2.7,<2.7.51|>=2.8,<2.8.50|>=3,<3.4.26|>=4,<4.1.12|>=4.2,<4.2.7",
                 "symfony/routing": ">=2,<2.0.19",
-                "symfony/security": ">=2,<2.7.51|>=2.8,<3.4.48|>=4,<4.4.23|>=5,<5.2.8",
+                "symfony/security": ">=2,<2.7.51|>=2.8,<3.4.49|>=4,<4.4.24|>=5,<5.2.8",
                 "symfony/security-bundle": ">=2,<2.7.48|>=2.8,<2.8.41|>=3,<3.3.17|>=3.4,<3.4.11|>=4,<4.0.11",
-                "symfony/security-core": ">=2.4,<2.6.13|>=2.7,<2.7.9|>=2.7.30,<2.7.32|>=2.8,<3.4.48|>=4,<4.4.23|>=5,<5.2.8",
+                "symfony/security-core": ">=2.4,<2.6.13|>=2.7,<2.7.9|>=2.7.30,<2.7.32|>=2.8,<3.4.49|>=4,<4.4.24|>=5,<5.2.9",
                 "symfony/security-csrf": ">=2.4,<2.7.48|>=2.8,<2.8.41|>=3,<3.3.17|>=3.4,<3.4.11|>=4,<4.0.11",
                 "symfony/security-guard": ">=2.8,<3.4.48|>=4,<4.4.23|>=5,<5.2.8",
                 "symfony/security-http": ">=2.3,<2.3.41|>=2.4,<2.7.51|>=2.8,<3.4.48|>=4,<4.4.23|>=5,<5.2.8",
                 "symfony/serializer": ">=2,<2.0.11",
-                "symfony/symfony": ">=2,<3.4.48|>=4,<4.4.23|>=5,<5.2.8",
+                "symfony/symfony": ">=2,<3.4.49|>=4,<4.4.24|>=5,<5.2.9",
                 "symfony/translation": ">=2,<2.0.17",
                 "symfony/validator": ">=2,<2.0.24|>=2.1,<2.1.12|>=2.2,<2.2.5|>=2.3,<2.3.3",
                 "symfony/var-exporter": ">=4.2,<4.2.12|>=4.3,<4.3.8",
@@ -1898,6 +1903,7 @@
                 "wallabag/tcpdf": "<6.2.22",
                 "wikimedia/parsoid": "<0.12.2",
                 "willdurand/js-translation-bundle": "<2.1.1",
+                "wp-cli/wp-cli": "<2.5",
                 "yii2mod/yii2-cms": "<1.9.2",
                 "yiisoft/yii": ">=1.1.14,<1.1.15",
                 "yiisoft/yii2": "<2.0.38",
@@ -1907,6 +1913,7 @@
                 "yiisoft/yii2-gii": "<2.0.4",
                 "yiisoft/yii2-jui": "<2.0.4",
                 "yiisoft/yii2-redis": "<2.0.8",
+                "yoast-seo-for-typo3/yoast_seo": "<7.2.1",
                 "yourls/yourls": "<1.7.4",
                 "zendesk/zendesk_api_client_php": "<2.2.11",
                 "zendframework/zend-cache": ">=2.4,<2.4.8|>=2.5,<2.5.3",
@@ -1969,7 +1976,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-05-13T21:03:10+00:00"
+            "time": "2021-05-21T19:22:20+00:00"
         },
         {
             "name": "sebastian/cli-parser",

@@ -38,14 +38,11 @@ $config = [
 Использование:
 
 ```php
-use dicr\file\FileStore;
-use dicr\file\LocalFileStore;
-
-/** @var FileStore $store получаем настроенный компонент хранилища */
+/** @var dicr\file\FileStore $store получаем настроенный компонент хранилища */
 $store = Yii::$app->get('fileStore');
 
 // или например хранилище в локальной файловой системе
-$store = LocalFileStore::root();
+$store2 = dicr\file\LocalFileStore::root();
 
 // список файлов хранилища в директории pdf
 $files = $store->list('pdf');
@@ -162,17 +159,23 @@ class Product extends ActiveRecord
 Использование файловых аттрибутов:
 
 ```php
+use dicr\file\UploadFile;use yii\db\ActiveRecord;use yii\helpers\Html;
+
+/**
+ * @var ActiveRecord $model
+ */
+
 // добавляем картинку товару
-$prod->image = new UploadFile('/tmp/newimage.jpg');
+$model->image = new UploadFile('/tmp/newimage.jpg');
 
 // сохраняем
-$prod->save();
+$model->save();
 
 // выводим превью картинки товара
-echo Html::img((string)$prod->image->thumb(320, 200));
+echo Html::img((string)$model->image->thumb(['width' => 320, 'height' => 200]));
 
 // выводим ссылки загрузки файлов товара
-foreach ($prod->docs ?: [] as $doc) {
+foreach ($model->docs ?: [] as $doc) {
     echo Html::a($doc->name, $doc->url);
 }
 ```
@@ -180,8 +183,16 @@ foreach ($prod->docs ?: [] as $doc) {
 Форма редактирования файлов товара:
 
 ```php
+use dicr\file\FileInputWidget;use yii\db\ActiveRecord;
+use yii\widgets\ActiveForm;
+
+/**
+ * @var ActiveForm $form
+ * @var ActiveRecord $model
+ */
+
 // поле с виджетом редактирования картинки
-echo $form->field($prod, 'image')->widget(FileInputWidget::class, [
+echo $form->field($model, 'image')->widget(FileInputWidget::class, [
   'layout' => 'images',
   'limit' => 1,
   'accept' => 'image/*',
@@ -189,7 +200,7 @@ echo $form->field($prod, 'image')->widget(FileInputWidget::class, [
 ]);
 
 // поле с виджетом редактирования документов
-echo $form->field($prod, 'docs')->widget(FileInputWidget::class, [
+echo $form->field($model, 'docs')->widget(FileInputWidget::class, [
   'layout' => 'files',
   'limit' => 0,
   'removeExt' => true

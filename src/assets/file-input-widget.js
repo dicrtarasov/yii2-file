@@ -1,8 +1,8 @@
 /*
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license MIT
- * @version 22.01.21 16:10:42
+ * @license GPL-3.0-or-later
+ * @version 22.05.21 21:51:05
  */
 
 (function (window, $) {
@@ -17,7 +17,7 @@
      * Плагин jQuery
      *
      * @param {object} options
-     * @returns {jQuery}
+     * @returns {JQuery}
      */
     $.fn.fileInputWidget = function (options) {
         // noinspection AssignmentToFunctionParameterJS,JSUnusedGlobalSymbols

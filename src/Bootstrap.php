@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license MIT
- * @version 14.09.20 04:45:30
+ * @license GPL-3.0-or-later
+ * @version 22.05.21 19:37:28
  */
 
 declare(strict_types = 1);
