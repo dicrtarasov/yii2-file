@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 22.05.21 21:42:34
+ * @version 12.08.21 23:25:33
  */
 
 declare(strict_types = 1);
@@ -125,16 +125,16 @@ class CSVResponseFormatter extends Component implements ResponseFormatterInterfa
             return [];
         }
 
-        if (is_iterable($row) || ($row instanceof ArrayAccess)) {
-            return $row;
+        if ($row instanceof Model) {
+            return $row->attributes;
         }
 
         if ($row instanceof Arrayable) {
             return $row->toArray();
         }
 
-        if ($row instanceof Model) {
-            return $row->attributes;
+        if (is_iterable($row) || ($row instanceof ArrayAccess)) {
+            return $row;
         }
 
         if (is_object($row)) {

@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 22.05.21 21:42:34
+ * @version 12.08.21 23:25:33
  */
 
 declare(strict_types = 1);
@@ -67,7 +67,7 @@ abstract class FileStore extends Component
                 throw new InvalidConfigException('url: ' . $this->url);
             }
 
-            $this->url = (string)$url;
+            $this->url = $url;
         }
     }
 

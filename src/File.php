@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 22.05.21 21:42:34
+ * @version 12.08.21 23:25:33
  */
 
 declare(strict_types = 1);
@@ -69,10 +69,6 @@ class File extends BaseObject
      */
     public function __construct(FileStore $store, $path, array $config = [])
     {
-        if ($store === null) {
-            throw new InvalidArgumentException('store');
-        }
-
         // store необходимо установить до установки пути, потому что normalizePath использует store
         $this->_store = $store;
 

@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 22.05.21 21:42:34
+ * @version 12.08.21 23:25:33
  */
 
 declare(strict_types = 1);
@@ -18,6 +18,7 @@ use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
 use yii\base\Model;
 use yii\db\ActiveRecord;
+use yii\db\BaseActiveRecord;
 use yii\di\Instance;
 use yii\web\UploadedFile;
 
@@ -205,9 +206,9 @@ class FileAttributeBehavior extends Behavior
     {
         return [
             Model::EVENT_BEFORE_VALIDATE => 'validateFileAttributes',
-            ActiveRecord::EVENT_AFTER_INSERT => 'saveFileAttributes',
-            ActiveRecord::EVENT_AFTER_UPDATE => 'saveFileAttributes',
-            ActiveRecord::EVENT_AFTER_DELETE => 'deleteModelFilePath',
+            BaseActiveRecord::EVENT_AFTER_INSERT => 'saveFileAttributes',
+            BaseActiveRecord::EVENT_AFTER_UPDATE => 'saveFileAttributes',
+            BaseActiveRecord::EVENT_AFTER_DELETE => 'deleteModelFilePath',
         ];
     }
 
