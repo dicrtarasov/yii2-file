@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 12.08.21 23:25:33
+ * @version 16.08.21 09:52:54
  */
 
 declare(strict_types = 1);
@@ -51,6 +51,9 @@ use function is_object;
  */
 class CSVResponseFormatter extends Component implements ResponseFormatterInterface
 {
+    /** @var string форма для Response::formatters */
+    public const FORMAT = 'csv';
+
     /** @var string Content-Type текст */
     public const CONTENT_TYPE_TEXT = 'text/csv';
 
