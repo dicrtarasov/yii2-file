@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 16.08.21 09:52:54
+ * @version 16.08.21 10:12:33
  */
 
 declare(strict_types = 1);
@@ -70,12 +70,12 @@ class CSVResponseFormatter extends Component implements ResponseFormatterInterfa
     public $csvConfig;
 
     /**
-     * @var array|bool поля, ассоциативный массив в виде field => title
+     * @var ?array поля, ассоциативный массив в виде field => title
      *      false - не выводить
      *      true - определить заголовки автоматически
      *      array - заголовки колонок
      */
-    public $fields = true;
+    public $fields;
 
     /** @var ?callable function($row, CSVResponseFormatter $formatter): array */
     public $format;
