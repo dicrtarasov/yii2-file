@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2021 Dicr http://dicr.org
+ * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 22.05.21 21:42:34
+ * @version 05.01.22 01:36:34
  */
 
 declare(strict_types = 1);
@@ -50,31 +50,31 @@ class FileInputWidget extends InputWidget
     public const LAYOUT_FILES = 'files';
 
     /** @var string вид 'images' или 'files' */
-    public $layout = self::LAYOUT_IMAGES;
+    public string $layout = self::LAYOUT_IMAGES;
 
-    /** @var int|null максимальное кол-во файлов */
-    public $limit;
+    /** @var int максимальное кол-во файлов */
+    public int $limit = 0;
 
     /** @var ?string mime-типы в input type=file, например image/* */
-    public $accept;
+    public ?string $accept = null;
 
     /** @var ?bool удалять расширение файла при отображении (default true for horizontal) */
-    public $removeExt;
+    public ?bool $removeExt = null;
 
     /** @var ?string название поля формы аттрибута */
-    public $inputName;
+    public ?string $inputName = null;
 
     /** @var array опции плагина */
-    public $clientOptions = [];
+    public array $clientOptions = [];
 
     /** @var string уникальный идентификатор */
-    private $uniqueClass;
+    private string $uniqueClass;
 
     /**
      * @inheritdoc
      * @throws InvalidConfigException
      */
-    public function init() : void
+    public function init(): void
     {
         parent::init();
 
@@ -84,7 +84,6 @@ class FileInputWidget extends InputWidget
         }
 
         // limit
-        $this->limit = (int)$this->limit;
         if ($this->limit < 0) {
             throw new InvalidConfigException('limit: ' . $this->limit);
         }
@@ -163,7 +162,7 @@ class FileInputWidget extends InputWidget
      * @inheritdoc
      * @throws InvalidConfigException
      */
-    public function run() : string
+    public function run(): string
     {
         // регистрируем ресурсы
         $this->view->registerAssetBundle(FileInputWidgetAsset::class);
@@ -189,10 +188,8 @@ class FileInputWidget extends InputWidget
 
     /**
      * Верстает блок файлов
-     *
-     * @return string
      */
-    protected function renderFiles() : string
+    protected function renderFiles(): string
     {
         $content = '';
 
@@ -207,10 +204,6 @@ class FileInputWidget extends InputWidget
 
     /**
      * Верстает блок файла
-     *
-     * @param int $pos
-     * @param File $file
-     * @return string
      */
     protected function renderFileBlock(int $pos, File $file): string
     {
@@ -247,9 +240,6 @@ class FileInputWidget extends InputWidget
 
     /**
      * Верстает блок картинки
-     *
-     * @param File $file
-     * @return string
      */
     protected function renderImage(File $file): string
     {
@@ -269,10 +259,8 @@ class FileInputWidget extends InputWidget
 
     /**
      * Верстает кнопку добавления картинки
-     *
-     * @return string
      */
-    protected function renderAddButton() : string
+    protected function renderAddButton(): string
     {
         // id поля файла
         $fileId = $this->id . '-addinput-' . mt_rand();

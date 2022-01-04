@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2021 Dicr http://dicr.org
+ * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 22.05.21 21:42:34
+ * @version 05.01.22 01:32:46
  */
 
 declare(strict_types = 1);
@@ -38,23 +38,21 @@ use function is_string;
 class UploadFile extends File
 {
     /** @var ?string наименование файла */
-    private $_name;
+    private ?string $_name = null;
 
     /** @var int ошибка загрузки */
-    private $_error;
+    private int $_error = 0;
 
-    /** @var int размер файла */
-    private $_size;
+    /** @var ?int размер файла */
+    private ?int $_size = null;
 
-    /** @var string mime-type */
-    private $_mimeType;
+    /** @var ?string mime-type */
+    private ?string $_mimeType = null;
 
     /**
      * Конструктор
-     *
-     * @param array|string $pathconfig
      */
-    public function __construct($pathconfig)
+    public function __construct(array|string $pathconfig)
     {
         $config = [];
 
@@ -66,26 +64,6 @@ class UploadFile extends File
         }
 
         parent::__construct(LocalFileStore::root(), $path, $config);
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function init(): void
-    {
-        parent::init();
-
-        if (isset($this->_error)) {
-            /** @noinspection UnnecessaryCastingInspection */
-            /** @noinspection PhpCastIsUnnecessaryInspection */
-            $this->_error = (int)$this->_error;
-        }
-
-        if (isset($this->_size)) {
-            /** @noinspection UnnecessaryCastingInspection */
-            /** @noinspection PhpCastIsUnnecessaryInspection */
-            $this->_size = (int)$this->_size;
-        }
     }
 
     /**
@@ -119,12 +97,8 @@ class UploadFile extends File
 
     /**
      * Файл аттрибута модели.
-     *
-     * @param string $attribute
-     * @param string $formName
-     * @return ?static
      */
-    public static function instance(string $attribute, string $formName = ''): ?self
+    public static function instance(string $attribute, string $formName = ''): ?static
     {
         $files = self::instances($attribute, $formName);
 
@@ -134,7 +108,7 @@ class UploadFile extends File
     /**
      * Парсит $_FILES и создает объекты.
      *
-     * @return UploadFile[] файлы аттрибута
+     * @return static[] файлы аттрибута
      */
     private static function parseInstances(): array
     {
@@ -157,10 +131,8 @@ class UploadFile extends File
 
     /**
      * Определяет формат данных (с названием формы или простой).
-     *
      * Формат $_FILES зависит от того есть ли название формы или нет.
      *
-     * @param array $data
      * @return bool true если данные формы
      */
     private static function isComplexFormData(array $data): bool
@@ -231,7 +203,7 @@ class UploadFile extends File
      * ```
      *
      * @param array $data данные аттрибута
-     * @return UploadFile[] файлы аттрибута
+     * @return static[] файлы аттрибута
      */
     private static function parseSimpleData(array $data): array
     {
@@ -311,7 +283,7 @@ class UploadFile extends File
      * ```
      *
      * @param array $data array данные аттрибутов формы
-     * @return UploadFile[] [$attribute => \dicr\file\UploadFile[]] аттрибуты формы с файлами
+     * @return static[] [$attribute => \dicr\file\UploadFile[]] аттрибуты формы с файлами
      */
     private static function parseFormData(array $data): array
     {
@@ -338,7 +310,7 @@ class UploadFile extends File
      * @param int[] $sizes размеры
      * @param int[] $errors ошибки
      * @param string[] $paths пути
-     * @return self[]
+     * @return static[]
      */
     private static function instancesFromData(
         array $names,
@@ -374,13 +346,10 @@ class UploadFile extends File
 
     /**
      * Конвертирует из yii\web\UploadedFile.
-     *
-     * @param UploadedFile $file
-     * @return static
      */
-    public static function fromUploadedFile(UploadedFile $file): self
+    public static function fromUploadedFile(UploadedFile $file): static
     {
-        return new self([
+        return new static([
             'path' => $file->tempName,
             'name' => $file->name,
             'mimeType' => $file->type,
@@ -417,7 +386,7 @@ class UploadFile extends File
      * @param string $name
      * @return $this
      */
-    public function setName(string $name): File
+    public function setName(string $name): static
     {
         $name = $this->_store->basename($name);
         if (empty($name)) {
@@ -431,10 +400,8 @@ class UploadFile extends File
 
     /**
      * Возвращает ошибку
-     *
-     * @return ?int
      */
-    public function getError(): ?int
+    public function getError(): int
     {
         return $this->_error;
     }
@@ -445,7 +412,7 @@ class UploadFile extends File
      * @param int|string $error
      * @return $this
      */
-    public function setError($error): self
+    public function setError(int|string $error): static
     {
         $this->_error = (int)$error;
 
@@ -474,13 +441,13 @@ class UploadFile extends File
      * @param int|string $size
      * @return $this
      */
-    public function setSize($size): self
+    public function setSize(int|string $size): static
     {
-        if ($size < 0) {
+        $this->_size = (int)$size;
+
+        if ($this->_size < 0) {
             throw new InvalidArgumentException('size');
         }
-
-        $this->_size = (int)$size;
 
         return $this;
     }
@@ -504,10 +471,9 @@ class UploadFile extends File
     /**
      * Устанавливает MIME-тип.
      *
-     * @param string $type
      * @return $this
      */
-    public function setMimeType(string $type): self
+    public function setMimeType(string $type): static
     {
         $this->_mimeType = $type;
 

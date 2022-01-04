@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2021 Dicr http://dicr.org
+ * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 12.08.21 23:25:33
+ * @version 05.01.22 00:42:42
  */
 
 declare(strict_types = 1);
@@ -160,7 +160,7 @@ use function usort;
 class FileAttributeBehavior extends Behavior
 {
     /** @var FileStore|string|array хранилище файлов */
-    public $store = 'fileStore';
+    public string|array|FileStore $store = 'fileStore';
 
     /**
      * @var array конфигурация аттрибутов [ attributeName => limit ]
@@ -168,7 +168,7 @@ class FileAttributeBehavior extends Behavior
      *      Если $limit == 1, то аттрибут $model->{attribute} имеет тип File,
      *      если $limit !== 1, $model->{attribute} имеет тип массива File[]
      */
-    public $attributes;
+    public array $attributes;
 
     /**
      * {@inheritdoc}
@@ -182,7 +182,7 @@ class FileAttributeBehavior extends Behavior
         $this->store = Instance::ensure($this->store, FileStore::class);
 
         // проверяем наличие аттрибутов
-        if (empty($this->attributes) || ! is_array($this->attributes)) {
+        if (empty($this->attributes)) {
             throw new InvalidConfigException('attributes');
         }
 
@@ -196,6 +196,7 @@ class FileAttributeBehavior extends Behavior
         }
 
         unset($params);
+
         parent::init();
     }
 
@@ -238,7 +239,7 @@ class FileAttributeBehavior extends Behavior
      * {@inheritdoc}
      * @throws Exception
      */
-    public function __get($name)
+    public function __get($name): mixed
     {
         return $this->hasFileAttribute($name) ?
             $this->getFileAttributeValue($name) : parent::__get($name);
@@ -248,7 +249,7 @@ class FileAttributeBehavior extends Behavior
      * {@inheritdoc}
      * @throws Exception
      */
-    public function __set($name, $value)
+    public function __set($name, mixed $value): void
     {
         if ($this->hasFileAttribute($name)) {
             $this->setFileAttributeValue($name, $value);
@@ -283,9 +284,6 @@ class FileAttributeBehavior extends Behavior
 
     /**
      * Проверяет существование файлового атрибута
-     *
-     * @param string $attribute
-     * @return bool
      */
     public function hasFileAttribute(string $attribute): bool
     {
@@ -295,10 +293,9 @@ class FileAttributeBehavior extends Behavior
     /**
      * Проверяет существование файлового атрибута.
      *
-     * @param string $attribute
      * @return $this
      */
-    protected function checkIsFileAttribute(string $attribute): self
+    protected function checkIsFileAttribute(string $attribute): static
     {
         if (! $this->hasFileAttribute($attribute)) {
             throw new RuntimeException(
@@ -311,7 +308,7 @@ class FileAttributeBehavior extends Behavior
     }
 
     /** @var File путь папки модели */
-    private $_modelFilePath;
+    private File $_modelFilePath;
 
     /**
      * Возвращает папку модели в хранилище файлов.
@@ -363,10 +360,9 @@ class FileAttributeBehavior extends Behavior
      * Устанавливает путь папки модели.
      * Если путь не установлен, то он рассчитывается автоматически.
      *
-     * @param ?File $path
      * @return $this
      */
-    public function setModelFilePath(?File $path): self
+    public function setModelFilePath(File $path): static
     {
         $this->_modelFilePath = $path;
 
@@ -376,14 +372,11 @@ class FileAttributeBehavior extends Behavior
     /**
      * Папка модели с кэшем картинок.
      *
-     * @return ?File
      * @throws InvalidConfigException
      */
     public function getModelThumbPath(): ?File
     {
-        $modelPath = $this->modelFilePath;
-
-        return $modelPath !== null ? $modelPath->child('dummy.jpg')->thumb()->parent : null;
+        return $this->modelFilePath?->child('dummy.jpg')->thumb()->parent;
     }
 
     /**
@@ -392,15 +385,12 @@ class FileAttributeBehavior extends Behavior
      * @return $this
      * @throws StoreException
      */
-    public function deleteModelThumbs(): self
+    public function deleteModelThumbs(): static
     {
         // удаляем папку с кэшем картинок модели
         try {
-            $thumbPath = $this->getModelThumbPath();
-            if ($thumbPath !== null) {
-                $thumbPath->delete();
-            }
-        } catch (InvalidConfigException $ex) {
+            $this->getModelThumbPath()?->delete();
+        } catch (InvalidConfigException) {
             // у хранилища нет кэша картинок
         }
 
@@ -415,7 +405,7 @@ class FileAttributeBehavior extends Behavior
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    public function deleteModelFilePath(): self
+    public function deleteModelFilePath(): static
     {
         // путь папки модели
         $path = $this->getModelFilePath();
@@ -434,7 +424,6 @@ class FileAttributeBehavior extends Behavior
     /**
      * Получает список файлов аттрибута модели.
      *
-     * @param string $attribute аттрибут
      * @return File[] файлы
      * @throws StoreException
      * @throws InvalidConfigException
@@ -464,18 +453,16 @@ class FileAttributeBehavior extends Behavior
     }
 
     /** @var File[][] текущие значения аттрибутов [attributeName => \dicr\file\File[]] */
-    private $values = [];
+    private array $values = [];
 
     /**
      * Возвращает значение файлового аттрибута
      *
-     * @param string $attribute
-     * @param bool $refresh
      * @return File[]|File|null
      * @throws InvalidConfigException
      * @throws StoreException
      */
-    public function getFileAttributeValue(string $attribute, bool $refresh = false)
+    public function getFileAttributeValue(string $attribute, bool $refresh = false): array|File|null
     {
         $this->checkIsFileAttribute($attribute);
 
@@ -496,11 +483,10 @@ class FileAttributeBehavior extends Behavior
     /**
      * Устанавливает значение файлового аттрибута
      *
-     * @param string $attribute
-     * @param File[]|File|null $value
+     * @param null|File|File[] $value
      * @return $this
      */
-    public function setFileAttributeValue(string $attribute, $value): self
+    public function setFileAttributeValue(string $attribute, array|File|null $value): static
     {
         $this->checkIsFileAttribute($attribute);
 
@@ -625,11 +611,9 @@ class FileAttributeBehavior extends Behavior
     /**
      * Выполняет проверку файла файлового атрибута.
      *
-     * @param string $attribute
-     * @param mixed $file
      * @return $this
      */
-    protected function validateFile(string $attribute, $file): self
+    protected function validateFile(string $attribute, mixed $file): static
     {
         // параметры аттрибута
         $params = $this->attributes[$attribute] ?? [];
@@ -662,7 +646,6 @@ class FileAttributeBehavior extends Behavior
      * Выполняет проверку файлового аттрибута и загруженных файлов.
      * Добавляет ошибки модели по addError
      *
-     * @param string $attribute
      * @return ?bool результаты проверки или null, если атрибут не инициализирован
      */
     public function validateFileAttribute(string $attribute): ?bool
@@ -724,7 +707,6 @@ class FileAttributeBehavior extends Behavior
      * Сохраняет значение аттрибута.
      * Загружает новые файлы (UploadFiles) и удаляется старые Files, согласно текущему значению аттрибута.
      *
-     * @param string $attribute
      * @return ?bool результат сохранения или null, если аттрибут не инициализирован
      * @throws StoreException
      * @throws InvalidConfigException
@@ -854,7 +836,6 @@ class FileAttributeBehavior extends Behavior
     /**
      * Удаляет все файлы аттрибута.
      *
-     * @param string $attribute
      * @return true
      * @throws StoreException
      * @throws InvalidConfigException
@@ -878,7 +859,6 @@ class FileAttributeBehavior extends Behavior
     /**
      * Удаляет все файлы всех аттрибутов
      *
-     * @return bool
      * @throws StoreException
      * @throws InvalidConfigException
      */
@@ -898,9 +878,7 @@ class FileAttributeBehavior extends Behavior
     /**
      * Находит позицию файла в списке файлов по имени.
      *
-     * @param File $file
      * @param File[] $files
-     * @return ?int
      */
     protected function searchModelFilePositionByName(File $file, array $files): ?int
     {

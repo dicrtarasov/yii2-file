@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2021 Dicr http://dicr.org
+ * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 22.05.21 21:42:34
+ * @version 05.01.22 01:02:51
  */
 
 declare(strict_types = 1);
@@ -56,33 +56,27 @@ class FlysystemFileStore extends FileStore
     /**
      * Конвертирует тип доступа public в Flysystem visibility type
      *
-     * @param bool $public
      * @return string \League\Flysystem\AdapterInterface::VISIBILITY_PUBLIC
      */
-    protected static function access2visibility(bool $public) : string
+    protected static function access2visibility(bool $public): string
     {
         return $public ? AdapterInterface::VISIBILITY_PUBLIC : AdapterInterface::VISIBILITY_PRIVATE;
     }
 
     /**
-     * Возвращает адаптер
-     *
-     * @return ?AdapterInterface
+     * Возвращает адаптер.
      */
-    public function getAdapter() : ?AdapterInterface
+    public function getAdapter(): ?AdapterInterface
     {
-        if (is_object($this->flysystem) && method_exists($this->flysystem, 'getAdapter')) {
-            return $this->flysystem->getAdapter();
-        }
-
-        return null;
+        return is_object($this->flysystem) && method_exists($this->flysystem, 'getAdapter') ?
+            $this->flysystem->getAdapter() : null;
     }
 
     /**
      * @inheritdoc
      * @throws InvalidConfigException
      */
-    public function list($path, array $filter = []) : array
+    public function list(array|string $path, array $filter = []): array
     {
         $path = $this->normalizePath($path);
 
@@ -114,7 +108,7 @@ class FlysystemFileStore extends FileStore
     /**
      * @inheritdoc
      */
-    public function exists($path) : bool
+    public function exists(array|string $path): bool
     {
         $path = $this->normalizePath($path);
 
@@ -130,7 +124,7 @@ class FlysystemFileStore extends FileStore
     /**
      * @inheritdoc
      */
-    public function isDir($path) : bool
+    public function isDir(array|string $path): bool
     {
         return $this->getType($path) === 'dir';
     }
@@ -138,11 +132,10 @@ class FlysystemFileStore extends FileStore
     /**
      * Возвращает тип файл/директория
      *
-     * @param string|array $path
      * @return string dir|file
      * @throws StoreException
      */
-    public function getType($path) : string
+    public function getType(array|string $path): string
     {
         $path = $this->normalizePath($path);
 
@@ -168,7 +161,7 @@ class FlysystemFileStore extends FileStore
     /**
      * @inheritdoc
      */
-    public function isFile($path) : bool
+    public function isFile(array|string $path): bool
     {
         return $this->getType($path) === 'file';
     }
@@ -176,7 +169,7 @@ class FlysystemFileStore extends FileStore
     /**
      * @inheritdoc
      */
-    public function isPublic($path) : bool
+    public function isPublic(array|string $path): bool
     {
         $path = $this->normalizePath($path);
 
@@ -199,7 +192,7 @@ class FlysystemFileStore extends FileStore
      * @param string $visibility \League\Flysystem\AdapterInterface::VISIBILITY_*
      * @return bool флаг public
      */
-    protected static function visibility2access(string $visibility) : bool
+    protected static function visibility2access(string $visibility): bool
     {
         return $visibility === AdapterInterface::VISIBILITY_PUBLIC;
     }
@@ -207,7 +200,7 @@ class FlysystemFileStore extends FileStore
     /**
      * @inheritdoc
      */
-    public function setPublic($path, bool $public): FileStore
+    public function setPublic(array|string $path, bool $public): static
     {
         $path = $this->normalizePath($path);
         $visibility = self::access2visibility($public);
@@ -230,7 +223,7 @@ class FlysystemFileStore extends FileStore
     /**
      * @inheritdoc
      */
-    public function size($path) : int
+    public function size(array|string $path): int
     {
         $path = $this->normalizePath($path);
 
@@ -250,7 +243,7 @@ class FlysystemFileStore extends FileStore
     /**
      * @inheritdoc
      */
-    public function mtime($path) : int
+    public function mtime(array|string $path): int
     {
         $path = $this->normalizePath($path);
 
@@ -270,7 +263,7 @@ class FlysystemFileStore extends FileStore
     /**
      * @inheritdoc
      */
-    public function mimeType($path) : string
+    public function mimeType(array|string $path): string
     {
         $path = $this->normalizePath($path);
 
@@ -290,7 +283,7 @@ class FlysystemFileStore extends FileStore
     /**
      * @inheritdoc
      */
-    public function readContents($path) : string
+    public function readContents(array|string $path): string
     {
         $path = $this->normalizePath($path);
 
@@ -310,7 +303,7 @@ class FlysystemFileStore extends FileStore
     /**
      * @inheritdoc
      */
-    public function writeContents($path, string $contents) : int
+    public function writeContents(array|string $path, string $contents): int
     {
         $path = $this->normalizePath($path);
 
@@ -335,7 +328,7 @@ class FlysystemFileStore extends FileStore
     /**
      * @inheritdoc
      */
-    public function readStream($path, string $mode = null)
+    public function readStream(array|string $path, string $mode = null)
     {
         $path = $this->normalizePath($path);
 
@@ -355,7 +348,7 @@ class FlysystemFileStore extends FileStore
     /**
      * @inheritdoc
      */
-    public function writeStream($path, $stream) : int
+    public function writeStream(array|string $path, $stream): int
     {
         $path = $this->normalizePath($path);
 
@@ -378,7 +371,7 @@ class FlysystemFileStore extends FileStore
      * @inheritdoc
      * @throws NotSupportedException
      */
-    public function copy($path, $newpath): FileStore
+    public function copy(array|string $path, array|string $newpath): static
     {
         $path = $this->normalizePath($path);
         $newpath = $this->normalizePath($newpath);
@@ -406,7 +399,7 @@ class FlysystemFileStore extends FileStore
      * @inheritdoc
      * @throws NotSupportedException
      */
-    public function absolutePath($path) : string
+    public function absolutePath(array|string $path): string
     {
         $path = $this->normalizePath($path);
 
@@ -421,7 +414,7 @@ class FlysystemFileStore extends FileStore
     /**
      * @inheritdoc
      */
-    public function rename($path, $newpath): FileStore
+    public function rename(array|string $path, array|string $newpath): static
     {
         $path = $this->normalizePath($path);
         $newpath = $this->normalizePath($newpath);
@@ -448,7 +441,7 @@ class FlysystemFileStore extends FileStore
     /**
      * @inheritdoc
      */
-    public function mkdir($path): FileStore
+    public function mkdir(array|string $path): static
     {
         $path = $this->normalizePath($path);
 
@@ -468,7 +461,7 @@ class FlysystemFileStore extends FileStore
     /**
      * @inheritdoc
      */
-    protected function unlink($path): FileStore
+    protected function unlink(array|string $path): static
     {
         $path = $this->buildPath($this->filterRootPath($path));
 
@@ -490,7 +483,7 @@ class FlysystemFileStore extends FileStore
     /**
      * @inheritdoc
      */
-    protected function rmdir($path): FileStore
+    protected function rmdir(array|string $path): static
     {
         $path = $this->buildPath($this->filterRootPath($path));
 

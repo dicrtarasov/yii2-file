@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2021 Dicr http://dicr.org
+ * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 22.05.21 21:42:34
+ * @version 05.01.22 01:42:48
  */
 
 declare(strict_types = 1);
@@ -21,7 +21,6 @@ class StoreException extends Exception
      * Конструктор
      *
      * @param ?string $msg если не задано, то берется из error_get_last
-     * @param ?Throwable $prev
      */
     public function __construct(?string $msg = null, ?Throwable $prev = null)
     {

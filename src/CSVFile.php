@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2021 Dicr http://dicr.org
+ * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 22.05.21 21:42:34
+ * @version 05.01.22 01:42:48
  */
 
 declare(strict_types = 1);
@@ -23,7 +23,6 @@ use function fopen;
 use function fputcsv;
 use function preg_match;
 use function rewind;
-use function strpos;
 
 /**
  * CSV File.
@@ -42,7 +41,7 @@ class CSVFile extends File implements Iterator
     public const CHARSET_DEFAULT = 'utf-8';
 
     /** @var string кодировка для преобразования при чтении/записи */
-    public $charset = self::CHARSET_DEFAULT;
+    public string $charset = self::CHARSET_DEFAULT;
 
     /** @var string разделитель полей по-умолчанию */
     public const DELIMITER_DEFAULT = ',';
@@ -51,43 +50,38 @@ class CSVFile extends File implements Iterator
     public const DELIMITER_EXCEL = ';';
 
     /** @var string разделитель полей */
-    public $delimiter = self::DELIMITER_DEFAULT;
+    public string $delimiter = self::DELIMITER_DEFAULT;
 
     /** @var string ограничитель полей по-умолчанию */
     public const ENCLOSURE_DEFAULT = '"';
 
     /** @var string символ ограничения строк в полях */
-    public $enclosure = self::ENCLOSURE_DEFAULT;
+    public string $enclosure = self::ENCLOSURE_DEFAULT;
 
     /** @var string символ экранирования по-умолчанию */
     public const ESCAPE_DEFAULT = '\\';
 
     /** @var string символ для экранирования */
-    public $escape = self::ESCAPE_DEFAULT;
+    public string $escape = self::ESCAPE_DEFAULT;
 
     /** @var ?resource файловый дескриптор */
     protected $_handle;
 
     /** @var ?int текущий номер строки файла */
-    protected $_lineNo;
+    protected ?int $_lineNo = null;
 
     /** @var ?string[] текущие данные для Iterable */
-    protected $_current;
+    protected ?array $_current;
 
     /**
      * CSVFile constructor.
      *
-     * @param array $config
      * @throws InvalidConfigException
      */
     public function __construct(array $config = [])
     {
         $store = ArrayHelper::remove($config, 'store');
-        if (empty($store)) {
-            $store = LocalFileStore::root();
-        } else {
-            $store = Instance::ensure($store, FileStore::class);
-        }
+        $store = empty($store) ? LocalFileStore::root() : Instance::ensure($store, FileStore::class);
 
         $path = ArrayHelper::remove($config, 'path', '');
 
@@ -109,8 +103,6 @@ class CSVFile extends File implements Iterator
 
     /**
      * Номер текущей строки
-     *
-     * @return ?int
      */
     public function getLineNo(): ?int
     {
@@ -134,7 +126,7 @@ class CSVFile extends File implements Iterator
      * @noinspection PhpUsageOfSilenceOperatorInspection
      * @throws StoreException
      */
-    public function reset(): self
+    public function reset(): static
     {
         if (! empty($this->_handle) && @rewind($this->_handle) === false) {
             $err = @error_get_last();
@@ -150,7 +142,6 @@ class CSVFile extends File implements Iterator
     /**
      * Декодирует строку из заданной кодировки.
      *
-     * @param array $line
      * @return string[]
      * @noinspection PhpUsageOfSilenceOperatorInspection
      */
@@ -176,7 +167,7 @@ class CSVFile extends File implements Iterator
     {
         if ($this->charset !== self::CHARSET_DEFAULT) {
             $charset = $this->charset;
-            if (strpos($charset, '//') === false) {
+            if (! str_contains($charset, '//')) {
                 $charset .= '//TRANSLIT';
             }
 
@@ -244,7 +235,6 @@ class CSVFile extends File implements Iterator
      * Если задан format, то вызывает для преобразования данных в массив.
      * Если задан charset, то кодирует в заданную кодировку.
      *
-     * @param array $line
      * @return int длина записанной строки
      * @noinspection PhpUsageOfSilenceOperatorInspection
      * @throws StoreException
@@ -303,12 +293,15 @@ class CSVFile extends File implements Iterator
     /**
      * Отматывает указатель в начало и читает первую строку
      *
+     * @return $this
      * @throws StoreException
      */
-    public function rewind(): void
+    public function rewind(): static
     {
         $this->reset();
         $this->readLine();
+
+        return $this;
     }
 
     /**
@@ -334,17 +327,18 @@ class CSVFile extends File implements Iterator
     /**
      * Читает следующую строку
      *
+     * @return $this
      * @throws StoreException
      */
-    public function next(): void
+    public function next(): static
     {
         $this->readLine();
+
+        return $this;
     }
 
     /**
      * Проверяет корректность текущей позиции (не конец файла)
-     *
-     * @return bool
      */
     public function valid(): bool
     {

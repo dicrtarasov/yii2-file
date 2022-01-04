@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2021 Dicr http://dicr.org
+ * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 16.08.21 10:12:33
+ * @version 05.01.22 01:17:27
  */
 
 declare(strict_types = 1);
@@ -61,13 +61,13 @@ class CSVResponseFormatter extends Component implements ResponseFormatterInterfa
     public const CONTENT_TYPE_EXCEL = 'application/vnd.ms-excel';
 
     /** @var ?string Content-Type */
-    public $contentType = self::CONTENT_TYPE_TEXT;
+    public ?string $contentType = self::CONTENT_TYPE_TEXT;
 
     /** @var ?string имя файла для content-dispose attachment */
-    public $fileName;
+    public ?string $fileName = null;
 
-    /** @var ?array конфиг CSVFile */
-    public $csvConfig;
+    /** @var array конфиг CSVFile */
+    public array $csvConfig = [];
 
     /**
      * @var ?array поля, ассоциативный массив в виде field => title
@@ -75,18 +75,15 @@ class CSVResponseFormatter extends Component implements ResponseFormatterInterfa
      *      true - определить заголовки автоматически
      *      array - заголовки колонок
      */
-    public $fields;
+    public ?array $fields = null;
 
     /** @var ?callable function($row, CSVResponseFormatter $formatter): array */
     public $format;
 
     /**
      * Конвертирует данные в Traversable
-     *
-     * @param array|object|Traversable|Arrayable|Query|DataProviderInterface $data
-     * @return array|Traversable
      */
-    protected static function convertData($data)
+    protected static function convertData(object|array $data): object|array
     {
         if (empty($data)) {
             return [];
@@ -118,11 +115,10 @@ class CSVResponseFormatter extends Component implements ResponseFormatterInterfa
     /**
      * Конвертирует строку данных в массив значений
      *
-     * @param array|object|Traversable|ArrayAccess|Arrayable|Model $row - данные строки
-     * @return array|ArrayAccess|Traversable массив значений
-     * @throws InvalidArgumentException
+     * @param object|array $row - данные строки
+     * @return object|array массив значений
      */
-    protected function convertRow($row)
+    protected function convertRow(object|array $row): object|array
     {
         if (empty($row)) {
             return [];
@@ -149,9 +145,6 @@ class CSVResponseFormatter extends Component implements ResponseFormatterInterfa
 
     /**
      * Возвращает mime-тип контента
-     *
-     * @param ?CSVFile $csv
-     * @return ?string
      */
     public function getMimeType(?CSVFile $csv = null): ?string
     {
@@ -177,12 +170,11 @@ class CSVResponseFormatter extends Component implements ResponseFormatterInterfa
     /**
      * Форматирует ответ в CSV-файл
      *
-     * @param array|Traversable|Arrayable|Query|DataProviderInterface $data данные
-     * @return CSVFile
+     * @param object|array $data данные
      * @throws InvalidConfigException
      * @throws StoreException
      */
-    public function formatData($data): CSVFile
+    public function formatData(object|array $data): CSVFile
     {
         // CSV-файл для вывода
         $csvFile = new CSVFile($this->csvConfig ?: []);

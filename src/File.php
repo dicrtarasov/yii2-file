@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2021 Dicr http://dicr.org
+ * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 12.08.21 23:25:33
+ * @version 05.01.22 01:24:31
  */
 
 declare(strict_types = 1);
@@ -48,26 +48,23 @@ class File extends BaseObject
     /** @var string регулярное выражение имени файла со служебным префиксом */
     protected const STORE_PREFIX_REGEX = '~^\.?([^\~]+)\~(\d+)\~(.+)$~u';
 
-    /** @var FileStore */
-    protected $_store;
+    protected FileStore $_store;
 
     /** @var string путь файла */
-    protected $_path;
+    protected string $_path;
 
-    /** @var string кэш абсолютного пути */
-    private $_absolutePath;
+    /** @var ?string кэш абсолютного пути */
+    private ?string $_absolutePath = null;
 
     /** @var ?string кэш абсолютного URL */
-    private $_absoluteUrl;
+    private ?string $_absoluteUrl = null;
 
     /**
      * Конструктор
      *
-     * @param FileStore $store
-     * @param string|array $path относительный путь
-     * @param array $config
+     * @param array|string $path относительный путь
      */
-    public function __construct(FileStore $store, $path, array $config = [])
+    public function __construct(FileStore $store, array|string $path, array $config = [])
     {
         // store необходимо установить до установки пути, потому что normalizePath использует store
         $this->_store = $store;
@@ -89,10 +86,8 @@ class File extends BaseObject
 
     /**
      * Возвращает путь
-     *
-     * @return string
      */
-    public function getPath() : string
+    public function getPath(): string
     {
         return $this->_path;
     }
@@ -104,7 +99,7 @@ class File extends BaseObject
      * @return $this
      * @throws StoreException
      */
-    public function setPath($path) : self
+    public function setPath(array|string $path): static
     {
         $path = $this->normalizePath($path);
 
@@ -130,7 +125,7 @@ class File extends BaseObject
      * @param string $name пользовательское имя файла
      * @return string имя файла со служебным префиксом.
      */
-    public static function createStorePrefix(string $attribute, int $pos, string $name) : string
+    public static function createStorePrefix(string $attribute, int $pos, string $name): string
     {
         // удаляем текущий префикс
         $name = static::removeStorePrefix($name);
@@ -145,7 +140,7 @@ class File extends BaseObject
      * @param string $name имя файла
      * @return string оригинальное имя без префикса
      */
-    public static function removeStorePrefix(string $name) : string
+    public static function removeStorePrefix(string $name): string
     {
         $matches = null;
         if (preg_match(self::STORE_PREFIX_REGEX, $name, $matches)) {
@@ -161,9 +156,8 @@ class File extends BaseObject
      * @param array $options
      * - removePrefix - удаляет служебный префикс позиции файла, если имеется
      * - removeExt - удаляет расширение если имеется
-     * @return string
      */
-    public function getName(array $options = []) : string
+    public function getName(array $options = []): string
     {
         $name = $this->_store->basename($this->_path);
 
@@ -185,7 +179,7 @@ class File extends BaseObject
      * @return $this
      * @throws StoreException
      */
-    public function setName(string $name) : self
+    public function setName(string $name): static
     {
         // получаем новое имя файла
         $name = $this->_store->basename($name);
@@ -203,19 +197,16 @@ class File extends BaseObject
      * Нормализация пути.
      *
      * @param string|string[] $path
-     * @return string
      */
-    protected function normalizePath($path) : string
+    protected function normalizePath(array|string $path): string
     {
         return $this->_store->normalizePath($path);
     }
 
     /**
      * Расширение файла по имени.
-     *
-     * @return string
      */
-    public function getExtension() : string
+    public function getExtension(): string
     {
         $matches = null;
 
@@ -224,11 +215,8 @@ class File extends BaseObject
 
     /**
      * Удаляет расширение из имени файла.
-     *
-     * @param string $name
-     * @return string
      */
-    public static function removeExtension(string $name) : string
+    public static function removeExtension(string $name): string
     {
         return preg_replace('~\.[^\.]+$~u', '', $name);
     }
@@ -236,10 +224,9 @@ class File extends BaseObject
     /**
      * Возвращает флаг существования файла.
      *
-     * @return bool
      * @throws StoreException
      */
-    public function getExists() : bool
+    public function getExists(): bool
     {
         return $this->_store->exists($this->_path);
     }
@@ -247,10 +234,9 @@ class File extends BaseObject
     /**
      * Возвращает признак директории.
      *
-     * @return bool
      * @throws StoreException
      */
-    public function getIsDir() : bool
+    public function getIsDir(): bool
     {
         return $this->_store->isDir($this->_path);
     }
@@ -258,10 +244,9 @@ class File extends BaseObject
     /**
      * Возвращает признак файла.
      *
-     * @return bool
      * @throws StoreException
      */
-    public function getIsFile() : bool
+    public function getIsFile(): bool
     {
         return $this->_store->isFile($this->_path);
     }
@@ -272,7 +257,7 @@ class File extends BaseObject
      * @return int размер в байтах
      * @throws StoreException
      */
-    public function getSize() : int
+    public function getSize(): int
     {
         return $this->_store->size($this->_path);
     }
@@ -283,7 +268,7 @@ class File extends BaseObject
      * @return int timestamp
      * @throws StoreException
      */
-    public function getMtime() : int
+    public function getMtime(): int
     {
         return $this->_store->mtime($this->_path);
     }
@@ -295,7 +280,7 @@ class File extends BaseObject
      * @return $this
      * @throws StoreException
      */
-    public function touch(?int $time = null) : self
+    public function touch(?int $time = null): static
     {
         $this->_store->touch($this->_path, $time);
 
@@ -305,10 +290,9 @@ class File extends BaseObject
     /**
      * Возвращает Mime-ип файла.
      *
-     * @return string
      * @throws StoreException
      */
-    public function getMimeType() : string
+    public function getMimeType(): string
     {
         return $this->_store->mimeType($this->_path);
     }
@@ -317,9 +301,8 @@ class File extends BaseObject
      * Сравнивает Mime-тип файла.
      *
      * @param string $type mime-тип с использованием шаблонов (image/png, text/*)
-     * @return bool
      */
-    public function matchMimeType(string $type) : bool
+    public function matchMimeType(string $type): bool
     {
         $regex = '~^' . str_replace(['/', '*'], ['\\/', '.+'], $type) . '$~uism';
 
@@ -329,10 +312,9 @@ class File extends BaseObject
     /**
      * Возвращает содержимое файла.
      *
-     * @return string
      * @throws StoreException
      */
-    public function getContents() : string
+    public function getContents(): string
     {
         return $this->_store->readContents($this->_path);
     }
@@ -340,11 +322,10 @@ class File extends BaseObject
     /**
      * Записывает содержимое файла из строки
      *
-     * @param string $contents
      * @return $this
      * @throws StoreException
      */
-    public function setContents(string $contents) : self
+    public function setContents(string $contents): static
     {
         $this->_store->writeContents($this->_path, $contents);
 
@@ -370,7 +351,7 @@ class File extends BaseObject
      * @return $this
      * @throws StoreException
      */
-    public function setStream($stream) : self
+    public function setStream($stream): static
     {
         if (! is_resource($stream)) {
             throw new InvalidArgumentException('stream');
@@ -383,10 +364,8 @@ class File extends BaseObject
 
     /**
      * Возвращает абсолютный путь.
-     *
-     * @return string
      */
-    public function getAbsolutePath() : string
+    public function getAbsolutePath(): string
     {
         if (! isset($this->_absolutePath)) {
             $this->_absolutePath = $this->_store->absolutePath($this->_path);
@@ -397,10 +376,8 @@ class File extends BaseObject
 
     /**
      * Возвращает url.
-     *
-     * @return ?string
      */
-    public function getUrl() : ?string
+    public function getUrl(): ?string
     {
         if ($this->_absoluteUrl === null) {
             $this->_absoluteUrl = $this->_store->url($this->_path) ?: false;
@@ -412,10 +389,9 @@ class File extends BaseObject
     /**
      * Возвращает родительскую директорию.
      *
-     * @return ?static
      * @throws InvalidConfigException
      */
-    public function getParent() : ?self
+    public function getParent(): ?self
     {
         if ($this->_path === '') {
             return null;
@@ -428,10 +404,9 @@ class File extends BaseObject
      * Возвращает дочерний файл с путем относительно данной директории.
      *
      * @param string|string[] $path
-     * @return static
      * @throws InvalidConfigException
      */
-    public function child($path) : self
+    public function child(array|string $path): self
     {
         return $this->_store->file($this->_store->childname($this->_path, $path));
     }
@@ -440,20 +415,18 @@ class File extends BaseObject
      * Возвращает список файлов директории
      *
      * @param array $options опции и фильтры {@link FileStore::list}
-     * @return static[]
+     * @return self[]
      * @throws StoreException
      */
-    public function getList(array $options = []) : array
+    public function getList(array $options = []): array
     {
         return $this->_store->list($this->_path, $options);
     }
 
     /**
      * Возвращает флаг скрытого файла
-     *
-     * @return bool
      */
-    public function getHidden() : bool
+    public function getHidden(): bool
     {
         return $this->_store->isHidden($this->_path);
     }
@@ -461,10 +434,9 @@ class File extends BaseObject
     /**
      * Возвращает флаг публичного доступа
      *
-     * @return bool
      * @throws StoreException не существует
      */
-    public function getPublic() : bool
+    public function getPublic(): bool
     {
         return $this->_store->isPublic($this->_path);
     }
@@ -472,11 +444,10 @@ class File extends BaseObject
     /**
      * Устанавливает флаг публичного доступа
      *
-     * @param bool $public
      * @return $this
      * @throws StoreException не существует
      */
-    public function setPublic(bool $public) : self
+    public function setPublic(bool $public): static
     {
         $this->_store->setPublic($this->_path, $public);
 
@@ -486,14 +457,14 @@ class File extends BaseObject
     /**
      * Импорт файла в хранилище
      *
-     * @param string|string[]|File $src импортируемый файл
+     * @param string|File|string[] $src импортируемый файл
      * @param array $options опции
      *  - bool $ifModified - импортировать файл только если время новее или размер отличается (по-умолчанию true)
      * @return $this
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    public function import($src, array $options = []) : self
+    public function import(array|File|string $src, array $options = []): static
     {
         $this->_store->import($src, $this->_path, $options);
 
@@ -503,12 +474,12 @@ class File extends BaseObject
     /**
      * Копирует файл.
      *
-     * @param $path
-     * @return static новый файл
+     * @param string|string[] $path
+     * @return self новый файл
      * @throws StoreException
      * @throws InvalidConfigException
      */
-    public function copy($path) : self
+    public function copy(array|string $path): self
     {
         $this->_store->copy($this->_path, $path);
 
@@ -521,7 +492,7 @@ class File extends BaseObject
      * @return $this
      * @throws StoreException
      */
-    public function mkdir() : self
+    public function mkdir(): static
     {
         $this->_store->mkdir($this->_path);
 
@@ -534,7 +505,7 @@ class File extends BaseObject
      * @return $this
      * @throws StoreException
      */
-    public function checkDir() : self
+    public function checkDir(): static
     {
         $this->_store->checkDir($this->_store->dirname($this->_path));
 
@@ -547,7 +518,7 @@ class File extends BaseObject
      * @return $this
      * @throws StoreException
      */
-    public function delete() : self
+    public function delete(): static
     {
         $this->_store->delete($this->_path);
 
@@ -558,12 +529,11 @@ class File extends BaseObject
      * Создает превью файла.
      *
      * @param array $config опции ThumbFile
-     * @return ThumbFile
      * - если thumbFileConfig не настроен, то false
      * - если файл не существует и не настроен noimage, то null
      * @throws InvalidConfigException
      */
-    public function thumb(array $config = []) : ThumbFile
+    public function thumb(array $config = []): ThumbFile
     {
         return $this->store->thumb($this, $config);
     }
@@ -574,11 +544,11 @@ class File extends BaseObject
      * @return $this
      * @throws StoreException
      */
-    public function clearThumb() : self
+    public function clearThumb(): static
     {
         try {
             $this->store->clearThumb($this);
-        } catch (InvalidConfigException $ex) {
+        } catch (InvalidConfigException) {
             // noop кэш картинок не настроен
         }
 
@@ -592,7 +562,7 @@ class File extends BaseObject
      * @return CSVFile
      * @throws InvalidConfigException
      */
-    public function csv(array $config = []) : CSVFile
+    public function csv(array $config = []): CSVFile
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
         return Yii::createObject($config + [
@@ -607,7 +577,7 @@ class File extends BaseObject
      *
      * @return string path
      */
-    public function __toString() : string
+    public function __toString(): string
     {
         return $this->_path;
     }

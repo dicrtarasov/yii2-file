@@ -1,11 +1,11 @@
 /*
- * @copyright 2019-2021 Dicr http://dicr.org
+ * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 22.05.21 21:51:05
+ * @version 05.01.22 00:32:24
  */
 
-(function (window, $) {
+((window, $) => {
     "use strict";
 
     // noinspection JSUnresolvedVariable
@@ -54,7 +54,7 @@
                 const $files = $('.file', $widget);
 
                 // обходим все элементы
-                $files.each(function (pos, $item) {
+                $files.each((pos, $item) => {
                     // устанавливаем имя ввода файла с индексом
                     // noinspection JSUnresolvedVariable
                     $('input', $item).attr('name', `${options.inputName}[${pos}]`);

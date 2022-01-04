@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2021 Dicr http://dicr.org
+ * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 22.05.21 21:42:34
+ * @version 05.01.22 01:42:48
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -15,9 +15,7 @@ use yii\base\NotSupportedException;
 
 use function ftp_close;
 use function in_array;
-use function is_int;
 use function is_resource;
-use function is_string;
 
 /**
  * Файловая система FTP.
@@ -31,19 +29,19 @@ use function is_string;
 class FtpFileStore extends LocalFileStore
 {
     /** @var string сервер */
-    public $host;
+    public string $host;
 
     /** @var int порт сервера */
-    public $port = 21;
+    public int $port = 21;
 
     /** @var string логин пользователя */
-    public $username = 'anonymous';
+    public string $username = 'anonymous';
 
     /** @var string пароль для парольной авторизации */
-    public $password;
+    public string $password;
 
     /** @var int таймаут сетевых операций */
-    public $timeout = 90;
+    public int $timeout = 90;
 
     /** @var resource connection */
     private $connection;
@@ -54,15 +52,16 @@ class FtpFileStore extends LocalFileStore
      */
     public function init(): void
     {
-        if (! is_string($this->host) || $this->host === '') {
+        if (empty($this->host)) {
             throw new InvalidConfigException('host');
         }
 
-        if (! is_int($this->port) || $this->port < 1) {
+        if ($this->port < 1) {
             throw new InvalidConfigException('port');
         }
 
         $this->connection = @ftp_connect($this->host, $this->port, $this->timeout);
+
         if (! is_resource($this->connection)) {
             throw new StoreException('ошибка подключения к серверу', new StoreException(''));
         }
@@ -90,7 +89,7 @@ class FtpFileStore extends LocalFileStore
      *
      * Переопределяем родительский метод для отмены проверок пути.
      */
-    public function setPath(string $path): LocalFileStore
+    public function setPath(string $path): static
     {
         $this->_path = '/' . $this->normalizePath($path);
 
@@ -100,7 +99,7 @@ class FtpFileStore extends LocalFileStore
     /**
      * @inheritDoc
      */
-    public function list($path, array $filter = []): array
+    public function list(array|string $path, array $filter = []): array
     {
         $path = $this->filterPath($path);
 
@@ -123,6 +122,7 @@ class FtpFileStore extends LocalFileStore
                     break;
                 }
 
+                /** @noinspection PhpConditionAlreadyCheckedInspection */
                 if (in_array($item, ['', '.', '..'], true)) {
                     continue;
                 }
@@ -149,7 +149,7 @@ class FtpFileStore extends LocalFileStore
     /**
      * @inheritdoc
      */
-    public function absolutePath($path): string
+    public function absolutePath(array|string $path): string
     {
         return 'ftp://' . $this->username . ':' . $this->password . '@' . $this->host . ':' . $this->port .
             $this->relativePath($path);
@@ -158,10 +158,9 @@ class FtpFileStore extends LocalFileStore
     /**
      * Возвращает относительный путь
      *
-     * @param string|array $path
-     * @return string
+     * @noinspection PhpMemberCanBePulledUpInspection
      */
-    public function relativePath($path): string
+    public function relativePath(array|string $path): string
     {
         return parent::absolutePath($path);
     }
@@ -169,7 +168,7 @@ class FtpFileStore extends LocalFileStore
     /**
      * @inheritDoc
      */
-    public function size($path): int
+    public function size(array|string $path): int
     {
         $size = @ftp_size($this->connection, $this->relativePath($path));
         if ($size < 0) {
@@ -182,7 +181,7 @@ class FtpFileStore extends LocalFileStore
     /**
      * @inheritDoc
      */
-    public function mtime($path): int
+    public function mtime(array|string $path): int
     {
         $time = @ftp_mdtm($this->connection, $this->relativePath($path));
         if ($time < 0) {
@@ -196,7 +195,7 @@ class FtpFileStore extends LocalFileStore
      * @inheritDoc
      * @throws NotSupportedException
      */
-    public function mimeType($path): string
+    public function mimeType(array|string $path): string
     {
         throw new NotSupportedException('mimeType');
     }
@@ -204,7 +203,7 @@ class FtpFileStore extends LocalFileStore
     /**
      * @inheritdoc
      */
-    public function rename($path, $newpath): FileStore
+    public function rename(array|string $path, array|string $newpath): static
     {
         $path = $this->filterRootPath($path);
         $newpath = $this->filterRootPath($newpath);
@@ -230,7 +229,7 @@ class FtpFileStore extends LocalFileStore
     /**
      * @inheritdoc
      */
-    public function mkdir($path): FileStore
+    public function mkdir(array|string $path): static
     {
         $path = $this->filterRootPath($path);
 
@@ -250,7 +249,7 @@ class FtpFileStore extends LocalFileStore
     /**
      * @inheritdoc
      */
-    public function setPublic($path, bool $public): FileStore
+    public function setPublic(array|string $path, bool $public): static
     {
         $path = $this->filterRootPath($path);
         $perms = $this->permsByPublic($this->isDir($path), $public);
@@ -268,7 +267,7 @@ class FtpFileStore extends LocalFileStore
      * @inheritDoc
      * @throws NotSupportedException
      */
-    public function isPublic($path): bool
+    public function isPublic(array|string $path): bool
     {
         throw new NotSupportedException('isPublic');
     }
@@ -276,7 +275,7 @@ class FtpFileStore extends LocalFileStore
     /**
      * @inheritdoc
      */
-    protected function unlink($path): FileStore
+    protected function unlink(array|string $path): static
     {
         $this->filterRootPath($path);
 
@@ -292,7 +291,7 @@ class FtpFileStore extends LocalFileStore
     /**
      * @inheritdoc
      */
-    protected function rmdir($path): FileStore
+    protected function rmdir(array|string $path): static
     {
         $this->filterRootPath($path);
 
