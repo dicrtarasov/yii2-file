@@ -3,7 +3,7 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 05.01.22 01:41:53
+ * @version 05.01.22 23:18:25
  */
 
 declare(strict_types = 1);
@@ -40,10 +40,7 @@ use function substr;
  */
 class ThumbFile extends File
 {
-    /**
-     * @var ?File исходный файл
-     * Если пустой, то применяется noimage
-     */
+    /** Исходный файл. Если пустой, то применяется noimage */
     public ?File $source = null;
 
     public int $width = 0;
@@ -51,7 +48,7 @@ class ThumbFile extends File
     public int $height = 0;
 
     /**
-     * @var string|bool|null дополнять до заданных размеров заполняя пустое пространство одной из величин.
+     * дополнять до заданных размеров заполняя пустое пространство одной из величин.
      * Примеры: `rgb(255,255,255)`, `#fff`, ...
      *
      * Применяется только когда заданы оба размера (width и height).
@@ -63,25 +60,25 @@ class ThumbFile extends File
      */
     public string|bool|null $fill = null;
 
-    /** @var ?string путь картинки-заглушки или функция, которая возвращает путь */
+    /** путь картинки-заглушки или функция, которая возвращает путь */
     public ?string $noimage = '@dicr/file/assets/noimage.png';
 
-    /** @var ?string путь картинки водяного знака (полупрозрачный png) */
+    /** путь картинки водяного знака (полупрозрачный png) */
     public ?string $watermark = null;
 
-    /** @var ?string путь картинки дисклеймера */
+    /** путь картинки дисклеймера */
     public ?string $disclaimer = null;
 
-    /** @var float качество сжатия картинки */
+    /** качество сжатия картинки */
     public float $quality = 0.95;
 
-    /** @var string формат файла */
+    /** формат файла */
     public string $format = 'jpg';
 
-    /** @var bool файл является заглушкой noimage */
+    /** файл является заглушкой noimage */
     protected bool $isNoimage = false;
 
-    /** @var ?Imagick сырое изображение */
+    /** сырое изображение */
     protected ?Imagick $_image = null;
 
     /**
@@ -153,7 +150,7 @@ class ThumbFile extends File
 
         // проверяем источник
         if (! empty($this->source)) {
-            if (! ($this->source instanceof File)) {
+            if (! $this->source instanceof File) {
                 throw new InvalidConfigException('source: ' . gettype($this->source));
             }
         } elseif (! empty($this->noimage)) {
@@ -215,7 +212,6 @@ class ThumbFile extends File
     /**
      * Обновляет превью.
      *
-     * @return $this
      * @throws StoreException
      */
     public function update(): static
@@ -238,7 +234,6 @@ class ThumbFile extends File
     /**
      * Генерирует превью.
      *
-     * @return $this
      * @throws StoreException
      */
     public function generate(): static
@@ -302,8 +297,6 @@ class ThumbFile extends File
     /**
      * Предварительная обработка картинки после загрузки.
      * (для дочерних классов)
-     *
-     * @return $this
      */
     protected function preprocessImage(): static
     {
@@ -314,9 +307,7 @@ class ThumbFile extends File
     /**
      * Масштабирует картинку.
      *
-     * @return $this
      * @throws StoreException
-     *
      * @link https://urmaul.com/blog/imagick-filters-comparison/ FILTERS
      */
     protected function resizeImage(): static
@@ -351,7 +342,6 @@ class ThumbFile extends File
     /**
      * Накладывает водяной знак.
      *
-     * @return $this
      * @throws StoreException
      */
     protected function watermarkImage(): static
@@ -402,7 +392,6 @@ class ThumbFile extends File
     /**
      * Накладывает пометку о возрастных ограничениях.
      *
-     * @return $this
      * @throws StoreException
      */
     protected function placeDisclaimer(): static
@@ -452,8 +441,6 @@ class ThumbFile extends File
     /**
      * После обработка перед сохранением.
      * (для дочерних классов)
-     *
-     * @return $this
      */
     protected function postprocessImage(): static
     {
@@ -464,7 +451,6 @@ class ThumbFile extends File
     /**
      * Сохраняет картинку превью.
      *
-     * @return $this
      * @throws StoreException
      */
     protected function writeImage(): static
@@ -512,7 +498,6 @@ class ThumbFile extends File
     /**
      * Удаляет превью заданного файла.
      *
-     * @return $this
      * @throws StoreException
      * @throws InvalidConfigException
      */

@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2021 Dicr http://dicr.org
+ * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 22.05.21 21:42:34
+ * @version 06.01.22 00:58:13
  */
 
 declare(strict_types = 1);
@@ -304,7 +304,6 @@ abstract class FileStoreTest extends TestCase
         }
 
         self::assertTrue($dir->isDir);
-
         self::assertNotEmpty($dir->delete());
         self::assertFalse($dir->exists);
 

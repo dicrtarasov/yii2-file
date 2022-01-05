@@ -3,13 +3,14 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 05.01.22 01:17:27
+ * @version 06.01.22 00:22:30
  */
 
 declare(strict_types = 1);
 namespace dicr\file;
 
 use ArrayAccess;
+use Closure;
 use Traversable;
 use Yii;
 use yii\base\Arrayable;
@@ -51,34 +52,34 @@ use function is_object;
  */
 class CSVResponseFormatter extends Component implements ResponseFormatterInterface
 {
-    /** @var string форма для Response::formatters */
+    /** форма для Response::formatters */
     public const FORMAT = 'csv';
 
-    /** @var string Content-Type текст */
+    /** Content-Type текст */
     public const CONTENT_TYPE_TEXT = 'text/csv';
 
-    /** @var string Content-Type excel */
+    /** Content-Type excel */
     public const CONTENT_TYPE_EXCEL = 'application/vnd.ms-excel';
 
-    /** @var ?string Content-Type */
+    /** Content-Type */
     public ?string $contentType = self::CONTENT_TYPE_TEXT;
 
-    /** @var ?string имя файла для content-dispose attachment */
+    /** имя файла для content-dispose attachment */
     public ?string $fileName = null;
 
-    /** @var array конфиг CSVFile */
+    /** конфиг CSVFile */
     public array $csvConfig = [];
 
     /**
-     * @var ?array поля, ассоциативный массив в виде field => title
+     * поля, ассоциативный массив в виде field => title
      *      false - не выводить
      *      true - определить заголовки автоматически
      *      array - заголовки колонок
      */
     public ?array $fields = null;
 
-    /** @var ?callable function($row, CSVResponseFormatter $formatter): array */
-    public $format;
+    /** function($row, CSVResponseFormatter $formatter): array */
+    public ?Closure $format = null;
 
     /**
      * Конвертирует данные в Traversable
@@ -114,9 +115,6 @@ class CSVResponseFormatter extends Component implements ResponseFormatterInterfa
 
     /**
      * Конвертирует строку данных в массив значений
-     *
-     * @param object|array $row - данные строки
-     * @return object|array массив значений
      */
     protected function convertRow(object|array $row): object|array
     {
@@ -132,7 +130,7 @@ class CSVResponseFormatter extends Component implements ResponseFormatterInterfa
             return $row->toArray();
         }
 
-        if (is_iterable($row) || ($row instanceof ArrayAccess)) {
+        if (is_iterable($row) || $row instanceof ArrayAccess) {
             return $row;
         }
 
@@ -170,7 +168,6 @@ class CSVResponseFormatter extends Component implements ResponseFormatterInterfa
     /**
      * Форматирует ответ в CSV-файл
      *
-     * @param object|array $data данные
      * @throws InvalidConfigException
      * @throws StoreException
      */
@@ -195,7 +192,7 @@ class CSVResponseFormatter extends Component implements ResponseFormatterInterfa
                 $line = [];
                 if (! empty($this->fields)) { // если заданы заголовки, то выбираем только заданные поля в заданной последовательности
                     // проверяем доступность прямой выборки индекса из массива
-                    if (! is_array($row) && ! ($row instanceof ArrayAccess)) {
+                    if (! is_array($row) && ! $row instanceof ArrayAccess) {
                         throw new InvalidConfigException(
                             'Для использования списка полей fields необходимо чтобы' .
                             ' элемент данных был либо array, либо типа ArrayAccess'
@@ -208,7 +205,7 @@ class CSVResponseFormatter extends Component implements ResponseFormatterInterfa
                     );
                 } else { // обходим все поля
                     // проверяем что данные доступны для обхода
-                    if (! is_array($row) && ! ($row instanceof Traversable)) {
+                    if (! is_array($row) && ! $row instanceof Traversable) {
                         throw new InvalidArgumentException(
                             'Элемент данных должен быть либо array, либо типа Traversable'
                         );

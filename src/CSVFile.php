@@ -3,7 +3,7 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 05.01.22 01:42:48
+ * @version 05.01.22 23:00:56
  */
 
 declare(strict_types = 1);
@@ -34,40 +34,40 @@ use function rewind;
  */
 class CSVFile extends File implements Iterator
 {
-    /** @var string кодировка Excel */
+    /** кодировка Excel */
     public const CHARSET_EXCEL = 'cp1251';
 
-    /** @var string кодировка по-умолчанию */
+    /** кодировка по-умолчанию */
     public const CHARSET_DEFAULT = 'utf-8';
 
-    /** @var string кодировка для преобразования при чтении/записи */
+    /** кодировка для преобразования при чтении/записи */
     public string $charset = self::CHARSET_DEFAULT;
 
-    /** @var string разделитель полей по-умолчанию */
+    /** разделитель полей по-умолчанию */
     public const DELIMITER_DEFAULT = ',';
 
-    /** @var string разделитель полей Excel */
+    /** разделитель полей Excel */
     public const DELIMITER_EXCEL = ';';
 
-    /** @var string разделитель полей */
+    /** разделитель полей */
     public string $delimiter = self::DELIMITER_DEFAULT;
 
-    /** @var string ограничитель полей по-умолчанию */
+    /** ограничитель полей по-умолчанию */
     public const ENCLOSURE_DEFAULT = '"';
 
-    /** @var string символ ограничения строк в полях */
+    /** символ ограничения строк в полях */
     public string $enclosure = self::ENCLOSURE_DEFAULT;
 
-    /** @var string символ экранирования по-умолчанию */
+    /** символ экранирования по-умолчанию */
     public const ESCAPE_DEFAULT = '\\';
 
-    /** @var string символ для экранирования */
+    /** символ для экранирования */
     public string $escape = self::ESCAPE_DEFAULT;
 
     /** @var ?resource файловый дескриптор */
     protected $_handle;
 
-    /** @var ?int текущий номер строки файла */
+    /** текущий номер строки файла */
     protected ?int $_lineNo = null;
 
     /** @var ?string[] текущие данные для Iterable */
@@ -122,7 +122,6 @@ class CSVFile extends File implements Iterator
     /**
      * Перематывает указатель в начальное состояние.
      *
-     * @return $this
      * @noinspection PhpUsageOfSilenceOperatorInspection
      * @throws StoreException
      */
@@ -159,7 +158,6 @@ class CSVFile extends File implements Iterator
     /**
      * Кодирует строку в заданную кодировку.
      *
-     * @param array $line
      * @return string[]
      * @noinspection PhpUsageOfSilenceOperatorInspection
      */
@@ -293,7 +291,6 @@ class CSVFile extends File implements Iterator
     /**
      * Отматывает указатель в начало и читает первую строку
      *
-     * @return $this
      * @throws StoreException
      */
     public function rewind(): static
@@ -327,7 +324,6 @@ class CSVFile extends File implements Iterator
     /**
      * Читает следующую строку
      *
-     * @return $this
      * @throws StoreException
      */
     public function next(): static

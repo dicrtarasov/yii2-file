@@ -3,7 +3,7 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 05.01.22 01:32:46
+ * @version 05.01.22 23:19:46
  */
 
 declare(strict_types = 1);
@@ -37,16 +37,16 @@ use function is_string;
  */
 class UploadFile extends File
 {
-    /** @var ?string наименование файла */
+    /** наименование файла */
     private ?string $_name = null;
 
-    /** @var int ошибка загрузки */
+    /** ошибка загрузки */
     private int $_error = 0;
 
-    /** @var ?int размер файла */
+    /** размер файла */
     private ?int $_size = null;
 
-    /** @var ?string mime-type */
+    /** mime-type */
     private ?string $_mimeType = null;
 
     /**
@@ -382,9 +382,6 @@ class UploadFile extends File
 
     /**
      * Установить имя файла
-     *
-     * @param string $name
-     * @return $this
      */
     public function setName(string $name): static
     {
@@ -408,9 +405,6 @@ class UploadFile extends File
 
     /**
      * Устанавливает ошибку
-     *
-     * @param int|string $error
-     * @return $this
      */
     public function setError(int|string $error): static
     {
@@ -437,9 +431,6 @@ class UploadFile extends File
 
     /**
      * Устанавливает размер.
-     *
-     * @param int|string $size
-     * @return $this
      */
     public function setSize(int|string $size): static
     {
@@ -470,8 +461,6 @@ class UploadFile extends File
 
     /**
      * Устанавливает MIME-тип.
-     *
-     * @return $this
      */
     public function setMimeType(string $type): static
     {

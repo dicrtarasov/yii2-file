@@ -3,51 +3,49 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 05.01.22 01:02:51
+ * @version 06.01.22 00:58:52
  */
 
 declare(strict_types = 1);
 namespace dicr\file;
 
-use League\Flysystem\AdapterInterface;
+use Closure;
 use League\Flysystem\Filesystem;
-use Throwable;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\StorageAttributes;
+use League\Flysystem\UnableToCopyFile;
+use League\Flysystem\UnableToCreateDirectory;
+use League\Flysystem\UnableToDeleteDirectory;
+use League\Flysystem\UnableToDeleteFile;
+use League\Flysystem\UnableToMoveFile;
+use League\Flysystem\UnableToReadFile;
+use League\Flysystem\UnableToRetrieveMetadata;
+use League\Flysystem\UnableToSetVisibility;
+use League\Flysystem\UnableToWriteFile;
+use League\Flysystem\Visibility;
 use yii\base\InvalidConfigException;
-use yii\base\NotSupportedException;
 
 use function call_user_func;
-use function is_array;
+use function clearstatcache;
 use function is_callable;
-use function is_object;
 use function strlen;
 
 /**
  * FileStore based on Flysystem adapters.
  *
- * @property-read AdapterInterface|null $adapter
  * @see http://flysystem.thephpleague.com/docs/
  */
 class FlysystemFileStore extends FileStore
 {
-    /** @var Filesystem|callable */
-    public $flysystem;
+    public Closure|Filesystem $flySystem;
 
     /**
      * @inheritdoc
      */
     public function init(): void
     {
-        if (is_callable($this->flysystem)) {
-            $this->flysystem = call_user_func(/** @scrutinizer ignore-type */ $this->flysystem, $this);
-        }
-
-        if (! ($this->flysystem instanceof Filesystem)) {
-            throw new InvalidConfigException('flysystem');
-        }
-
-        $config = $this->flysystem->getConfig();
-        if (! $config->has('visibility')) {
-            $config->set('visibility', self::access2visibility($this->public));
+        if (is_callable($this->flySystem)) {
+            $this->flySystem = call_user_func($this->flySystem, $this);
         }
 
         parent::init();
@@ -56,134 +54,12 @@ class FlysystemFileStore extends FileStore
     /**
      * Конвертирует тип доступа public в Flysystem visibility type
      *
-     * @return string \League\Flysystem\AdapterInterface::VISIBILITY_PUBLIC
+     * @param bool $public true - публичный, false - приватный
+     * @return string Visibility
      */
     protected static function access2visibility(bool $public): string
     {
-        return $public ? AdapterInterface::VISIBILITY_PUBLIC : AdapterInterface::VISIBILITY_PRIVATE;
-    }
-
-    /**
-     * Возвращает адаптер.
-     */
-    public function getAdapter(): ?AdapterInterface
-    {
-        return is_object($this->flysystem) && method_exists($this->flysystem, 'getAdapter') ?
-            $this->flysystem->getAdapter() : null;
-    }
-
-    /**
-     * @inheritdoc
-     * @throws InvalidConfigException
-     */
-    public function list(array|string $path, array $filter = []): array
-    {
-        $path = $this->normalizePath($path);
-
-        if (! $this->exists($path)) {
-            return [];
-        }
-
-        try {
-            $items = $this->flysystem->listContents($path, $filter['recursive'] ?? false);
-        } catch (Throwable $ex) {
-            throw new StoreException($path, $ex);
-        }
-
-        /** @var File[] $files */
-        $files = [];
-        foreach ($items as $item) {
-            // создаем файл
-            $file = $this->file($item['path']);
-
-            // фильтруем
-            if ($this->fileMatchFilter($file, $filter)) {
-                $files[] = $file;
-            }
-        }
-
-        return self::sortByName($files);
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function exists(array|string $path): bool
-    {
-        $path = $this->normalizePath($path);
-
-        try {
-            $ret = $this->flysystem->has($path);
-        } catch (Throwable $ex) {
-            throw new StoreException($path, $ex);
-        }
-
-        return ! empty($ret);
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function isDir(array|string $path): bool
-    {
-        return $this->getType($path) === 'dir';
-    }
-
-    /**
-     * Возвращает тип файл/директория
-     *
-     * @return string dir|file
-     * @throws StoreException
-     */
-    public function getType(array|string $path): string
-    {
-        $path = $this->normalizePath($path);
-
-        try {
-            $ret = $this->flysystem->getMetadata($path);
-        } catch (Throwable $ex) {
-            throw new StoreException($path, $ex);
-        }
-
-        if (is_array($ret)) {
-            /** @var array $ret */
-            $ret = $ret['type'] ?? false;
-        }
-
-        /** @var string|false $ret */
-        if (empty($ret)) {
-            throw new StoreException('Ошибка получения типа файла: ' . $path);
-        }
-
-        return $ret;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function isFile(array|string $path): bool
-    {
-        return $this->getType($path) === 'file';
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function isPublic(array|string $path): bool
-    {
-        $path = $this->normalizePath($path);
-
-        try {
-            $ret = $this->flysystem->getVisibility($path);
-        } catch (Throwable $ex) {
-            throw new StoreException($path, $ex);
-        }
-
-        if (empty($ret)) {
-            throw new StoreException($path);
-        }
-
-        return self::visibility2access($ret);
+        return $public ? Visibility::PUBLIC : Visibility::PRIVATE;
     }
 
     /**
@@ -194,11 +70,125 @@ class FlysystemFileStore extends FileStore
      */
     protected static function visibility2access(string $visibility): bool
     {
-        return $visibility === AdapterInterface::VISIBILITY_PUBLIC;
+        return $visibility === Visibility::PUBLIC;
     }
 
     /**
      * @inheritdoc
+     */
+    public function list(array|string $path, array $filter = []): array
+    {
+        $path = $this->normalizePath($path);
+
+        if (! $this->exists($path)) {
+            throw new StoreException('Директория не существует: ' . $path);
+        }
+
+        try {
+            return $this->flySystem
+                ->listContents($path, $filter['recursive'] ?? false)
+                ->sortByPath()
+                ->map(fn(StorageAttributes $attributes) => $this->file($attributes->path()))
+                ->filter(fn(File $file) => $this->fileMatchFilter($file, $filter))
+                ->toArray();
+        } catch (FilesystemException $ex) {
+            throw new StoreException('Ошибка чтения директории: ' . $path, $ex);
+        }
+    }
+
+    /**
+     * @inheritdoc
+     * @throws StoreException|InvalidConfigException
+     */
+    public function exists(array|string $path): bool
+    {
+        $path = $this->normalizePath($path);
+
+        try {
+            return $this->flySystem->fileExists($path) || $this->isDir($path);
+        } catch (FilesystemException|UnableToRetrieveMetadata $ex) {
+            throw new StoreException('Ошибка определения файла: ' . $path, $ex);
+        }
+    }
+
+    /**
+     * Возвращает тип файл/директория
+     *
+     * @return string dir|file
+     * @throws StoreException|InvalidConfigException
+     */
+    public function getType(array|string $path): string
+    {
+        $path = $this->normalizePath($path);
+
+        $parent = $this->file($path)->parent;
+        if ($parent === null) {
+            throw new StoreException('Ошибка получения директории: ' . $path);
+        }
+
+        try {
+            $listing = $this->flySystem->listContents($parent->path, false);
+
+            /** @var StorageAttributes $item */
+            foreach ($listing as $item) {
+                if ($item->path() === $path) {
+                    return $item->isDir() ? File::TYPE_DIR : File::TYPE_FILE;
+                }
+            }
+        } catch (FilesystemException $ex) {
+            throw new StoreException('Ошибка получения типа файла', $ex);
+        }
+
+        throw new StoreException('Не удалось определить тип файла: ' . $path);
+    }
+
+    /**
+     * @inheritdoc
+     * @throws InvalidConfigException
+     */
+    public function isFile(array|string $path): bool
+    {
+        try {
+            return $this->getType($path) === File::TYPE_FILE;
+        } catch (StoreException) {
+            // для несуществующих файлов выбрасывается исключение
+            return false;
+        }
+    }
+
+    /**
+     * @inheritdoc
+     * @throws InvalidConfigException
+     */
+    public function isDir(array|string $path): bool
+    {
+        try {
+            return $this->getType($path) === File::TYPE_DIR;
+        } catch (StoreException) {
+            // для несуществующих файлов выбрасывается исключение
+            return false;
+        }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function isPublic(array|string $path): bool
+    {
+        $path = $this->normalizePath($path);
+
+        try {
+            $visibility = $this->flySystem->visibility($path);
+
+            return self::visibility2access($visibility);
+        } catch (FilesystemException|UnableToRetrieveMetadata $ex) {
+            throw new StoreException('Ошибка получения прав файла: ' . $path, $ex);
+        }
+    }
+
+    /**
+     * @inheritdoc
+     * @param string[]|string $path
      */
     public function setPublic(array|string $path, bool $public): static
     {
@@ -206,16 +196,12 @@ class FlysystemFileStore extends FileStore
         $visibility = self::access2visibility($public);
 
         try {
-            $ret = $this->flysystem->setVisibility($path, $visibility);
-        } catch (Throwable $ex) {
-            throw new StoreException($path, $ex);
-        }
+            $this->flySystem->setVisibility($path, $visibility);
 
-        if ($ret === false) {
-            throw new StoreException($path);
+            clearstatcache(true, $path);
+        } catch (FilesystemException|UnableToSetVisibility $ex) {
+            throw new StoreException('Ошибка установки прав на файл: ' . $path, $ex);
         }
-
-        $this->clearStatCache($path);
 
         return $this;
     }
@@ -228,16 +214,10 @@ class FlysystemFileStore extends FileStore
         $path = $this->normalizePath($path);
 
         try {
-            $ret = $this->flysystem->getSize($path);
-        } catch (Throwable $ex) {
-            throw new StoreException($path, $ex);
+            return $this->flySystem->fileSize($path);
+        } catch (FilesystemException|UnableToRetrieveMetadata $ex) {
+            throw new StoreException('Ошибка определения размера файла: ' . $path, $ex);
         }
-
-        if ($ret === false) {
-            throw new StoreException($path);
-        }
-
-        return $ret;
     }
 
     /**
@@ -248,16 +228,10 @@ class FlysystemFileStore extends FileStore
         $path = $this->normalizePath($path);
 
         try {
-            $ret = $this->flysystem->getTimestamp($path);
-        } catch (Throwable $ex) {
-            throw new StoreException($path, $ex);
+            return $this->flySystem->lastModified($path);
+        } catch (FilesystemException|UnableToRetrieveMetadata $ex) {
+            throw new StoreException('Ошибка определения времени модификации файла: ' . $path, $ex);
         }
-
-        if ($ret === false) {
-            throw new StoreException($path);
-        }
-
-        return $ret;
     }
 
     /**
@@ -268,16 +242,10 @@ class FlysystemFileStore extends FileStore
         $path = $this->normalizePath($path);
 
         try {
-            $ret = $this->flysystem->getMimetype($path);
-        } catch (Throwable $ex) {
-            throw new StoreException($path, $ex);
+            return $this->flySystem->mimeType($path);
+        } catch (FilesystemException|UnableToRetrieveMetadata $ex) {
+            throw new StoreException('Ошибка определения mime-типа файла: ' . $path, $ex);
         }
-
-        if ($ret === false) {
-            throw new StoreException($path);
-        }
-
-        return $ret;
     }
 
     /**
@@ -288,16 +256,10 @@ class FlysystemFileStore extends FileStore
         $path = $this->normalizePath($path);
 
         try {
-            $ret = $this->flysystem->read($path);
-        } catch (Throwable $ex) {
-            throw new StoreException($path, $ex);
+            return $this->flySystem->read($path);
+        } catch (FilesystemException|UnableToReadFile $ex) {
+            throw new StoreException('Ошибка чтения файла: ' . $path, $ex);
         }
-
-        if ($ret === false) {
-            throw new StoreException($path);
-        }
-
-        return $ret;
     }
 
     /**
@@ -308,21 +270,13 @@ class FlysystemFileStore extends FileStore
         $path = $this->normalizePath($path);
 
         try {
-            $ret = $this->flysystem->put($path, $contents);
-        } catch (Throwable $ex) {
-            throw new StoreException($path, $ex);
+            $this->flySystem->write($path, $contents);
+            clearstatcache(true, $path);
+        } catch (FilesystemException|UnableToWriteFile $ex) {
+            throw new StoreException('Ошибка записи файла: ' . $path, $ex);
         }
 
-        if ($ret === false) {
-            throw new StoreException($path);
-        }
-
-        // глючный flysystem возвращает bool вместо size, поэтому костыль
-        $ret = strlen($contents);
-
-        $this->clearStatCache($path);
-
-        return $ret;
+        return strlen($contents);
     }
 
     /**
@@ -333,16 +287,10 @@ class FlysystemFileStore extends FileStore
         $path = $this->normalizePath($path);
 
         try {
-            $ret = $this->flysystem->readStream($path);
-        } catch (Throwable $ex) {
-            throw new StoreException($path, $ex);
+            return $this->flySystem->readStream($path);
+        } catch (FilesystemException|UnableToReadFile $ex) {
+            throw new StoreException('Ошибка чтения файла: ' . $path, $ex);
         }
-
-        if ($ret === false) {
-            throw new StoreException($path);
-        }
-
-        return $ret;
     }
 
     /**
@@ -353,23 +301,17 @@ class FlysystemFileStore extends FileStore
         $path = $this->normalizePath($path);
 
         try {
-            $ret = $this->flysystem->putStream($path, $stream);
-        } catch (Throwable $ex) {
-            throw new StoreException($path, $ex);
+            $this->flySystem->writeStream($path, $stream);
+            clearstatcache(true, $path);
+        } catch (FilesystemException|UnableToWriteFile $ex) {
+            throw new StoreException('Ошибка записи файла: ' . $path, $ex);
         }
-
-        if ($ret === false) {
-            throw new StoreException($path);
-        }
-
-        $this->clearStatCache($path);
 
         return 1;
     }
 
     /**
      * @inheritdoc
-     * @throws NotSupportedException
      */
     public function copy(array|string $path, array|string $newpath): static
     {
@@ -381,34 +323,22 @@ class FlysystemFileStore extends FileStore
         }
 
         try {
-            $ret = $this->flysystem->copy($path, $newpath);
-        } catch (Throwable $ex) {
-            throw new StoreException($path, $ex);
+            $this->flySystem->copy($path, $newpath);
+            clearstatcache(true, $path);
+            clearstatcache(true, $newpath);
+        } catch (FilesystemException|UnableToCopyFile $ex) {
+            throw new StoreException('Ошибка копирования файла ' . $path . ' в ' . $newpath, $ex);
         }
-
-        if ($ret === false) {
-            throw new StoreException($path);
-        }
-
-        $this->clearStatCache($newpath);
 
         return $this;
     }
 
     /**
      * @inheritdoc
-     * @throws NotSupportedException
      */
     public function absolutePath(array|string $path): string
     {
-        $path = $this->normalizePath($path);
-
-        $adapter = $this->adapter;
-        if (isset($adapter) && is_callable([$adapter, 'applyPathPrefix'])) {
-            return $adapter->applyPathPrefix($path);
-        }
-
-        throw new NotSupportedException('адаптер не поддерживает метод applyPathPrefix');
+        return $this->normalizePath($path);
     }
 
     /**
@@ -424,16 +354,12 @@ class FlysystemFileStore extends FileStore
         }
 
         try {
-            $ret = $this->flysystem->rename($path, $newpath);
-        } catch (Throwable $ex) {
-            throw new StoreException($path, $ex);
+            $this->flySystem->move($path, $newpath);
+            clearstatcache(true, $path);
+            clearstatcache(true, $newpath);
+        } catch (FilesystemException|UnableToMoveFile $ex) {
+            throw new StoreException('Ошибка переименования файла ' . $path . ' в ' . $newpath, $ex);
         }
-
-        if ($ret === false) {
-            throw new StoreException($path);
-        }
-
-        $this->clearStatCache($path);
 
         return $this;
     }
@@ -446,13 +372,10 @@ class FlysystemFileStore extends FileStore
         $path = $this->normalizePath($path);
 
         try {
-            $ret = $this->flysystem->createDir($path);
-        } catch (Throwable $ex) {
-            throw new StoreException($path, $ex);
-        }
-
-        if ($ret === false) {
-            throw new StoreException($path);
+            $this->flySystem->createDirectory($path);
+            clearstatcache(true, $path);
+        } catch (UnableToCreateDirectory|FilesystemException $ex) {
+            throw new StoreException('Ошибка создания директории: ' . $path, $ex);
         }
 
         return $this;
@@ -466,16 +389,11 @@ class FlysystemFileStore extends FileStore
         $path = $this->buildPath($this->filterRootPath($path));
 
         try {
-            $ret = $this->flysystem->delete($path);
-        } catch (Throwable $ex) {
-            throw new StoreException($path, $ex);
+            $this->flySystem->delete($path);
+            clearstatcache(true, $path);
+        } catch (FilesystemException|UnableToDeleteFile $ex) {
+            throw new StoreException('Ошибка удаления файла: ' . $path, $ex);
         }
-
-        if ($ret === false) {
-            throw new StoreException($path);
-        }
-
-        $this->clearStatCache($path);
 
         return $this;
     }
@@ -488,16 +406,11 @@ class FlysystemFileStore extends FileStore
         $path = $this->buildPath($this->filterRootPath($path));
 
         try {
-            $ret = $this->flysystem->deleteDir($path);
-        } catch (Throwable $ex) {
-            throw new StoreException($path, $ex);
+            $this->flySystem->deleteDirectory($path);
+            clearstatcache(true, $path);
+        } catch (FilesystemException|UnableToDeleteDirectory $ex) {
+            throw new StoreException('Ошибка удаления директории: ' . $path, $ex);
         }
-
-        if ($ret === false) {
-            throw new StoreException($path);
-        }
-
-        $this->clearStatCache($path);
 
         return $this;
     }

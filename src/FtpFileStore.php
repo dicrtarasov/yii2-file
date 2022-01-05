@@ -3,7 +3,7 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 05.01.22 01:42:48
+ * @version 05.01.22 23:14:05
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -28,19 +28,19 @@ use function is_resource;
  */
 class FtpFileStore extends LocalFileStore
 {
-    /** @var string сервер */
+    /** сервер */
     public string $host;
 
-    /** @var int порт сервера */
+    /** порт сервера */
     public int $port = 21;
 
-    /** @var string логин пользователя */
+    /** логин пользователя */
     public string $username = 'anonymous';
 
-    /** @var string пароль для парольной авторизации */
+    /** пароль для парольной авторизации */
     public string $password;
 
-    /** @var int таймаут сетевых операций */
+    /** таймаут сетевых операций */
     public int $timeout = 90;
 
     /** @var resource connection */

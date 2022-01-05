@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2021 Dicr http://dicr.org
+ * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 16.08.21 14:09:20
+ * @version 05.01.22 22:59:14
  */
 
 declare(strict_types = 1);
@@ -30,7 +30,7 @@ class Bootstrap implements BootstrapInterface
             'basePath' => __DIR__ . '/messages'
         ];
 
-        if ((Yii::$app instanceof Application) &&
+        if (Yii::$app instanceof Application &&
             ! isset(Yii::$app->response->formatters[CSVResponseFormatter::FORMAT])) {
             Yii::$app->response->formatters[CSVResponseFormatter::FORMAT] = CSVResponseFormatter::class;
         }

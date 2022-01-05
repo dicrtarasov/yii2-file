@@ -3,7 +3,7 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 05.01.22 00:42:42
+ * @version 05.01.22 23:08:44
  */
 
 declare(strict_types = 1);
@@ -159,11 +159,11 @@ use function usort;
  */
 class FileAttributeBehavior extends Behavior
 {
-    /** @var FileStore|string|array хранилище файлов */
+    /** хранилище файлов */
     public string|array|FileStore $store = 'fileStore';
 
     /**
-     * @var array конфигурация аттрибутов [ attributeName => limit ]
+     * конфигурация аттрибутов [ attributeName => limit ]
      *      Ключ - название аттрибута, limit - ограничение кол-ва файлов.
      *      Если $limit == 1, то аттрибут $model->{attribute} имеет тип File,
      *      если $limit !== 1, $model->{attribute} имеет тип массива File[]
@@ -292,8 +292,6 @@ class FileAttributeBehavior extends Behavior
 
     /**
      * Проверяет существование файлового атрибута.
-     *
-     * @return $this
      */
     protected function checkIsFileAttribute(string $attribute): static
     {
@@ -307,7 +305,7 @@ class FileAttributeBehavior extends Behavior
         return $this;
     }
 
-    /** @var File путь папки модели */
+    /** путь папки модели */
     private File $_modelFilePath;
 
     /**
@@ -333,7 +331,7 @@ class FileAttributeBehavior extends Behavior
             }
 
             // если это модель базы данных и имеется primaryKey
-            if (($this->owner instanceof ActiveRecord) && ! empty($this->owner::primaryKey())) {
+            if ($this->owner instanceof ActiveRecord && ! empty($this->owner::primaryKey())) {
                 // получаем значения ключей
                 $primaryKey = $this->owner->getPrimaryKey(true);
 
@@ -359,8 +357,6 @@ class FileAttributeBehavior extends Behavior
     /**
      * Устанавливает путь папки модели.
      * Если путь не установлен, то он рассчитывается автоматически.
-     *
-     * @return $this
      */
     public function setModelFilePath(File $path): static
     {
@@ -382,7 +378,6 @@ class FileAttributeBehavior extends Behavior
     /**
      * Удаляет папку с кэшем картинок.
      *
-     * @return $this
      * @throws StoreException
      */
     public function deleteModelThumbs(): static
@@ -401,7 +396,6 @@ class FileAttributeBehavior extends Behavior
      * Удаляет папку модели.
      * (нужен для обработчика событий модели).
      *
-     * @return $this
      * @throws StoreException
      * @throws InvalidConfigException
      */
@@ -483,8 +477,7 @@ class FileAttributeBehavior extends Behavior
     /**
      * Устанавливает значение файлового аттрибута
      *
-     * @param null|File|File[] $value
-     * @return $this
+     * @param File|File[]|null $value
      */
     public function setFileAttributeValue(string $attribute, array|File|null $value): static
     {
@@ -610,8 +603,6 @@ class FileAttributeBehavior extends Behavior
 
     /**
      * Выполняет проверку файла файлового атрибута.
-     *
-     * @return $this
      */
     protected function validateFile(string $attribute, mixed $file): static
     {

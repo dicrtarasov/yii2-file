@@ -3,7 +3,7 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 05.01.22 01:45:45
+ * @version 05.01.22 23:15:32
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -43,17 +43,17 @@ use function is_string;
  */
 class LocalFileStore extends FileStore
 {
-    /** @var int флаги для записи file_put_contents (например LOCK_EX) */
+    /** флаги для записи file_put_contents (например LOCK_EX) */
     public int $writeFlags = 0;
 
-    /** @var string mode for fopen for reading stream */
+    /** mode for fopen for reading stream */
     public string $readMode = 'rb';
 
     /** @var array|resource stream_context options */
     public $context;
 
     /**
-     * @var int[] публичные права доступа на создаваемые файла и директории.
+     * публичные права доступа на создаваемые файла и директории.
      *      Приватные получаются путем маски & 0x700
      */
     public array $perms = [
@@ -61,7 +61,7 @@ class LocalFileStore extends FileStore
         'file' => 0644
     ];
 
-    /** @var string корневой путь */
+    /** корневой путь */
     protected string $_path;
 
     /**
@@ -100,9 +100,7 @@ class LocalFileStore extends FileStore
     }
 
     /**
-     * Возвращает путь
-     *
-     * @return string
+     * Возвращает путь.
      */
     public function getPath(): string
     {
@@ -112,7 +110,6 @@ class LocalFileStore extends FileStore
     /**
      * Установить корневой путь
      *
-     * @return $this
      * @throws StoreException
      */
     public function setPath(string $path): static
@@ -541,9 +538,7 @@ class LocalFileStore extends FileStore
     }
 
     /**
-     * Конвертирует в строку
-     *
-     * @return string
+     * Конвертирует в строку.
      */
     public function __toString(): string
     {

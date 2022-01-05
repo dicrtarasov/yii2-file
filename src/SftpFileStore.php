@@ -3,7 +3,7 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 05.01.22 01:15:19
+ * @version 05.01.22 23:16:03
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -24,25 +24,25 @@ use function ssh2_disconnect;
  */
 class SftpFileStore extends LocalFileStore
 {
-    /** @var string сервер */
+    /** сервер */
     public string $host;
 
-    /** @var int порт сервера */
+    /** порт сервера */
     public int $port = 22;
 
-    /** @var string логин пользователя */
+    /** логин пользователя */
     public string $username;
 
-    /** @var ?string пароль для парольной авторизации */
+    /** пароль для парольной авторизации */
     public ?string $password = null;
 
-    /** @var ?string путь к файлу с открытым ключом в формате OpenSSH для авторизации ключом */
+    /** путь к файлу с открытым ключом в формате OpenSSH для авторизации ключом */
     public ?string $pubkeyfile = null;
 
-    /** @var ?string путь к файлу приватного ключа */
+    /** путь к файлу приватного ключа */
     public ?string $privkeyfile = null;
 
-    /** @var ?string пароль приватного ключа */
+    /** пароль приватного ключа */
     public ?string $passphrase = null;
 
     /** @var resource connection */

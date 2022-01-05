@@ -3,7 +3,7 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 05.01.22 01:36:34
+ * @version 05.01.22 23:09:18
  */
 
 declare(strict_types = 1);
@@ -43,31 +43,31 @@ use function preg_match;
  */
 class FileInputWidget extends InputWidget
 {
-    /** @var string дизайн для загрузки картинок */
+    /** дизайн для загрузки картинок */
     public const LAYOUT_IMAGES = 'images';
 
-    /** @var string дизайн для загрузки файлов */
+    /** дизайн для загрузки файлов */
     public const LAYOUT_FILES = 'files';
 
-    /** @var string вид 'images' или 'files' */
+    /** вид 'images' или 'files' */
     public string $layout = self::LAYOUT_IMAGES;
 
-    /** @var int максимальное кол-во файлов */
+    /** максимальное кол-во файлов */
     public int $limit = 0;
 
-    /** @var ?string mime-типы в input type=file, например image/* */
+    /** mime-типы в input type=file, например image/* */
     public ?string $accept = null;
 
-    /** @var ?bool удалять расширение файла при отображении (default true for horizontal) */
+    /** удалять расширение файла при отображении (default true for horizontal) */
     public ?bool $removeExt = null;
 
-    /** @var ?string название поля формы аттрибута */
+    /** название поля формы аттрибута */
     public ?string $inputName = null;
 
-    /** @var array опции плагина */
+    /** опции плагина */
     public array $clientOptions = [];
 
-    /** @var string уникальный идентификатор */
+    /** уникальный идентификатор */
     private string $uniqueClass;
 
     /**
@@ -118,7 +118,7 @@ class FileInputWidget extends InputWidget
 
         // проверяем все значения на File
         foreach ($this->value as $file) {
-            if (! ($file instanceof File)) {
+            if (! $file instanceof File) {
                 throw new InvalidConfigException('value file: ' . gettype($file));
             }
         }
@@ -187,7 +187,7 @@ class FileInputWidget extends InputWidget
     }
 
     /**
-     * Верстает блок файлов
+     * Верстает блок файлов.
      */
     protected function renderFiles(): string
     {
@@ -203,7 +203,7 @@ class FileInputWidget extends InputWidget
     }
 
     /**
-     * Верстает блок файла
+     * Верстает блок файла.
      */
     protected function renderFileBlock(int $pos, File $file): string
     {
@@ -239,7 +239,7 @@ class FileInputWidget extends InputWidget
     }
 
     /**
-     * Верстает блок картинки
+     * Верстает блок картинки.
      */
     protected function renderImage(File $file): string
     {
@@ -258,7 +258,7 @@ class FileInputWidget extends InputWidget
     }
 
     /**
-     * Верстает кнопку добавления картинки
+     * Верстает кнопку добавления картинки.
      */
     protected function renderAddButton(): string
     {

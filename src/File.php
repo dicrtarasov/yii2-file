@@ -3,7 +3,7 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 05.01.22 01:24:31
+ * @version 06.01.22 00:19:41
  */
 
 declare(strict_types = 1);
@@ -45,24 +45,28 @@ use function str_replace;
  */
 class File extends BaseObject
 {
-    /** @var string регулярное выражение имени файла со служебным префиксом */
+    public const TYPE_FILE = 'file';
+
+    public const TYPE_DIR = 'dir';
+
+    /** регулярное выражение имени файла со служебным префиксом */
     protected const STORE_PREFIX_REGEX = '~^\.?([^\~]+)\~(\d+)\~(.+)$~u';
 
     protected FileStore $_store;
 
-    /** @var string путь файла */
+    /** путь файла */
     protected string $_path;
 
-    /** @var ?string кэш абсолютного пути */
+    /** кэш абсолютного пути */
     private ?string $_absolutePath = null;
 
-    /** @var ?string кэш абсолютного URL */
+    /** кэш абсолютного URL */
     private ?string $_absoluteUrl = null;
 
     /**
      * Конструктор
      *
-     * @param array|string $path относительный путь
+     * @param string[]|string $path относительный путь
      */
     public function __construct(FileStore $store, array|string $path, array $config = [])
     {
@@ -76,8 +80,6 @@ class File extends BaseObject
 
     /**
      * Возвращает хранилище
-     *
-     * @return FileStore
      */
     public function getStore(): FileStore
     {
@@ -96,7 +98,6 @@ class File extends BaseObject
      * Устанавливает путь.
      *
      * @param string|string[] $path new path
-     * @return $this
      * @throws StoreException
      */
     public function setPath(array|string $path): static
@@ -153,7 +154,7 @@ class File extends BaseObject
     /**
      * Имя файла.
      *
-     * @param array $options
+     * @param $options
      * - removePrefix - удаляет служебный префикс позиции файла, если имеется
      * - removeExt - удаляет расширение если имеется
      */
@@ -176,7 +177,6 @@ class File extends BaseObject
      * Переименовывает файл (только имя), в том же каталоге.
      *
      * @param string $name новое имя
-     * @return $this
      * @throws StoreException
      */
     public function setName(string $name): static
@@ -277,7 +277,6 @@ class File extends BaseObject
      * Обновляет время модификации.
      *
      * @param int|null $time время, если null, то time()
-     * @return $this
      * @throws StoreException
      */
     public function touch(?int $time = null): static
@@ -322,7 +321,6 @@ class File extends BaseObject
     /**
      * Записывает содержимое файла из строки
      *
-     * @return $this
      * @throws StoreException
      */
     public function setContents(string $contents): static
@@ -348,7 +346,6 @@ class File extends BaseObject
      * Сохраняет содержимое файла из потока
      *
      * @param resource $stream
-     * @return $this
      * @throws StoreException
      */
     public function setStream($stream): static
@@ -444,7 +441,6 @@ class File extends BaseObject
     /**
      * Устанавливает флаг публичного доступа
      *
-     * @return $this
      * @throws StoreException не существует
      */
     public function setPublic(bool $public): static
@@ -460,7 +456,6 @@ class File extends BaseObject
      * @param string|File|string[] $src импортируемый файл
      * @param array $options опции
      *  - bool $ifModified - импортировать файл только если время новее или размер отличается (по-умолчанию true)
-     * @return $this
      * @throws StoreException
      * @throws InvalidConfigException
      */
@@ -489,7 +484,6 @@ class File extends BaseObject
     /**
      * Создает директорию.
      *
-     * @return $this
      * @throws StoreException
      */
     public function mkdir(): static
@@ -502,7 +496,6 @@ class File extends BaseObject
     /**
      * Проверяет создает родительскую директорию.
      *
-     * @return $this
      * @throws StoreException
      */
     public function checkDir(): static
@@ -515,7 +508,6 @@ class File extends BaseObject
     /**
      * Удаляет файл
      *
-     * @return $this
      * @throws StoreException
      */
     public function delete(): static
@@ -541,7 +533,6 @@ class File extends BaseObject
     /**
      * Очищает все превью файла.
      *
-     * @return $this
      * @throws StoreException
      */
     public function clearThumb(): static
@@ -558,8 +549,6 @@ class File extends BaseObject
     /**
      * CSVFile.
      *
-     * @param array $config
-     * @return CSVFile
      * @throws InvalidConfigException
      */
     public function csv(array $config = []): CSVFile
@@ -574,8 +563,6 @@ class File extends BaseObject
 
     /**
      * Конвертирует в строку.
-     *
-     * @return string path
      */
     public function __toString(): string
     {
