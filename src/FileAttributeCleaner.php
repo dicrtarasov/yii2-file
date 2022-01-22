@@ -3,7 +3,7 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 23.01.22 01:04:18
+ * @version 23.01.22 01:55:55
  */
 
 declare(strict_types=1);
@@ -103,15 +103,18 @@ class FileAttributeCleaner extends Component
     {
         $keysFound = 0;
 
-        $modelsPaths = $this->store->file($this->model->formName())->getList([
-            'dir' => true
-        ]);
+        $basePath = $this->store->file($this->model->formName());
+        if ($basePath->exists) {
+            $modelsPaths = $this->store->file($this->model->formName())->getList([
+                'dir' => true
+            ]);
 
-        foreach ($modelsPaths as $modelPath) {
-            $id = $modelPath->name;
-            if (!in_array($id, $this->existsIds, true)) {
-                $keysFound++;
-                ($this->callback)($modelPath);
+            foreach ($modelsPaths as $modelPath) {
+                $id = $modelPath->name;
+                if (!in_array($id, $this->existsIds, true)) {
+                    $keysFound++;
+                    ($this->callback)($modelPath);
+                }
             }
         }
 
