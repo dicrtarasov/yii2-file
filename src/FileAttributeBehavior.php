@@ -3,10 +3,10 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 05.01.22 23:08:44
+ * @version 23.01.22 01:04:04
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 namespace dicr\file;
 
 use LogicException;
@@ -219,7 +219,7 @@ class FileAttributeBehavior extends Behavior
      */
     public function attach($owner): void
     {
-        if (! $owner instanceof Model) {
+        if (!$owner instanceof Model) {
             throw new InvalidConfigException('Некорректный тип владельца: ' . gettype($owner));
         }
 
@@ -295,7 +295,7 @@ class FileAttributeBehavior extends Behavior
      */
     protected function checkIsFileAttribute(string $attribute): static
     {
-        if (! $this->hasFileAttribute($attribute)) {
+        if (!$this->hasFileAttribute($attribute)) {
             throw new RuntimeException(
                 'Файловый аттрибут: ' . $attribute .
                 ' модели: ' . gettype($this->owner) . ' не существует'
@@ -303,6 +303,61 @@ class FileAttributeBehavior extends Behavior
         }
 
         return $this;
+    }
+
+    /**
+     * Конвертирует значение PRIMARY_KEY модели в путь.
+     *
+     * @param mixed[] $primaryKeyValue
+     * @param string $pathSeparator
+     * @return string|null
+     */
+    public static function primaryKeyPath(array $primaryKeyValue, string $pathSeparator = '/'): ?string
+    {
+        if (empty($primaryKeyValue)) {
+            return null;
+        }
+
+        // если модель не сохранена и основные ключи не установлены, то возвращаем null
+        foreach ($primaryKeyValue as $val) {
+            if ($val === null) {
+                return null;
+            }
+        }
+
+        return str_replace(
+            $pathSeparator, '_', implode('-', $primaryKeyValue)
+        );
+    }
+
+    /**
+     * Относительный путь модели в файловом хранилище.
+     *
+     * @return string[]|null
+     * @throws InvalidConfigException
+     */
+    public static function modelRelPath(Model $model, string $pathSeparator = '/'): ?array
+    {
+        // относительный путь
+        $relpath = [];
+
+        // добавляем в путь имя формы
+        $formName = $model->formName();
+        if (!empty($formName)) {
+            $relpath[] = $formName;
+        }
+
+        // если это модель базы данных и имеется primaryKey
+        if ($model instanceof ActiveRecord && !empty($model::primaryKey())) {
+            $keyPath = self::primaryKeyPath($model->getPrimaryKey(true), $pathSeparator);
+            if (!$keyPath) {
+                return null;
+            }
+
+            $relpath[] = $keyPath;
+        }
+
+        return $relpath;
     }
 
     /** путь папки модели */
@@ -319,36 +374,10 @@ class FileAttributeBehavior extends Behavior
      */
     public function getModelFilePath(): ?File
     {
-        if (! isset($this->_modelFilePath)) {
-            // относительный путь
-            $relpath = [];
-
-            // добавляем в путь имя формы
-            /** @scrutinizer ignore-call */
-            $formName = $this->owner->formName();
-            if (! empty($formName)) {
-                $relpath[] = $formName;
-            }
-
-            // если это модель базы данных и имеется primaryKey
-            if ($this->owner instanceof ActiveRecord && ! empty($this->owner::primaryKey())) {
-                // получаем значения ключей
-                $primaryKey = $this->owner->getPrimaryKey(true);
-
-                // если модель не сохранена и основные ключи не установлены, то возвращаем null
-                foreach ($primaryKey as $val) {
-                    if ($val === null) {
-                        return null;
-                    }
-                }
-
-                // добавляем ключи к пути
-                $relpath[] = str_replace(
-                    $this->store->pathSeparator, '_', implode('-', $primaryKey)
-                );
-            }
-
-            $this->_modelFilePath = $this->store->file($relpath);
+        if (!isset($this->_modelFilePath)) {
+            $this->_modelFilePath = $this->store->file(
+                self::modelRelPath($this->owner, $this->store->pathSeparator)
+            );
         }
 
         return $this->_modelFilePath;
@@ -428,7 +457,7 @@ class FileAttributeBehavior extends Behavior
         $modelPath = $this->getModelFilePath();
 
         // если папка не существует, то возвращаем пустой список
-        if ($modelPath === null || ! $modelPath->exists) {
+        if ($modelPath === null || !$modelPath->exists) {
             return [];
         }
 
@@ -460,7 +489,7 @@ class FileAttributeBehavior extends Behavior
     {
         $this->checkIsFileAttribute($attribute);
 
-        if (! isset($this->values[$attribute]) || $refresh) {
+        if (!isset($this->values[$attribute]) || $refresh) {
             $this->values[$attribute] = $this->listAttributeFiles($attribute);
         }
 
@@ -468,7 +497,7 @@ class FileAttributeBehavior extends Behavior
 
         // если аттрибут имеет скалярный тип, то возвращаем первое значение
         if ((int)$this->attributes[$attribute]['limit'] === 1) {
-            return ! empty($vals) ? reset($vals) : null;
+            return !empty($vals) ? reset($vals) : null;
         }
 
         return $vals;
@@ -486,7 +515,7 @@ class FileAttributeBehavior extends Behavior
         // конвертируем значение в массив (нельзя (array), потому что Model::toArray)
         if (empty($value)) {
             $value = [];
-        } elseif (! is_array($value)) {
+        } elseif (!is_array($value)) {
             $value = [$value];
         }
 
@@ -499,7 +528,7 @@ class FileAttributeBehavior extends Behavior
             // конвертируем из yii\web\UploadedFile
             if ($file instanceof UploadedFile) {
                 $file = UploadFile::fromUploadedFile($file);
-            } elseif (! $file instanceof File) {
+            } elseif (!$file instanceof File) {
                 throw new InvalidArgumentException(
                     'Некорректный тип значения: ' . gettype($file) . ' аттрибута: ' . $attribute
                 );
@@ -543,7 +572,7 @@ class FileAttributeBehavior extends Behavior
 
         /** @var array загруженные новые файлы с позициями $files */
         $files = UploadFile::instances($attribute, $formName);
-        if (! isset($post) && ! isset($files)) {
+        if (!isset($post) && !isset($files)) {
             return false;
         }
 
@@ -554,7 +583,7 @@ class FileAttributeBehavior extends Behavior
         $value = [];
 
         // для начала просматриваем данные $_POST с именами старых файлов для сохранения
-        if (! empty($post) && $attributePath !== null) {
+        if (!empty($post) && $attributePath !== null) {
             foreach ($post as $pos => $name) {
                 // пропускаем пустые значения
                 $name = basename($name);
@@ -568,7 +597,7 @@ class FileAttributeBehavior extends Behavior
         }
 
         // перезаписываем позиции из $_POST загруженными файлами из $_FILE
-        if (! empty($files)) {
+        if (!empty($files)) {
             foreach ($files as $pos => $file) {
                 $value[$pos] = $file;
             }
@@ -612,18 +641,18 @@ class FileAttributeBehavior extends Behavior
         // проверяем на пустое значение
         if (empty($file)) {
             $this->owner->addError($attribute, 'Пустое значение файла');
-        } elseif (! $file instanceof File) {
+        } elseif (!$file instanceof File) {
             $this->owner->addError($attribute, 'Некорректный тип значения: ' . gettype($file));
-        } elseif (! $file->exists) {
+        } elseif (!$file->exists) {
             $this->owner->addError($attribute, 'Загружаемый файл не существует: ' . $file->path);
         } elseif ($file->size <= 0) {
             $this->owner->addError($attribute, 'Пустой размер файла: ' . $file->name);
         } elseif (isset($params['maxsize']) && $file->size > $params['maxsize']) {
             $this->owner->addError($attribute, 'Размер не более ' . Yii::$app->formatter->asSize($params['maxsize']));
-        } elseif (isset($params['type']) && ! $file->matchMimeType($params['type'])) {
+        } elseif (isset($params['type']) && !$file->matchMimeType($params['type'])) {
             $this->owner->addError($attribute, 'Неверный тип файла: ' . $file->mimeType);
         } elseif ($file instanceof UploadFile) {
-            if (! empty($file->error)) {
+            if (!empty($file->error)) {
                 $this->owner->addError($attribute, 'Ошибка загрузки файла');
             } elseif (empty($file->name)) {
                 $this->owner->addError($attribute, 'Не задано имя загружаемого файла: ' . $file->path);
@@ -647,7 +676,7 @@ class FileAttributeBehavior extends Behavior
         $files = $this->values[$attribute] ?? null;
 
         // если атрибут не был инициализирован, то пропускаем проверку
-        if (! isset($files)) {
+        if (!isset($files)) {
             return null;
         }
 
@@ -655,13 +684,13 @@ class FileAttributeBehavior extends Behavior
         $params = $this->attributes[$attribute];
 
         // минимальное количество
-        if (! empty($params['min']) && count($files) < $params['min']) {
+        if (!empty($params['min']) && count($files) < $params['min']) {
             /** @scrutinizer ignore-call */
             $this->owner->addError($attribute, 'Необходимо не менее ' . (int)$params['min'] . ' количество файлов');
         }
 
         // максимальное количество
-        if (! empty($params['limit']) && count($files) > $params['limit']) {
+        if (!empty($params['limit']) && count($files) > $params['limit']) {
             /** @scrutinizer ignore-call */
             $this->owner->addError($attribute, 'Максимальное кол-во файлов: ' . (int)$params['limit']);
         }
@@ -716,7 +745,7 @@ class FileAttributeBehavior extends Behavior
         $files = $this->values[$attribute] ?? null;
 
         // если новые значения не установлены, то сохранять не нужно
-        if (! isset($files)) {
+        if (!isset($files)) {
             return null;
         }
 
@@ -725,20 +754,20 @@ class FileAttributeBehavior extends Behavior
 
         // импортируем новые и переименовываем старые во временные имена с точкой
         foreach ($files as $pos => &$file) {
-            if (! $file instanceof File) {
+            if (!$file instanceof File) {
                 // некорректный тип значения
                 throw new RuntimeException('Неизвестный тип значения файлового аттрибута ' . $attribute);
             }
 
             // если это загружаемый файл и содержит ошибку загрузки, то пропускаем
-            if ($file instanceof UploadFile && ! empty($file->error)) {
+            if ($file instanceof UploadFile && !empty($file->error)) {
                 // если это загружаемый файл и содержит ошибки - пропускаем
                 unset($files[$pos]);
                 continue;
             }
 
             // если файл не существует
-            if (! $file->exists) {
+            if (!$file->exists) {
                 // если файл в том же хранилище, то мог быть удален в параллельном запросе
                 if ($file->store === $this->store) {
                     unset($files[$pos]);
@@ -858,7 +887,7 @@ class FileAttributeBehavior extends Behavior
         $ret = true;
 
         foreach (array_keys($this->attributes) as $attribute) {
-            if (! $this->deleteFileAttribute($attribute)) {
+            if (!$this->deleteFileAttribute($attribute)) {
                 $ret = false;
             }
         }
