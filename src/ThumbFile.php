@@ -3,7 +3,7 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 24.01.22 04:56:07
+ * @version 24.01.22 05:08:48
  */
 
 declare(strict_types=1);
@@ -235,7 +235,7 @@ class ThumbFile extends File
             return true;
         }
 
-        return $this->mtime >= $this->source->mtime;
+        return $this->exists && $this->mtime >= $this->source->mtime;
     }
 
     /**
