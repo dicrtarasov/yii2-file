@@ -3,10 +3,10 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 05.01.22 23:18:25
+ * @version 24.01.22 04:56:07
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 namespace dicr\file;
 
 use Imagick;
@@ -18,7 +18,7 @@ use Yii;
 use yii\base\InvalidConfigException;
 use yii\di\Instance;
 
-use function gettype;
+use function in_array;
 use function is_file;
 use function is_string;
 use function mb_strtolower;
@@ -37,9 +37,13 @@ use function substr;
  * можно вызвать $thumbFile->generate()
  *
  * @property-read bool $isReady флаг существования готового превью
+ * @property-read bool $isSkipConvert файл имеет формат, которые не конвертируются
  */
 class ThumbFile extends File
 {
+    /** пропуск resize для указанных форматов */
+    public const SKIP_FORMATS = ['svg', 'pdf'];
+
     /** Исходный файл. Если пустой, то применяется noimage */
     public ?File $source = null;
 
@@ -123,23 +127,23 @@ class ThumbFile extends File
         }
 
         // noimage
-        if (! empty($this->noimage)) {
+        if (!empty($this->noimage)) {
             $this->noimage = (string)Yii::getAlias($this->noimage);
-            if (! is_file($this->noimage)) {
+            if (!is_file($this->noimage)) {
                 throw new InvalidConfigException('noimage недоступен: ' . $this->noimage);
             }
         }
 
-        if (! empty($this->watermark)) {
+        if (!empty($this->watermark)) {
             $this->watermark = (string)Yii::getAlias($this->watermark);
-            if (! is_file($this->watermark)) {
+            if (!is_file($this->watermark)) {
                 throw new InvalidConfigException('watermark недоступен: ' . $this->watermark);
             }
         }
 
-        if (! empty($this->disclaimer)) {
+        if (!empty($this->disclaimer)) {
             $this->disclaimer = Yii::getAlias($this->disclaimer);
-            if (! is_string($this->disclaimer) || ! is_file($this->disclaimer)) {
+            if (!is_string($this->disclaimer) || !is_file($this->disclaimer)) {
                 throw new InvalidConfigException('disclaimer недоступен');
             }
         }
@@ -149,16 +153,12 @@ class ThumbFile extends File
         }
 
         // проверяем источник
-        if (! empty($this->source)) {
-            if (! $this->source instanceof File) {
-                throw new InvalidConfigException('source: ' . gettype($this->source));
-            }
-        } elseif (! empty($this->noimage)) {
+        if ((empty($this->source) || !$this->source->exists) && !empty($this->noimage)) {
             // если не указан источник, то считаем это noimage
             $this->source = LocalFileStore::root()->file($this->noimage);
             $this->isNoimage = true;
-        } else {
-            throw new InvalidConfigException('не указан source и noimage');
+        } elseif ($this->isSkipConvert) {
+            $this->_store = $this->source->store;
         }
 
         // обновляем путь картинки в кеше
@@ -166,10 +166,29 @@ class ThumbFile extends File
     }
 
     /**
+     * Пропуск конвертирования.
+     */
+    public function getIsSkipConvert(): bool
+    {
+        return !empty($this->source) &&
+            in_array((string)$this->source->extension, self::SKIP_FORMATS);
+    }
+
+    /**
      * Генерирует путь картинки в кеше.
      */
     protected function createPath(): string
     {
+        // если не задан источник (отсутствует), то путь липовый
+        if (empty($this->source)) {
+            return 'dummy-empty';
+        }
+
+        // если пропускаем конвертирование формата, то путь берем оригинального источника
+        if ($this->isSkipConvert) {
+            return $this->source->path;
+        }
+
         // путь файла в кэше
         $path = $this->isNoimage ? 'noimage/' . $this->noimage : $this->source->path;
 
@@ -179,18 +198,18 @@ class ThumbFile extends File
         // добавляем размер
         $path .= '~' . $this->width . 'x' . $this->height;
 
-        if (! $this->isNoimage) {
+        if (!$this->isNoimage) {
             // помечаем картинки с watermark
-            if (! empty($this->watermark)) {
+            if (!empty($this->watermark)) {
                 $path .= '~w' . substr(md5($this->watermark), 0, 4);
             }
 
             // помечаем картинки с дисклеймером
-            if (! empty($this->disclaimer)) {
+            if (!empty($this->disclaimer)) {
                 $path .= '~d' . substr(md5($this->watermark), 0, 4);
             }
 
-            if ($this->width > 0 && $this->height > 0 && ! empty($this->fill)) {
+            if ($this->width > 0 && $this->height > 0 && !empty($this->fill)) {
                 $path .= '~f';
             }
         }
@@ -206,7 +225,17 @@ class ThumbFile extends File
      */
     public function getIsReady(): bool
     {
-        return $this->exists && $this->mtime >= $this->source->mtime;
+        // файл не задан - делать нечего
+        if (empty($this->source)) {
+            return true;
+        }
+
+        // если файл не конвертируемый, то готов
+        if ($this->isSkipConvert) {
+            return true;
+        }
+
+        return $this->mtime >= $this->source->mtime;
     }
 
     /**
@@ -216,6 +245,10 @@ class ThumbFile extends File
      */
     public function update(): static
     {
+        if ($this->isSkipConvert) {
+            return $this;
+        }
+
         /** @noinspection PhpExpressionResultUnusedInspection */
         $this->preprocessImage();
         $this->resizeImage();
@@ -238,7 +271,7 @@ class ThumbFile extends File
      */
     public function generate(): static
     {
-        if (! $this->isReady) {
+        if (!$this->isReady) {
             $this->update();
         }
 
@@ -254,7 +287,7 @@ class ThumbFile extends File
         // обновляем файл превью
         $this->generate();
 
-        return parent::getUrl();
+        return !empty($this->source) ? parent::getUrl() : null;
     }
 
     /**
@@ -264,7 +297,7 @@ class ThumbFile extends File
      */
     protected function image(): Imagick
     {
-        if (! isset($this->_image)) {
+        if (!isset($this->_image)) {
             // создаем картинку
             $this->_image = new Imagick();
 
@@ -313,7 +346,7 @@ class ThumbFile extends File
     protected function resizeImage(): static
     {
         // если заданы размеры, то делаем масштабирование
-        if (! empty($this->width) || ! empty($this->height)) {
+        if (!empty($this->width) || !empty($this->height)) {
             try {
                 $image = $this->image();
                 $image->setOption('filter:support', '2.0');
@@ -325,10 +358,10 @@ class ThumbFile extends File
                 $bestFit = $this->width > 0 && $this->height > 0;
 
                 // дополняем цветом заполнения до нужных размеров
-                $fill = $bestFit && ! empty($this->fill);
+                $fill = $bestFit && !empty($this->fill);
 
                 // очищает профили и заполняет пустое пространство
-                if (! $image->thumbnailImage($this->width, $this->height, $bestFit, $fill)) {
+                if (!$image->thumbnailImage($this->width, $this->height, $bestFit, $fill)) {
                     Yii::error('Ошибка создания thumbnail', __METHOD__);
                 }
             } catch (ImagickException|ImagickPixelException $ex) {
