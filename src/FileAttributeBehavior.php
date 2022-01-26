@@ -3,7 +3,7 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 23.01.22 01:04:04
+ * @version 26.01.22 03:06:10
  */
 
 declare(strict_types=1);
@@ -361,7 +361,7 @@ class FileAttributeBehavior extends Behavior
     }
 
     /** путь папки модели */
-    private File $_modelFilePath;
+    private ?File $_modelFilePath = null;
 
     /**
      * Возвращает папку модели в хранилище файлов.
@@ -375,9 +375,8 @@ class FileAttributeBehavior extends Behavior
     public function getModelFilePath(): ?File
     {
         if (!isset($this->_modelFilePath)) {
-            $this->_modelFilePath = $this->store->file(
-                self::modelRelPath($this->owner, $this->store->pathSeparator)
-            );
+            $path = self::modelRelPath($this->owner, $this->store->pathSeparator);
+            $this->_modelFilePath = empty($path) ? null : $this->store->file($path);
         }
 
         return $this->_modelFilePath;
