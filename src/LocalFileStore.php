@@ -3,11 +3,11 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 05.01.22 23:15:32
+ * @version 27.01.22 01:01:56
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
-declare(strict_types = 1);
+declare(strict_types=1);
 namespace dicr\file;
 
 use DirectoryIterator;
@@ -22,6 +22,7 @@ use yii\base\InvalidConfigException;
 
 use function in_array;
 use function is_dir;
+use function is_link;
 use function is_resource;
 use function is_string;
 
@@ -71,15 +72,15 @@ class LocalFileStore extends FileStore
     {
         parent::init();
 
-        if (! isset($this->_path)) {
+        if (!isset($this->_path)) {
             throw new InvalidConfigException('path');
         }
 
-        if (! is_resource($this->context)) {
+        if (!is_resource($this->context)) {
             $this->context = stream_context_create($this->context);
         }
 
-        if (! isset($this->perms['dir'], $this->perms['file'])) {
+        if (!isset($this->perms['dir'], $this->perms['file'])) {
             throw new InvalidConfigException('perms');
         }
     }
@@ -92,7 +93,7 @@ class LocalFileStore extends FileStore
         /** @var static instance for root "/" */
         static $root;
 
-        if (! isset($root)) {
+        if (!isset($root)) {
             $root = new static(['path' => '/']);
         }
 
@@ -116,19 +117,19 @@ class LocalFileStore extends FileStore
     {
         // решаем алиасы
         $fullPath = Yii::getAlias($path);
-        if (! is_string($fullPath)) {
+        if (!is_string($fullPath)) {
             throw new InvalidArgumentException('Неизвестный алиас: ' . $path);
         }
 
         // получаем реальный путь
         if ($fullPath !== '/') {
             $fullPath = realpath($fullPath);
-            if (! is_string($fullPath)) {
+            if (!is_string($fullPath)) {
                 throw new StoreException('Путь не существует: ' . $path);
             }
 
             // проверяем что путь директория
-            if (! is_dir($fullPath)) {
+            if (!is_dir($fullPath)) {
                 throw new StoreException('Не является директорией: ' . $path);
             }
         }
@@ -150,7 +151,7 @@ class LocalFileStore extends FileStore
         $fullPath = $this->absolutePath($path);
 
         try {
-            if (! empty($filter['recursive'])) {
+            if (!empty($filter['recursive'])) {
                 $dirIterator = new RecursiveDirectoryIterator($fullPath, FilesystemIterator::CURRENT_AS_FILEINFO);
                 $iterator = new RecursiveIteratorIterator($dirIterator, RecursiveIteratorIterator::CHILD_FIRST);
             } else {
@@ -206,7 +207,9 @@ class LocalFileStore extends FileStore
      */
     public function isFile(array|string $path): bool
     {
-        return is_file($this->absolutePath($path));
+        $absPath = $this->absolutePath($path);
+
+        return is_file($absPath) || is_link($absPath);
     }
 
     /**
@@ -280,7 +283,7 @@ class LocalFileStore extends FileStore
     public function touch(array|string $path, ?int $time = null): static
     {
         $absPath = $this->absolutePath($path);
-        if (! @touch($absPath, $time ?: time())) {
+        if (!@touch($absPath, $time ?: time())) {
             $this->throwLastError('Ошибка обновления времени правки файла', $absPath);
         }
 
@@ -344,7 +347,7 @@ class LocalFileStore extends FileStore
         $exists = $this->exists($path);
 
         // проверяем наличие директории если файл не существует
-        if (! $exists) {
+        if (!$exists) {
             $this->checkDir($this->dirname($path));
         }
 
@@ -518,7 +521,7 @@ class LocalFileStore extends FileStore
 
         // проверяем на существование
         if ($this->exists($path)) {
-            if (! $this->isDir($path)) {
+            if (!$this->isDir($path)) {
                 throw new StoreException('Уже существует не директория: ' . $absPath);
             }
 
@@ -530,7 +533,7 @@ class LocalFileStore extends FileStore
 
         // создаем директорию
         if (@mkdir($absPath, $perms, true, $this->context) === false &&
-            ! is_dir($absPath)) {
+            !is_dir($absPath)) {
             $this->throwLastError('Создание директории', $absPath);
         }
 
