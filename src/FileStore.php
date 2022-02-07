@@ -3,7 +3,7 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 05.01.22 23:11:58
+ * @version 08.02.22 01:30:13
  */
 
 declare(strict_types = 1);
@@ -149,7 +149,7 @@ abstract class FileStore extends Component
      */
     public function url(array|string $path): ?string
     {
-        if ($this->url === null) {
+        if (!isset($this->url)) {
             return null;
         }
 

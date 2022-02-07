@@ -3,7 +3,7 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 06.01.22 00:58:52
+ * @version 08.02.22 01:28:57
  */
 
 declare(strict_types = 1);
@@ -75,6 +75,7 @@ class FlysystemFileStore extends FileStore
 
     /**
      * @inheritdoc
+     * @throws InvalidConfigException
      */
     public function list(array|string $path, array $filter = []): array
     {

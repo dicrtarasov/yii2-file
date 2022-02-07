@@ -3,7 +3,7 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 06.01.22 00:19:41
+ * @version 08.02.22 01:25:01
  */
 
 declare(strict_types = 1);
@@ -376,7 +376,7 @@ class File extends BaseObject
      */
     public function getUrl(): ?string
     {
-        if ($this->_absoluteUrl === null) {
+        if (!isset($this->_absoluteUrl)) {
             $this->_absoluteUrl = $this->_store->url($this->_path) ?: false;
         }
 

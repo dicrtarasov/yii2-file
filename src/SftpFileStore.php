@@ -3,7 +3,7 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 05.01.22 23:16:03
+ * @version 08.02.22 01:29:23
  */
 
 /** @noinspection PhpUsageOfSilenceOperatorInspection */
@@ -163,8 +163,6 @@ class SftpFileStore extends LocalFileStore
 
     /**
      * Возвращает относительный путь
-     *
-     * @noinspection PhpMemberCanBePulledUpInspection
      */
     public function relativePath(array|string $path): string
     {

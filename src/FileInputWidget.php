@@ -3,7 +3,7 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 05.01.22 23:09:18
+ * @version 08.02.22 01:27:29
  */
 
 declare(strict_types = 1);
@@ -84,17 +84,17 @@ class FileInputWidget extends InputWidget
         }
 
         // limit
-        if ($this->limit < 0) {
+        if (!isset($this->limit) || $this->limit < 0) {
             throw new InvalidConfigException('limit: ' . $this->limit);
         }
 
         // removeExt
-        if ($this->removeExt === null) {
+        if (!isset($this->removeExt)) {
             $this->removeExt = $this->layout === 'files';
         }
 
         // получаем название поля ввода файлов
-        if ($this->inputName === null) {
+        if (!isset($this->inputName)) {
             $this->inputName = $this->hasModel() ? Html::getInputName($this->model, $this->attribute) : $this->name;
         }
 
@@ -105,7 +105,7 @@ class FileInputWidget extends InputWidget
         }
 
         // берем значение модели
-        if ($this->value === null && $this->hasModel()) {
+        if (!isset($this->value) && $this->hasModel()) {
             $this->value = Html::getAttributeValue($this->model, $this->attribute);
         }
 

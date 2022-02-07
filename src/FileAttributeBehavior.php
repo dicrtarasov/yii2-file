@@ -3,7 +3,7 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 26.01.22 03:06:10
+ * @version 08.02.22 01:26:30
  */
 
 declare(strict_types=1);
@@ -320,7 +320,7 @@ class FileAttributeBehavior extends Behavior
 
         // если модель не сохранена и основные ключи не установлены, то возвращаем null
         foreach ($primaryKeyValue as $val) {
-            if ($val === null) {
+            if (!isset($val)) {
                 return null;
             }
         }
