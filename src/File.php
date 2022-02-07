@@ -3,7 +3,7 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 08.02.22 01:25:01
+ * @version 08.02.22 01:33:37
  */
 
 declare(strict_types = 1);
@@ -61,7 +61,7 @@ class File extends BaseObject
     private ?string $_absolutePath = null;
 
     /** кэш абсолютного URL */
-    private ?string $_absoluteUrl = null;
+    private string|false|null $_absoluteUrl = null;
 
     /**
      * Конструктор
