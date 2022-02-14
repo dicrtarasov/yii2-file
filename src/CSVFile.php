@@ -3,7 +3,7 @@
  * @copyright 2019-2022 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license GPL-3.0-or-later
- * @version 05.01.22 23:00:56
+ * @version 14.02.22 23:14:22
  */
 
 declare(strict_types = 1);
@@ -253,7 +253,7 @@ class CSVFile extends File implements Iterator
             $absolutePath = empty($this->_path) ? 'php://temp' : $this->absolutePath;
 
             /** @noinspection FopenBinaryUnsafeUsageInspection */
-            $this->_handle = @fopen($absolutePath, 'wt+');
+            $this->_handle = @fopen($absolutePath, 'w+');
             if ($this->_handle === false) {
                 $err = error_get_last();
                 @error_clear_last();
@@ -289,21 +289,17 @@ class CSVFile extends File implements Iterator
     // Интерфейс Iterable //////////////////////////////////////////////////////////////////
 
     /**
-     * Отматывает указатель в начало и читает первую строку
-     *
+     * @inheritDoc
      * @throws StoreException
      */
-    public function rewind(): static
+    public function rewind(): void
     {
         $this->reset();
         $this->readLine();
-
-        return $this;
     }
 
     /**
-     * Возвращает номер текущей строки
-     *
+     * @inheritDoc
      * @return ?int номер строки, начиная с 1
      */
     public function key(): ?int
@@ -312,8 +308,7 @@ class CSVFile extends File implements Iterator
     }
 
     /**
-     * Возвращает текущую прочитанную строку
-     *
+     * @inheritDoc
      * @return ?string[]
      */
     public function current(): ?array
@@ -322,19 +317,16 @@ class CSVFile extends File implements Iterator
     }
 
     /**
-     * Читает следующую строку
-     *
+     * @inheritDoc
      * @throws StoreException
      */
-    public function next(): static
+    public function next(): void
     {
         $this->readLine();
-
-        return $this;
     }
 
     /**
-     * Проверяет корректность текущей позиции (не конец файла)
+     * @inheritDoc
      */
     public function valid(): bool
     {
